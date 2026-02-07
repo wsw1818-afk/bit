@@ -86,6 +86,13 @@ namespace AIBeat.UI
             // 배경 이미지 설정
             SetupBackground();
 
+            // 0. 센터 오버레이(배경) 제거
+            if (generateTabContent != null)
+            {
+                var bgImage = generateTabContent.GetComponent<Image>();
+                if (bgImage != null) bgImage.enabled = false;
+            }
+
             // backButton: 씬에 "BackButton" 존재
             if (backButton == null)
             {
@@ -94,7 +101,7 @@ namespace AIBeat.UI
                     backButton = backObj.GetComponent<Button>();
             }
 
-            // generateButton 동적 생성
+            // generateButton 동적 생성 (하단 중앙 배치)
             if (generateButton == null)
             {
                 var existing = transform.Find("GenerateButton");
@@ -104,85 +111,78 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -396));  // -340 → -396
+                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -500)); 
                 }
             }
+            // 버튼 위치 강제 조정
+            var genRect = generateButton.GetComponent<RectTransform>();
+            genRect.anchorMin = new Vector2(0.5f, 0);
+            genRect.anchorMax = new Vector2(0.5f, 0);
+            genRect.pivot = new Vector2(0.5f, 0);
+            genRect.anchoredPosition = new Vector2(0, 50); // 바닥에서 50 띄움
+            genRect.sizeDelta = new Vector2(400, 70);
 
-            // genreButtonContainer 동적 생성
+
+            // 1. Genre Container (Left Column: 0.05 ~ 0.35)
             if (genreButtonContainer == null)
             {
                 var existing = transform.Find("GenreContainer");
-                if (existing != null)
-                {
-                    genreButtonContainer = existing;
-                }
-                else
-                {
-                    genreButtonContainer = CreateScrollableContainer("GenreContainer", new Vector2(0, -136), new Vector2(0, 110));  // -80 → -136
-                }
+                if (existing != null) genreButtonContainer = existing;
+                else genreButtonContainer = CreateColumnContainer("GenreContainer");
             }
+            LayoutColumn(genreButtonContainer, 0.05f, 0.35f, "장르");
 
-            // moodButtonContainer 동적 생성
+            // 2. Mood Container (Center Column: 0.35 ~ 0.65)
             if (moodButtonContainer == null)
             {
                 var existing = transform.Find("MoodContainer");
-                if (existing != null)
-                {
-                    moodButtonContainer = existing;
-                }
-                else
-                {
-                    moodButtonContainer = CreateScrollableContainer("MoodContainer", new Vector2(0, -226), new Vector2(0, 110));  // -170 → -226
-                }
+                if (existing != null) moodButtonContainer = existing;
+                else moodButtonContainer = CreateColumnContainer("MoodContainer");
             }
+            LayoutColumn(moodButtonContainer, 0.35f, 0.65f, "분위기");
 
-            // bpmSlider 동적 생성
+            // 3. BPM Container (Right Column: 0.65 ~ 0.95)
             if (bpmSlider == null)
             {
-                var existing = transform.Find("BpmSlider");
-                if (existing != null)
+                var existing = transform.Find("BpmContainer");
+                if (existing != null) 
                 {
-                    bpmSlider = existing.GetComponent<Slider>();
+                    // 기존에 있다면 그 안의 Slider 컴포넌트나 더미를 찾아야 함 (여기선 생략하고 새로 생성 유도하거나 기존 로직 유지)
+                     bpmSlider = existing.GetComponentInChildren<Slider>();
                 }
                 else
                 {
                     bpmSlider = CreateBpmSlider();
                 }
             }
-
-            // bpmValueText 동적 생성 (숨김 - 버튼에 BPM 표시하므로 불필요)
-            if (bpmValueText == null)
+             // BPM 컨테이너 위치 잡기 (CreateBpmSlider에서 생성된 컨테이너)
+            var bpmContainer = transform.Find("BpmContainer");
+            if (bpmContainer != null)
             {
-                var existing = transform.Find("BpmValueText");
-                if (existing != null)
-                {
-                    bpmValueText = existing.GetComponent<TextMeshProUGUI>();
-                    existing.gameObject.SetActive(false);  // 숨김
-                }
-                else
-                {
-                    bpmValueText = CreateUIText("BpmValueText", "140 BPM", new Vector2(140, -311), 20);
-                    bpmValueText.gameObject.SetActive(false);  // 숨김
-                }
+                LayoutColumn(bpmContainer, 0.65f, 0.95f, "빠르기");
             }
 
-            // energyText 동적 생성
+
+            // Preview Texts - 숨김 (UI 단순화)
+            if (previewGenreText != null) previewGenreText.gameObject.SetActive(false);
+            if (previewMoodText != null) previewMoodText.gameObject.SetActive(false);
+            if (previewBpmText != null) previewBpmText.gameObject.SetActive(false);
+            if (bpmValueText != null) bpmValueText.gameObject.SetActive(false);
+
+            // Energy Text - 상단이나 하단으로 이동
             if (energyText == null)
             {
                 var existing = transform.Find("EnergyText");
-                if (existing != null)
-                    energyText = existing.GetComponent<TextMeshProUGUI>();
-                else
-                    energyText = CreateUIText("EnergyText", "에너지: 3/3", new Vector2(0, -446), 18);  // -390 → -446
+                if (existing != null) energyText = existing.GetComponent<TextMeshProUGUI>();
+                else energyText = CreateUIText("EnergyText", "에너지: 3/3", Vector2.zero, 18);
             }
+            // Energy Text 위치: Generate 버튼 아래
+            var energyRect = energyText.GetComponent<RectTransform>();
+            energyRect.anchorMin = new Vector2(0.5f, 0);
+            energyRect.anchorMax = new Vector2(0.5f, 0);
+            energyRect.pivot = new Vector2(0.5f, 1);
+            energyRect.anchoredPosition = new Vector2(0, 40); // Generate 버튼 바로 아래
 
-            // previewGenreText, previewMoodText, previewBpmText
-            if (previewGenreText == null)
-                previewGenreText = CreateUIText("PreviewGenreText", "EDM", new Vector2(-120, -356), 16);  // -300 → -356
-            if (previewMoodText == null)
-                previewMoodText = CreateUIText("PreviewMoodText", "Aggressive", new Vector2(0, -356), 16);  // -300 → -356
-            if (previewBpmText == null)
-                previewBpmText = CreateUIText("PreviewBpmText", "140 BPM", new Vector2(120, -356), 16);  // -300 → -356
 
             // loadingPanel 동적 생성
             if (loadingPanel == null)
@@ -281,11 +281,6 @@ namespace AIBeat.UI
             {
                 optionButtonPrefab = CreateOptionButtonTemplate();
             }
-
-            // 라벨 텍스트 (Section titles) - 탭 바 높이(56px) 고려
-            CreateSectionLabel("GenreLabel", "장르", new Vector2(0, -106));  // -50 → -106
-            CreateSectionLabel("MoodLabel", "분위기", new Vector2(0, -196));  // -140 → -196
-            CreateSectionLabel("BpmLabel", "빠르기", new Vector2(0, -281));  // -225 → -281 (BPM 제거)
         }
 
         /// <summary>
@@ -331,23 +326,21 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 스크롤 가능한 버튼 컨테이너 (가로 스크롤)
+        /// 세로 컬럼 컨테이너 생성 (Vertical Column) - 화면 높이의 대부분을 차지
         /// </summary>
-        private Transform CreateScrollableContainer(string name, Vector2 anchoredPos, Vector2 sizeDelta)
+        private Transform CreateColumnContainer(string name)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
             var rect = go.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.05f, 1);
-            rect.anchorMax = new Vector2(0.95f, 1);
-            rect.pivot = new Vector2(0.5f, 1);
-            rect.anchoredPosition = anchoredPos;
-            rect.sizeDelta = sizeDelta;
+            // Anchor는 LayoutColumn에서 설정
 
-            // ScrollRect for horizontal scrolling
+            // ScrollRect (Vertical)
             var scrollRect = go.AddComponent<ScrollRect>();
-            scrollRect.horizontal = true;
-            scrollRect.vertical = false;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.scrollSensitivity = 20f;
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
 
             // Viewport (Mask)
             var viewport = new GameObject("Viewport");
@@ -357,34 +350,71 @@ namespace AIBeat.UI
             vpRect.anchorMax = Vector2.one;
             vpRect.offsetMin = Vector2.zero;
             vpRect.offsetMax = Vector2.zero;
-            viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f); // Mask needs Image
-            viewport.AddComponent<Mask>().showMaskGraphic = false;
+            
+            var mask = viewport.AddComponent<RectMask2D>(); // 성능상 RectMask2D 선호
+            // viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0); // RectMask2D는 Image 필요 없음
 
-            // Content (HorizontalLayoutGroup)
+            // Content (VerticalLayoutGroup)
             var content = new GameObject("Content");
             content.transform.SetParent(viewport.transform, false);
             var cRect = content.AddComponent<RectTransform>();
-            cRect.anchorMin = new Vector2(0, 0);
-            cRect.anchorMax = new Vector2(0, 1);
-            cRect.pivot = new Vector2(0, 0.5f);
+            cRect.anchorMin = new Vector2(0, 1);
+            cRect.anchorMax = new Vector2(1, 1);
+            cRect.pivot = new Vector2(0.5f, 1);
             cRect.offsetMin = Vector2.zero;
             cRect.offsetMax = Vector2.zero;
+            // 높이는 ContentSizeFitter가 제어
 
-            var hLayout = content.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 10;
-            hLayout.padding = new RectOffset(8, 8, 6, 6);
-            hLayout.childControlWidth = false;
-            hLayout.childControlHeight = true;
-            hLayout.childForceExpandWidth = false;
-            hLayout.childForceExpandHeight = true;
+            var vLayout = content.AddComponent<VerticalLayoutGroup>();
+            vLayout.spacing = 15;
+            vLayout.padding = new RectOffset(10, 10, 10, 10);
+            vLayout.childControlWidth = true;
+            vLayout.childControlHeight = false; // 버튼 높이는 자체 설정
+            vLayout.childForceExpandWidth = true;
+            vLayout.childForceExpandHeight = false;
+            vLayout.childAlignment = TextAnchor.UpperCenter;
 
             var csf = content.AddComponent<ContentSizeFitter>();
-            csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             scrollRect.content = cRect;
             scrollRect.viewport = vpRect;
 
-            return content.transform; // 버튼이 추가될 Content를 반환
+            return content.transform; // 버튼들이 추가될 부모
+        }
+
+        /// <summary>
+        /// 컬럼 컨테이너 레이아웃 및 라벨 설정 헬퍼
+        /// </summary>
+        private void LayoutColumn(Transform containerContent, float xMin, float xMax, string labelText)
+        {
+            if (containerContent == null) return;
+            
+            // containerContent는 ScrollRect의 Content임.
+            // ScrollRect가 있는 GameObject(컨테이너 본체)를 찾아야 함
+            // CreateColumnContainer 구조: Container -> Viewport -> Content
+            
+            var scrollRect = containerContent.GetComponentInParent<ScrollRect>();
+            if (scrollRect == null) return;
+            
+            var containerTr = scrollRect.transform;
+            var rect = containerTr.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchorMin = new Vector2(xMin, 0.2f); // 하단 여백 (버튼 영역)
+                rect.anchorMax = new Vector2(xMax, 0.9f); // 상단 여백 (탭바 아래)
+                rect.offsetMin = new Vector2(5, 0);
+                rect.offsetMax = new Vector2(-5, -40); // 라벨 공간 확보
+            }
+            
+            // 섹션 라벨 생성/위치 잡기
+            // 라벨은 컨테이너 위에 배치 (컨테이너의 형제/부모 좌표계 기준)
+            string labelName = $"{containerTr.name}_Label";
+            var labelTr = transform.Find(labelName);
+            if (labelTr == null)
+            {
+                CreateSectionLabel(labelName, labelText, xMin, xMax);
+            }
         }
 
         /// <summary>
@@ -406,8 +436,9 @@ namespace AIBeat.UI
             slider.value = 140;
             dummySlider.SetActive(false);  // 숨김
 
-            // BPM 버튼 컨테이너 (가로 스크롤)
-            var container = CreateScrollableContainer("BpmContainer", new Vector2(0, -311), new Vector2(0, 60));  // 높이 60px로 확대
+            // BPM 버튼 컨테이너 (세로 컬럼)
+            var container = CreateColumnContainer("BpmContainer");
+            // 위치 설정은 AutoSetupReferences의 LayoutColumn에서 처리됨 (여기서는 생성만)
 
             // BPM 옵션 버튼들 생성 (80, 100, 120, 140, 160, 180)
             int[] bpmOptions = { 80, 100, 120, 140, 160, 180 };
@@ -418,17 +449,21 @@ namespace AIBeat.UI
                 var btnGo = GameObject.Instantiate(optionButtonPrefab, container.transform);
                 btnGo.name = $"BPM_{bpm}";
 
-                // 버튼 크기 조정 (더 크게)
+                // 버튼 크기 및 스타일 조정
                 var btnRect = btnGo.GetComponent<RectTransform>();
                 if (btnRect != null)
-                    btnRect.sizeDelta = new Vector2(80, 50);  // 120→80 너비, 44→50 높이
+                {
+                    // 세로 리스트에서는 가로가 꽉 차므로(VerticalLayoutGroup childForceExpandWidth=true)
+                    // 높이만 설정하면 됨
+                    btnRect.sizeDelta = new Vector2(0, 50); 
+                }
 
                 // 텍스트 설정
                 var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)
                 {
-                    btnText.text = $"{bpm}";  // BPM 숫자만 표시
-                    btnText.fontSize = 24;  // 20→24 (더 크게)
+                    btnText.text = $"{bpm} BPM"; 
+                    btnText.fontSize = 20;
                 }
 
                 // 버튼 이벤트
@@ -548,26 +583,27 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 섹션 라벨 동적 생성 (중복 방지) - MainMenuUI 스타일 적용
+        /// 섹션 라벨 동적 생성 (컬럼 상단 중앙)
         /// </summary>
-        private void CreateSectionLabel(string name, string text, Vector2 anchoredPos)
+        private void CreateSectionLabel(string name, string text, float xMin, float xMax)
         {
             if (transform.Find(name) != null) return; // 이미 존재
 
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
             var rect = go.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.05f, 1);
-            rect.anchorMax = new Vector2(0.5f, 1);
-            rect.pivot = new Vector2(0, 1);
-            rect.anchoredPosition = anchoredPos;
-            rect.sizeDelta = new Vector2(0, 32);  // 28→32 (높이 확대)
+            rect.anchorMin = new Vector2(xMin, 0.9f); // 컨테이너 상단
+            rect.anchorMax = new Vector2(xMax, 0.9f);
+            rect.pivot = new Vector2(0.5f, 0); // 바닥 기준
+            rect.anchoredPosition = new Vector2(0, 10); // 조금 띄움
+            rect.sizeDelta = new Vector2(0, 30); 
 
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 20;  // 16→20 (MainMenuUI 섹션 헤더와 일치)
-            tmp.color = new Color(0.5f, 0.8f, 1f);
+            tmp.fontSize = 22; 
+            tmp.color = new Color(0.6f, 0.9f, 1f);
             tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.Bottom; // 텍스트 하단 정렬(버튼쪽으로)
         }
 
         private void Initialize()
