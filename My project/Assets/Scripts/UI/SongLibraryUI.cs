@@ -18,7 +18,7 @@ namespace AIBeat.UI
         // 색상 상수 (사이버펑크 네온 스타일)
         private static readonly Color NEON_CYAN = new Color(0f, 0.8f, 1f, 0.5f);
         private static readonly Color NEON_CYAN_BRIGHT = new Color(0f, 0.9f, 1f, 0.8f);
-        private static readonly Color CARD_BG = new Color(0.05f, 0.05f, 0.15f, 0.85f);
+        private static readonly Color CARD_BG = new Color(0.2f, 0.3f, 0.5f, 1f); // DEBUG: 밝은 파란색으로 확인
         private static readonly Color DELETE_COLOR = new Color(0.8f, 0.1f, 0.1f, 0.8f);
 
         // UI 참조
@@ -222,13 +222,25 @@ namespace AIBeat.UI
                 LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
             }
 
-            Debug.Log($"[SongLibrary] Created {songs.Count} cards, container childCount={contentContainer?.childCount}");
-            if (scrollRect != null && scrollRect.content != null)
-                Debug.Log($"[SongLibrary] content rect={scrollRect.content.rect}, childCount={scrollRect.content.childCount}");
+            Debug.Log($"[SongLibrary] Created {songs.Count} cards");
+            if (rootPanel != null)
+            {
+                var rr = rootPanel.GetComponent<RectTransform>();
+                Debug.Log($"[SongLibrary] rootPanel rect={rr.rect}, active={rootPanel.activeSelf}");
+            }
+            if (scrollRect != null)
+            {
+                var sr = scrollRect.GetComponent<RectTransform>();
+                Debug.Log($"[SongLibrary] scrollView rect={sr.rect}");
+                if (scrollRect.viewport != null)
+                    Debug.Log($"[SongLibrary] viewport rect={scrollRect.viewport.rect}");
+                if (scrollRect.content != null)
+                    Debug.Log($"[SongLibrary] content rect={scrollRect.content.rect}, pos={scrollRect.content.anchoredPosition}");
+            }
             foreach (var item in songItems)
             {
                 var ir = item.GetComponent<RectTransform>();
-                Debug.Log($"[SongLibrary] card '{item.name}' rect={ir.rect}, sizeDelta={ir.sizeDelta}");
+                Debug.Log($"[SongLibrary] card '{item.name}' rect={ir.rect}, active={item.activeSelf}");
             }
         }
 
