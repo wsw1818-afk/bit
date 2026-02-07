@@ -1,1 +1,1 @@
-🐛 SongSelectUI 탭 투명도 수정 + 중복 생성 방지: TAB_INACTIVE alpha 0.6→0.9, CreateTabSystem 중복 방지 로직 추가
+🐛 SongSelectUI BPM 슬라이더 핸들 높이 수정: 0→30px로 변경하여 화면 전체로 늘어나는 버그 해결

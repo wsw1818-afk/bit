@@ -430,7 +430,7 @@ namespace AIBeat.UI
             var handle = new GameObject("Handle");
             handle.transform.SetParent(handleArea.transform, false);
             var hRect = handle.AddComponent<RectTransform>();
-            hRect.sizeDelta = new Vector2(20, 0);
+            hRect.sizeDelta = new Vector2(20, 30);  // 0 → 30 (슬라이더 높이와 동일)
             var handleImg = handle.AddComponent<Image>();
             handleImg.color = Color.white;
 
