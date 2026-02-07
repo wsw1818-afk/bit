@@ -6265,7 +6265,7 @@ MonoBehaviour:
   gameplayUI: {fileID: 1889979240}
   countdownTime: 3
   debugMode: 1
-  autoPlay: 1
+  autoPlay: 0
   debugSongData: {fileID: 0}
 --- !u!4 &1775238432
 Transform:

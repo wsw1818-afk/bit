@@ -26,6 +26,15 @@ namespace AIBeat.Editor
                 return;
             }
 
+            // 빌드 전 PlayerSettings 강제 적용
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+            PlayerSettings.allowedAutorotateToPortrait = true;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            PlayerSettings.allowedAutorotateToLandscapeRight = false;
+            PlayerSettings.useAnimatedAutorotation = false;
+            Debug.Log("[AndroidBuilder] PlayerSettings: Portrait only, autorotate disabled");
+
             // 빌드 타겟 확인 및 전환
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
             {
