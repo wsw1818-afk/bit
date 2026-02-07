@@ -36,7 +36,7 @@
 1. ~~**AI API 연동**~~ → **취소됨** (비용 문제로 Suno AI에서 수동 다운로드 방식으로 결정)
 2. **로컬 MP3 로드/재생** — AudioManager 로드 코드 존재, 실제 MP3 파일 연결 미완료. OfflineAudioAnalyzer + SmartBeatMapper로 자동 노트 생성 가능
 3. **캘리브레이션** — CalibrationManager 코드 존재하나 실제 탭 테스트 미수행
-4. **Android 빌드** — 빌드 파이프라인 미설정
+4. ~~**Android 빌드**~~ → **완료** (APK 57.2MB, `Builds/Android/AIBeat.apk`)
 5. **터치 입력** — InputHandler에 터치 코드 존재, 실기기 테스트 미수행
 6. **곡 라이브러리** — SongLibrary에 0곡 (다운로드한 곡 관리 UI 미구현)
 7. **에너지 시스템** — UI 존재, 실제 차감/충전 로직 미확인
@@ -50,8 +50,8 @@
 ## Next
 1) 2키+스크래치 레인 구조 변경 (계획 파일 존재)
 2) 로컬 MP3 파일 로드 → 자동 분석 → 노트 생성 → 실제 재생 연결
-3) Android 빌드 파이프라인 설정
-4) 실기기 테스트
+3) ~~Android 빌드 파이프라인 설정~~ ✅ 완료
+4) 실기기 테스트 (APK 설치 후)
 
 ---
 ## Archive Rule (요약)
