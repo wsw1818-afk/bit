@@ -1,1 +1,1 @@
-✅ BPM 버튼 생성 로직 완료: 빈 Content 감지 → 컨테이너 재생성 (Play 모드 재시작 필요)
+🐛 SongSelectUI BPM 버튼 텍스트 미표시 수정: optionButtonPrefab 초기화 순서 오류 해결 (BPM Container 생성 전에 prefab 먼저 생성)

@@ -141,6 +141,12 @@ namespace AIBeat.UI
             }
             LayoutColumn(moodButtonContainer, 0.35f, 0.65f, "분위기");
 
+            // optionButtonPrefab 먼저 생성 (BPM 버튼이 사용함)
+            if (optionButtonPrefab == null)
+            {
+                optionButtonPrefab = CreateOptionButtonTemplate();
+            }
+
             // 3. BPM Container (Right Column: 0.65 ~ 0.95)
             if (bpmSlider == null)
             {
@@ -286,12 +292,6 @@ namespace AIBeat.UI
                     progressSlider.interactable = false;
                     progressSlider.value = 0;
                 }
-            }
-
-            // optionButtonPrefab: 프리팹 없으면 동적 생성 패턴
-            if (optionButtonPrefab == null)
-            {
-                optionButtonPrefab = CreateOptionButtonTemplate();
             }
         }
 
