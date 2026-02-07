@@ -1,1 +1,1 @@
-📱 SongSelect UI 모바일 최적화: 3단 컬럼 → 탭 전환 단일 컬럼 방식 (Genre/Mood/BPM 옵션 탭 바 + 전체 화면 세로 스크롤, Generate 버튼 하단 고정, 에너지 우측 상단 배치, 터치 영역 60-70px 확대)
+🔧 SongSelect 옵션 탭 바 가시성 수정: OptionTabBar가 OptionContainer에 가려지는 문제 해결 (OptionContainer.offsetMax -150→-120 조정, OptionTabBar SetSiblingIndex로 MainTabBar 바로 다음 배치)

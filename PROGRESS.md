@@ -7,14 +7,14 @@
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 37)
+## What changed (세션 41)
 
 ### 음악/DJ 테마 디자인 개선
 - **LaneVisualFeedback**: 레인 색상 → 바이올렛(스크래치)+네온블루/시안(키), 판정선 블루-시안 음파 글로우, 비트 반응 색상 시프트, 판정 이펙트(골드/시안/민트/핑크), 스크래치존 "♬ DJ" 턴테이블 라벨, 키라벨 음표(♪♫)
 - **GameplayUI**: DJ 콘솔 스코어 패널(블루-퍼플 테두리), 이퀄라이저 콤보 색상(민트→시안→골드→핫핑크), 판정 텍스트 "♫ PERFECT!", 일시정지 ⏸ 아이콘, 결과 화면 DJ 부스 배경, 랭크 컬러(골드/시안/민트/라벤더)
 - **NoteSpawner**: 노트 색상 → 네온 블루(탭), 민트 그린(롱), 바이올렛(스크래치)
 
-### 곡 생성 UI 모바일 최적화 (세션 38~40)
+### 곡 생성 UI 모바일 최적화 (세션 38~41)
 - ~~**3단 컬럼 레이아웃**~~(세션 38~39) → **탭 전환 단일 컬럼 방식**으로 전환 (세션 40)
 - **옵션 탭 바**: Genre/Mood/BPM 3개 탭 전환 (상단 메인 탭 아래 60px)
 - **전체 화면 세로 스크롤**: CreateFullScreenColumn() 함수로 전체 화면 단일 컬럼 생성 (좌우 20px 여백, 버튼 간격 20px)
@@ -23,6 +23,7 @@
 - **터치 영역 확대**: 버튼 높이 60-70px (BPM 70px, 나머지 60px), 폰트 크기 22-24px
 - **시각적 개선**: Preview 텍스트 숨김, 버튼 클릭 시 배경 색상 변경(선택: 0,0.4,0.6 / 미선택: 0.12,0.12,0.22)
 - **코드 구조**: CreateFullScreenColumn(), CreateOptionTabBar(), SwitchToOptionTab(), CreateGenreButtons/MoodButtons/BPMButtons()
+- **옵션 탭 바 가시성 수정** (세션 41): OptionTabBar가 OptionContainer에 가려지는 문제 해결 → OptionContainer.offsetMax를 -150에서 -120으로 조정
 
 ### 전체 플로우 종합 테스트 (3개 씬 모두 통과)
 
@@ -32,10 +33,11 @@
 | SongSelect | 정상 | 0 | SongLibrary 0곡 로드 |
 | Gameplay | 정상 | 0 | Score 65,276 (보너스 포함), P:40 G:16 Good:8 B:2 M:0 |
 
-## Commands & Results (세션 40)
+## Commands & Results (세션 41)
 - recompile_scripts → **0 에러, 0 경고** ✅
 - BPM 버튼 텍스트 표시 문제 해결 (세션 39) ✅
 - 모바일 UI 최적화 완료: 3단 컬럼 → 탭 전환 단일 컬럼 (세션 40) ✅
+- 옵션 탭 바 가시성 문제 해결: OptionTabBar 위치 조정 및 OptionContainer 오프셋 수정 (세션 41) ✅
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)

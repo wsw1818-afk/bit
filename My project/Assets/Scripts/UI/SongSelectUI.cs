@@ -364,8 +364,8 @@ namespace AIBeat.UI
             var rect = go.AddComponent<RectTransform>();
             rect.anchorMin = new Vector2(0, 0);
             rect.anchorMax = new Vector2(1, 1);
-            rect.offsetMin = new Vector2(20, 100); // 하단: Generate 버튼 영역 확보
-            rect.offsetMax = new Vector2(-20, -150); // 상단: 옵션 탭 바 영역 확보
+            rect.offsetMin = new Vector2(20, 100); // 하단: Generate 버튼 영역 확보 (바닥에서 100px)
+            rect.offsetMax = new Vector2(-20, -120); // 상단: 메인 탭(56px) + 옵션 탭(60px) + 여백(4px) = 120px
 
             // ScrollRect (Vertical)
             var scrollRect = go.AddComponent<ScrollRect>();
@@ -636,10 +636,21 @@ namespace AIBeat.UI
                 return;
             }
 
-            // 옵션 탭 바 컨테이너 (메인 TabBar 아래 배치)
+            // 옵션 탭 바 컨테이너 (메인 TabBar 바로 아래 배치)
             var optTabBar = new GameObject("OptionTabBar");
             optTabBar.transform.SetParent(transform, false);
-            optTabBar.transform.SetAsFirstSibling(); // 상단 배치
+
+            // TabBar를 찾아서 그 바로 다음에 배치
+            var mainTabBar = transform.Find("TabBar");
+            if (mainTabBar != null)
+            {
+                // TabBar의 sibling index + 1 위치에 배치
+                optTabBar.transform.SetSiblingIndex(mainTabBar.GetSiblingIndex() + 1);
+            }
+            else
+            {
+                optTabBar.transform.SetAsFirstSibling(); // TabBar가 없으면 최상단
+            }
 
             var optTabRect = optTabBar.AddComponent<RectTransform>();
             optTabRect.anchorMin = new Vector2(0, 1);
