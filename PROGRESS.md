@@ -7,26 +7,25 @@
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 43)
+## What changed (세션 44)
 
-### SongSelect 가로 화면 최적화
-- **GridLayout 다열 배치**: 장르/분위기 4열, BPM 3열로 버튼 배치 (가로 화면 공간 활용)
-- **CreateButtonGrid()**: 각 섹션별 GridLayoutGroup 컨테이너 생성, ContentSizeFitter로 높이 자동 조절
-- **AdjustGridCellSize()**: Canvas 폭 기반으로 셀 너비 자동 계산 (코루틴 1프레임 대기)
-- **VerticalLayoutGroup spacing/padding 축소**: 20→6, padding 20→10 (가로 화면에 맞게)
-- **섹션 라벨 축소**: 높이 36→28, 폰트 20→17 (가로 화면 공간 절약)
-- **버튼 폰트 축소**: 22→18 (그리드 셀에 맞게)
+### SongSelect 대폭 단순화 — 라이브러리 전용으로 전환
+- **제거됨**: 탭 시스템 ("새 곡 만들기" | "내 라이브러리")
+- **제거됨**: 곡 생성 UI (장르/분위기/BPM 버튼, Generate 버튼, GridLayout)
+- **제거됨**: 에너지 시스템 (표시/충전/소모 로직 전체)
+- **제거됨**: 로딩 패널 (프로그레스 바, 로딩 메시지)
+- **제거됨**: ISongGenerator/FakeSongGenerator 참조 (SongSelectUI에서)
+- **제거됨**: OptionContainer, BPM Slider, Preview Texts
+- **SongSelectUI.cs**: 1333줄 → 155줄 (88% 코드 감소)
+- **추가**: "내 라이브러리" 타이틀 바 (탭 대체)
+- **SongLibraryUI.cs**: 빈 목록 메시지에서 "새 곡 만들기 탭" 참조 제거
+- 이유: AI API 취소됨 → Suno AI 수동 다운로드 → 곡 생성 UI 불필요
 
 ### 검증
 - recompile_scripts → 0 에러, 0 경고 ✅
-- Play 모드 SongSelect 씬: 에러 0개 ✅
-- GridLayout 4열 동작 확인: EDM(1행1열), House(1행2열), Chiptune(2행1열) 위치 정상 ✅
-- 한국어 폰트 정상 적용 (MalgunGothicBold SDF) ✅
 
-## Commands & Results (세션 43)
+## Commands & Results (세션 44)
 - recompile_scripts → **0 에러, 0 경고** ✅
-- MCP Play 모드 검증: SongSelect 씬 에러 0개 ✅
-- Genre_EDM anchoredPosition=(100,-28), Genre_House=(308,-28), Genre_Chiptune=(100,-84) → 4열 그리드 정상 ✅
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)
@@ -40,7 +39,7 @@
 4. ~~**Android 빌드**~~ → **완료** (APK 57.2MB, `Builds/Android/AIBeat.apk`)
 5. **터치 입력** — InputHandler에 터치 코드 존재, 실기기 테스트 미수행
 6. **곡 라이브러리** — SongLibrary에 0곡 (다운로드한 곡 관리 UI 미구현)
-7. **에너지 시스템** — UI 존재, 실제 차감/충전 로직 미확인
+7. ~~**에너지 시스템**~~ → **제거됨** (곡 생성 기능 제거로 불필요)
 
 ## 아키텍처 결정 (세션 35)
 - **음악 소스**: Suno AI에서 수동 생성 → MP3 다운로드 → 게임에 로컬 로드

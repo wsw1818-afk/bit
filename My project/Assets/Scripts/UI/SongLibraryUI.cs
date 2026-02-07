@@ -266,7 +266,7 @@ namespace AIBeat.UI
             emptyLayout.preferredHeight = 200;
 
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyText.text = "아직 곡이 없습니다!\n'새 곡 만들기' 탭에서\n첫 비트를 생성해보세요!";
+            emptyText.text = "아직 곡이 없습니다!\nMP3 파일을 추가해주세요.";
             emptyText.fontSize = 22;
             emptyText.color = new Color(0.4f, 0.4f, 0.5f);
             emptyText.alignment = TextAlignmentOptions.Center;
