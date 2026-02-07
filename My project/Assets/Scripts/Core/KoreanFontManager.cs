@@ -26,60 +26,83 @@ namespace AIBeat.Core
         {
             _initialized = true;
 
-            // Resources에서 SDF 에셋 로드 시도
-            _koreanFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/MalgunGothicBold SDF");
-            if (_koreanFont != null)
+            // 여러 경로에서 SDF 에셋 로드 시도
+            string[] paths = {
+                "Fonts & Materials/MalgunGothicBold SDF",  // TMP Resources
+                "Fonts/MalgunGothicBold SDF",              // Custom Resources
+                "MalgunGothicBold SDF",                    // Root Resources
+            };
+
+            foreach (var path in paths)
             {
-                Debug.Log("[KoreanFontManager] 한국어 폰트 에셋 로드 성공");
-                return;
-            }
-
-            // Fallback: TMP 기본 Resources 경로에서 시도
-            _koreanFont = Resources.Load<TMP_FontAsset>("Fonts/MalgunGothicBold SDF");
-            if (_koreanFont != null)
-            {
-                Debug.Log("[KoreanFontManager] 한국어 폰트 에셋 로드 성공 (Fonts/)");
-                return;
-            }
-
-            // OS 폰트에서 동적 생성 시도
-            CreateFromOSFont();
-        }
-
-        private static void CreateFromOSFont()
-        {
-            // Font.CreateDynamicFontFromOSFont은 런타임에서 사용 가능
-            string[] fontNames = { "Malgun Gothic", "맑은 고딕", "NanumGothic", "Gulim", "Dotum" };
-            Font osFont = null;
-
-            foreach (var name in fontNames)
-            {
-                osFont = Font.CreateDynamicFontFromOSFont(name, 36);
-                if (osFont != null)
+                _koreanFont = Resources.Load<TMP_FontAsset>(path);
+                if (_koreanFont != null)
                 {
-                    Debug.Log("[KoreanFontManager] OS 폰트 발견: " + name);
-                    break;
+                    Debug.Log($"[KoreanFontManager] 한국어 폰트 로드 성공: {path}");
+                    return;
                 }
             }
 
-            if (osFont == null)
+            // LiberationSans SDF에 Fallback으로 등록된 폰트 확인
+            var defaultFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+            if (defaultFont != null && defaultFont.fallbackFontAssetTable != null)
             {
-                Debug.LogWarning("[KoreanFontManager] 한국어 OS 폰트를 찾을 수 없습니다.");
+                foreach (var fallback in defaultFont.fallbackFontAssetTable)
+                {
+                    if (fallback != null && fallback.name.Contains("Malgun"))
+                    {
+                        _koreanFont = fallback;
+                        Debug.Log("[KoreanFontManager] Fallback에서 한국어 폰트 발견");
+                        return;
+                    }
+                }
+            }
+
+            // 마지막 수단: TMP_FontAsset을 런타임에 TTF로부터 생성
+            CreateFromTTF();
+        }
+
+        private static void CreateFromTTF()
+        {
+            // Resources에서 TTF 폰트 로드 후 Dynamic SDF 에셋 생성
+            var ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
+            if (ttfFont == null)
+            {
+                // OS 폰트에서 시도
+                string[] fontNames = { "Malgun Gothic", "맑은 고딕", "NanumGothic", "Gulim", "Dotum" };
+                foreach (var name in fontNames)
+                {
+                    ttfFont = Font.CreateDynamicFontFromOSFont(name, 36);
+                    if (ttfFont != null)
+                    {
+                        Debug.Log("[KoreanFontManager] OS 폰트 발견: " + name);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                Debug.Log("[KoreanFontManager] Resources에서 TTF 폰트 로드 성공");
+            }
+
+            if (ttfFont == null)
+            {
+                Debug.LogWarning("[KoreanFontManager] 한국어 폰트를 찾을 수 없습니다.");
                 return;
             }
 
-#if UNITY_EDITOR
-            // 에디터에서만 CreateFontAsset 사용 가능
-            _koreanFont = TMP_FontAsset.CreateFontAsset(osFont);
+            // TMP_FontAsset.CreateFontAsset은 에디터/빌드 모두 사용 가능 (Unity 2021.2+)
+            _koreanFont = TMP_FontAsset.CreateFontAsset(ttfFont);
             if (_koreanFont != null)
             {
                 _koreanFont.name = "Korean Dynamic Font";
                 _koreanFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
-                Debug.Log("[KoreanFontManager] 에디터에서 Dynamic TMP 폰트 생성 완료");
+                Debug.Log("[KoreanFontManager] Dynamic TMP 폰트 생성 완료");
             }
-#else
-            Debug.LogWarning("[KoreanFontManager] 빌드 환경에서는 미리 생성된 SDF 에셋이 필요합니다.");
-#endif
+            else
+            {
+                Debug.LogWarning("[KoreanFontManager] TMP_FontAsset.CreateFontAsset 실패");
+            }
         }
 
         public static void ApplyFont(TMP_Text textComponent)

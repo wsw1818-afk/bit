@@ -15,7 +15,7 @@ namespace AIBeat.Gameplay
         [Header("Touch Zone Settings")]
         [SerializeField] private int touchZoneCount = 2;       // 2개 균등 터치 존 (Key1, Key2)
         [SerializeField] private float touchAreaRatio = 0.85f;  // 하단 85% 입력 영역 (상단 UI만 제외)
-        [SerializeField] private float scratchEdgeRatio = 0.12f; // 좌우 가장자리 12%를 스크래치 전용 존으로
+        [SerializeField] private float scratchEdgeRatio = 0.08f; // 좌우 가장자리 8%를 스크래치 전용 존으로
 
         [Header("Debug")]
         [SerializeField] private bool showTouchDebug = true;

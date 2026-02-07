@@ -1,1 +1,1 @@
-📱 모바일 UI+음악 로드 수정: Canvas Scaler 1080x1920 통일, SafeArea 순서 수정, Android StreamingAssets 호환, persistentDataPath/Music 스캔 추가
+🔧 터치 밀림+폰트 깨짐 수정: scratchEdgeRatio 12%→8%, KoreanFontManager TTF→Dynamic SDF 런타임 생성 지원
