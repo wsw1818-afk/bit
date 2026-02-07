@@ -7,6 +7,9 @@ namespace AIBeat.Editor
 {
     public static class AndroidBuilder
     {
+        private static readonly string BuildLogPath = Path.Combine(
+            Directory.GetParent(Application.dataPath).FullName, "build_result.txt");
+
         [MenuItem("Tools/A.I. BEAT/Check Android Module")]
         public static void CheckAndroidModule()
         {
@@ -19,10 +22,21 @@ namespace AIBeat.Editor
         [MenuItem("Tools/A.I. BEAT/Build Android APK")]
         public static void BuildAndroidAPK()
         {
+            // 빌드 시작 표시 파일 작성
+            File.WriteAllText(BuildLogPath, "BUILDING...\n");
+
+            // delayCall로 빌드 실행 (MCP 응답 후 실행되도록)
+            EditorApplication.delayCall += ExecuteBuild;
+        }
+
+        private static void ExecuteBuild()
+        {
             // Android 모듈 확인
             if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
             {
-                Debug.LogError("[AndroidBuilder] Android Build Support module is NOT installed! Please install it via Unity Hub.");
+                string msg = "[AndroidBuilder] Android Build Support module is NOT installed!";
+                Debug.LogError(msg);
+                File.WriteAllText(BuildLogPath, $"FAILED\n{msg}\n");
                 return;
             }
 
@@ -76,12 +90,15 @@ namespace AIBeat.Editor
             {
                 long sizeBytes = new FileInfo(apkPath).Length;
                 float sizeMB = sizeBytes / (1024f * 1024f);
-                Debug.Log($"[AndroidBuilder] BUILD SUCCEEDED! APK size: {sizeMB:F1} MB");
-                Debug.Log($"[AndroidBuilder] APK path: {apkPath}");
+                string successMsg = $"BUILD SUCCEEDED! APK size: {sizeMB:F1} MB\nPath: {apkPath}";
+                Debug.Log($"[AndroidBuilder] {successMsg}");
+                File.WriteAllText(BuildLogPath, $"SUCCESS\n{successMsg}\n");
             }
             else if (summary.result == BuildResult.Failed)
             {
-                Debug.LogError($"[AndroidBuilder] BUILD FAILED! Errors: {summary.totalErrors}");
+                string failMsg = $"BUILD FAILED! Errors: {summary.totalErrors}";
+                Debug.LogError($"[AndroidBuilder] {failMsg}");
+                File.WriteAllText(BuildLogPath, $"FAILED\n{failMsg}\n");
             }
         }
     }
