@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using AIBeat.Core;
+using System.Collections.Generic;
 
 namespace AIBeat.UI
 {
@@ -110,27 +111,34 @@ namespace AIBeat.UI
                 settingsPanel.SetActive(false);
             }
 
-            // 모바일 버튼 최소 크기 보장
-            EnsureButtonMobileSize();
-
-            // 한국어 폰트 적용 (□□□ 방지)
+            // 한국어 폰트 적용 (□□□ 방지) - 버튼 스타일 적용 전에 먼저
             KoreanFontManager.ApplyFontToAll(gameObject);
 
-            // 버튼 텍스트 한국어화
-            SetButtonTextsKorean();
+            // 모바일 버튼 스타일 + 한국어 텍스트 적용 (폰트 적용 후)
+            EnsureButtonMobileSize();
 
             // 타이틀 애니메이션
             AnimateTitle();
         }
 
         /// <summary>
-        /// 버튼 스타일 개선 (모바일 터치 최적화 + 네온 효과)
+        /// 버튼 스타일 개선 (모바일 터치 최적화 + 네온 효과 + 한국어 텍스트)
         /// </summary>
         private void EnsureButtonMobileSize()
         {
-            Button[] buttons = { playButton, libraryButton, settingsButton, exitButton };
-            foreach (var btn in buttons)
+            // 한국어 텍스트 매핑
+            var buttonTexts = new Dictionary<Button, string>
             {
+                { playButton, "플레이" },
+                { libraryButton, "라이브러리" },
+                { settingsButton, "설정" },
+                { exitButton, "종료" }
+            };
+
+            foreach (var kvp in buttonTexts)
+            {
+                var btn = kvp.Key;
+                var koreanText = kvp.Value;
                 if (btn == null) continue;
 
                 // 크기 보장 (최소 60px 높이)
@@ -163,41 +171,15 @@ namespace AIBeat.UI
                 colors.disabledColor = new Color(0.2f, 0.2f, 0.3f, 0.5f);
                 btn.colors = colors;
 
-                // 텍스트 스타일
+                // 텍스트: 한국어 + 스타일 강제 적용
                 var tmp = btn.GetComponentInChildren<TMP_Text>();
                 if (tmp != null)
                 {
-                    if (tmp.fontSize < 24) tmp.fontSize = 24;  // 22→24
+                    tmp.text = koreanText;  // 한국어 텍스트 설정
+                    tmp.fontSize = 24;  // 강제 적용
                     tmp.fontStyle = FontStyles.Bold;
-                    tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+                    tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
                 }
-            }
-        }
-
-        /// <summary>
-        /// 버튼 텍스트 한국어화
-        /// </summary>
-        private void SetButtonTextsKorean()
-        {
-            if (playButton != null)
-            {
-                var tmp = playButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (tmp != null) tmp.text = "플레이";
-            }
-            if (libraryButton != null)
-            {
-                var tmp = libraryButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (tmp != null) tmp.text = "라이브러리";
-            }
-            if (settingsButton != null)
-            {
-                var tmp = settingsButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (tmp != null) tmp.text = "설정";
-            }
-            if (exitButton != null)
-            {
-                var tmp = exitButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (tmp != null) tmp.text = "종료";
             }
         }
 
@@ -205,8 +187,8 @@ namespace AIBeat.UI
         {
             if (titleText == null) return;
 
-            // 타이틀 스타일 강화
-            titleText.fontSize = Mathf.Max(titleText.fontSize, 48);
+            // 타이틀 스타일 강화 - 강제 적용
+            titleText.fontSize = 48;  // 강제로 48 설정 (Mathf.Max 제거)
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = new Color(0f, 0.85f, 1f, 1f);
 
