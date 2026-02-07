@@ -22,8 +22,8 @@ namespace AIBeat.Gameplay
 
         [Header("Spawn Settings")]
         [SerializeField] private float noteSpeed = 5f;         // 노트 속도 (units/sec)
-        [SerializeField] private float spawnDistance = 10f;    // 판정선까지의 거리
-        [SerializeField] private float lookAhead = 2f;         // 미리 생성할 시간(초)
+        [SerializeField] private float spawnDistance = 15f;    // 판정선까지의 거리
+        [SerializeField] private float lookAhead = 3f;         // 미리 생성할 시간(초)
 
         [Header("Pool Settings")]
         [SerializeField] private int poolSize = 100;

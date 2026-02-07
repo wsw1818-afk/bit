@@ -55,12 +55,12 @@ namespace AIBeat.UI
         private TMP_Text bonusScoreText;
         private Coroutine bonusScoreCoroutine;
 
-        [Header("Colors (Music Theme)")]
-        [SerializeField] private Color perfectColor = new Color(1f, 0.85f, 0.1f);    // 골드 비트
-        [SerializeField] private Color greatColor = new Color(0.2f, 0.9f, 1f);       // 네온 시안
-        [SerializeField] private Color goodColor = new Color(0.4f, 1f, 0.6f);        // 민트
-        [SerializeField] private Color badColor = new Color(0.8f, 0.3f, 0.6f);       // 핑크
-        [SerializeField] private Color missColor = new Color(0.4f, 0.4f, 0.5f);      // 다크 그레이
+        [Header("Colors (BIT.jpg 네온 팔레트)")]
+        [SerializeField] private Color perfectColor = new Color(1f, 0.85f, 0.1f);    // 골드
+        [SerializeField] private Color greatColor = new Color(0f, 0.85f, 1f);        // 시안
+        [SerializeField] private Color goodColor = new Color(0.2f, 1f, 0.4f);        // 그린
+        [SerializeField] private Color badColor = new Color(1f, 0.15f, 0.65f);       // 마젠타
+        [SerializeField] private Color missColor = new Color(0.35f, 0.35f, 0.45f);   // 그레이
 
         private Coroutine judgementCoroutine;
         private TMP_Text earlyLateText; // Early/Late 피드백 표시
@@ -193,11 +193,11 @@ namespace AIBeat.UI
             topBarRect.sizeDelta = new Vector2(0, 110);
 
             var topBarBg = topBar.AddComponent<Image>();
-            topBarBg.color = new Color(0.02f, 0.01f, 0.06f, 0.85f);
+            topBarBg.color = UIColorPalette.BG_TOPBAR;
 
             var barOutline = topBar.AddComponent<Outline>();
-            barOutline.effectColor = new Color(0.2f, 0.3f, 0.8f, 0.4f);
-            barOutline.effectDistance = new Vector2(0, -1);
+            barOutline.effectColor = UIColorPalette.BORDER_CYAN;
+            barOutline.effectDistance = new Vector2(0, -2);
 
             // HorizontalLayoutGroup
             var hLayout = topBar.AddComponent<HorizontalLayoutGroup>();
@@ -217,7 +217,7 @@ namespace AIBeat.UI
                 titleLE.preferredWidth = 250;
                 songTitleText.fontSize = 36;
                 songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
-                songTitleText.color = new Color(0.3f, 0.9f, 1f, 0.7f);
+                songTitleText.color = UIColorPalette.NEON_CYAN.WithAlpha(0.8f);
                 songTitleText.fontStyle = FontStyles.Bold;
                 songTitleText.textWrappingMode = TextWrappingModes.NoWrap;
                 songTitleText.overflowMode = TextOverflowModes.Ellipsis;
@@ -248,7 +248,7 @@ namespace AIBeat.UI
                 scoreText.color = new Color(1f, 1f, 1f, 1f);
                 scoreText.fontStyle = FontStyles.Bold;
                 scoreText.outlineWidth = 0.1f;
-                scoreText.outlineColor = new Color32(60, 80, 255, 120);
+                scoreText.outlineColor = new Color32(0, 140, 255, 150);
             }
 
             // --- 콤보 (오른쪽) ---
@@ -310,7 +310,7 @@ namespace AIBeat.UI
             btnRect.sizeDelta = new Vector2(100, 100);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
-            btnImage.color = new Color(0.05f, 0.03f, 0.15f, 0.7f);
+            btnImage.color = UIColorPalette.BG_BUTTON.WithAlpha(0.7f);
 
             // 일시정지 아이콘
             var textGo = new GameObject("PauseIcon");
@@ -322,7 +322,7 @@ namespace AIBeat.UI
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
             iconText.text = "||";
             iconText.fontSize = 48;
-            iconText.color = new Color(0.6f, 0.7f, 1f, 0.9f);
+            iconText.color = UIColorPalette.NEON_CYAN.WithAlpha(0.9f);
             iconText.alignment = TextAlignmentOptions.Center;
 
             pauseButton = pauseBtnGo.AddComponent<Button>();
@@ -348,9 +348,9 @@ namespace AIBeat.UI
             panelRect.anchoredPosition = Vector2.zero;
             panelRect.sizeDelta = new Vector2(400, 400);
 
-            // 반투명 원형 배경
+            // 반투명 배경
             var bg = countdownPanel.AddComponent<Image>();
-            bg.color = new Color(0.02f, 0.01f, 0.08f, 0.7f);
+            bg.color = UIColorPalette.BG_DEEP.WithAlpha(0.75f);
 
             // 카운트다운 텍스트
             var textGo = new GameObject("CountdownText");
@@ -364,11 +364,11 @@ namespace AIBeat.UI
             countdownText = textGo.AddComponent<TextMeshProUGUI>();
             countdownText.text = "";
             countdownText.fontSize = 180;
-            countdownText.color = new Color(0.2f, 0.9f, 1f, 1f);
+            countdownText.color = UIColorPalette.NEON_CYAN_BRIGHT;
             countdownText.alignment = TextAlignmentOptions.Center;
             countdownText.fontStyle = FontStyles.Bold;
             countdownText.outlineWidth = 0.2f;
-            countdownText.outlineColor = new Color32(0, 100, 255, 180);
+            countdownText.outlineColor = new Color32(0, 120, 255, 200);
         }
 
         /// <summary>
@@ -427,7 +427,7 @@ namespace AIBeat.UI
             if (bonusScoreText == null) return;
 
             bonusScoreText.gameObject.SetActive(true);
-            bonusScoreText.text = $"BONUS +{totalBonus}";
+            bonusScoreText.text = $"보너스 +{totalBonus}";
             bonusScoreText.color = new Color(1f, 0.85f, 0.2f, 1f);
 
             // 작은 팝업 효과
@@ -466,7 +466,7 @@ namespace AIBeat.UI
 
             // 반투명 배경
             var bgImage = statsPanel.AddComponent<Image>();
-            bgImage.color = new Color(0.01f, 0.01f, 0.04f, 0.6f);
+            bgImage.color = UIColorPalette.BG_DEEP.WithAlpha(0.6f);
 
             // HorizontalLayoutGroup으로 5개 판정을 가로 정렬
             var layout = statsPanel.AddComponent<HorizontalLayoutGroup>();
@@ -594,16 +594,16 @@ namespace AIBeat.UI
         {
             if (btn == null) return;
 
-            // 배경색
+            // BIT.jpg 스타일 배경
             var img = btn.GetComponent<Image>();
             if (img != null)
-                img.color = new Color(0.05f, 0.05f, 0.15f, 0.95f);
+                img.color = UIColorPalette.BG_BUTTON;
 
-            // 네온 테두리
+            // 네온 마젠타 테두리
             var outline = btn.GetComponent<Outline>();
             if (outline == null)
                 outline = btn.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0.9f, 1f, 0.5f);
+            outline.effectColor = UIColorPalette.BORDER_MAGENTA;
             outline.effectDistance = new Vector2(1.5f, -1.5f);
 
             // 텍스트
@@ -613,7 +613,7 @@ namespace AIBeat.UI
                 tmp.text = koreanText;
                 tmp.fontSize = 30;
                 tmp.fontStyle = FontStyles.Bold;
-                tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+                tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
             }
         }
 
@@ -648,19 +648,19 @@ namespace AIBeat.UI
         {
             if (comboText != null)
             {
-                comboText.text = combo > 0 ? $"{combo} COMBO" : "";
+                comboText.text = combo > 0 ? $"{combo} 콤보" : "";
 
-                // 콤보 색상 단계 (이퀄라이저 바 그라데이션)
+                // 콤보 색상 단계 (BIT.jpg 네온 팔레트)
                 if (combo >= 100)
-                    comboText.color = new Color(1f, 0.2f, 0.8f, 1f); // 핫 핑크 (MAX)
+                    comboText.color = UIColorPalette.COMBO_100; // 마젠타 (MAX)
                 else if (combo >= 50)
-                    comboText.color = new Color(1f, 0.85f, 0.1f, 1f); // 골드 비트
+                    comboText.color = UIColorPalette.COMBO_50;  // 옐로우
                 else if (combo >= 25)
-                    comboText.color = new Color(0.2f, 0.9f, 1f, 1f); // 네온 시안
+                    comboText.color = UIColorPalette.COMBO_25;  // 시안
                 else if (combo >= 10)
-                    comboText.color = new Color(0.4f, 1f, 0.6f, 1f); // 민트
+                    comboText.color = UIColorPalette.COMBO_10;  // 그린
                 else
-                    comboText.color = new Color(0.8f, 0.85f, 1f, 0.9f); // 라이트 블루
+                    comboText.color = UIColorPalette.COMBO_LOW; // 라이트 블루
 
                 // 10콤보 단위 마일스톤 펄스
                 if (combo > 0 && combo % 10 == 0)
@@ -712,7 +712,7 @@ namespace AIBeat.UI
                 {
                     earlyLateText.gameObject.SetActive(true);
                     bool isLate = rawDiff > 0;
-                    earlyLateText.text = isLate ? "LATE" : "EARLY";
+                    earlyLateText.text = isLate ? "느림" : "빠름";
                     earlyLateText.color = isLate
                         ? new Color(1f, 0.5f, 0.2f, 0.8f)  // 주황 (느림)
                         : new Color(0.3f, 0.7f, 1f, 0.8f);  // 하늘 (빠름)
@@ -801,7 +801,7 @@ namespace AIBeat.UI
             {
                 bgImage2 = resultPanel.AddComponent<Image>();
             }
-            bgImage2.color = new Color(0.04f, 0.03f, 0.12f, 0.96f);
+            bgImage2.color = UIColorPalette.BG_DEEP.WithAlpha(0.96f);
 
             resultPanel.SetActive(true);
 
@@ -827,19 +827,19 @@ namespace AIBeat.UI
             }
 
             if (resultPerfectText != null)
-                resultPerfectText.text = $"PERFECT: {result.PerfectCount}";
+                resultPerfectText.text = $"퍼펙트: {result.PerfectCount}";
 
             if (resultGreatText != null)
-                resultGreatText.text = $"GREAT: {result.GreatCount}";
+                resultGreatText.text = $"그레이트: {result.GreatCount}";
 
             if (resultGoodText != null)
-                resultGoodText.text = $"GOOD: {result.GoodCount}";
+                resultGoodText.text = $"굿: {result.GoodCount}";
 
             if (resultBadText != null)
-                resultBadText.text = $"BAD: {result.BadCount}";
+                resultBadText.text = $"배드: {result.BadCount}";
 
             if (resultMissText != null)
-                resultMissText.text = $"MISS: {result.MissCount}";
+                resultMissText.text = $"미스: {result.MissCount}";
 
             // NEW RECORD 체크 및 표시
             CheckAndShowNewRecord(result);
@@ -859,7 +859,7 @@ namespace AIBeat.UI
             // 이미 생성되어 있으면 업데이트만
             if (resultSongInfoText != null)
             {
-                resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {currentSongData.Genre}  |  BPM {currentSongData.BPM:F0}";
+                resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
                 return;
             }
 
@@ -872,9 +872,9 @@ namespace AIBeat.UI
             songInfoRect.offsetMax = Vector2.zero;
 
             resultSongInfoText = songInfoGo.AddComponent<TextMeshProUGUI>();
-            resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {currentSongData.Genre}  |  BPM {currentSongData.BPM:F0}";
+            resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
             resultSongInfoText.fontSize = 18;
-            resultSongInfoText.color = new Color(0.5f, 0.6f, 1f, 0.75f);
+            resultSongInfoText.color = UIColorPalette.NEON_BLUE;
             resultSongInfoText.alignment = TextAlignmentOptions.Center;
         }
 
@@ -915,8 +915,8 @@ namespace AIBeat.UI
                 resultBonusScoreText.fontStyle = FontStyles.Bold;
             }
 
-            resultBonusScoreText.text = $"(BONUS +{result.BonusScore:N0})";
-            resultBonusScoreText.color = new Color(1f, 0.85f, 0.2f, 0.9f); // 골드
+            resultBonusScoreText.text = $"(보너스 +{result.BonusScore:N0})";
+            resultBonusScoreText.color = UIColorPalette.NEON_YELLOW.WithAlpha(0.9f);
             resultBonusScoreText.gameObject.SetActive(true);
         }
 
@@ -961,7 +961,7 @@ namespace AIBeat.UI
             if (isNewRecord)
             {
                 resultNewRecordText.text = "\u2605 신기록! \u2605";
-                resultNewRecordText.color = new Color(1f, 1f, 0.2f, 1f); // 노란색
+                resultNewRecordText.color = UIColorPalette.NEON_YELLOW;
                 resultNewRecordText.gameObject.SetActive(true);
 
                 // 깜빡이는 애니메이션 효과 (스케일)
@@ -978,12 +978,12 @@ namespace AIBeat.UI
         {
             return rank switch
             {
-                "S+" => new Color(1f, 0.85f, 0.1f),    // 골드 비트
-                "S" => new Color(1f, 0.75f, 0.2f),      // 오렌지 골드
-                "A" => new Color(0.2f, 0.9f, 1f),       // 네온 시안
-                "B" => new Color(0.4f, 1f, 0.6f),       // 민트
-                "C" => new Color(0.7f, 0.75f, 0.9f),    // 라벤더
-                _ => new Color(0.4f, 0.4f, 0.5f)        // 다크 그레이
+                "S+" => UIColorPalette.NEON_YELLOW,      // 골드
+                "S" => UIColorPalette.EQ_YELLOW,          // 옐로우
+                "A" => UIColorPalette.NEON_CYAN,          // 시안
+                "B" => UIColorPalette.NEON_GREEN,         // 그린
+                "C" => UIColorPalette.TEXT_GRAY,           // 라벤더
+                _ => UIColorPalette.TEXT_DIM               // 다크
             };
         }
 

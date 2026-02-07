@@ -2,13 +2,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.IO;
+using System.Collections;
+using System.Collections.Generic;
 using AIBeat.Core;
 using AIBeat.Data;
 
 namespace AIBeat.UI
 {
     /// <summary>
-    /// 곡 선택 UI - 로컬 MP3 라이브러리 목록 표시
+    /// 곡 선택 UI - BIT.jpg 네온 사이버펑크 디자인
+    /// 배경 이미지 + 이퀄라이저 바 + 곡 라이브러리
     /// </summary>
     public class SongSelectUI : MonoBehaviour
     {
@@ -18,19 +21,128 @@ namespace AIBeat.UI
         // 라이브러리 UI
         private SongLibraryUI songLibraryUI;
 
+        // 이퀄라이저 바
+        private List<Image> eqBars = new List<Image>();
+        private Coroutine eqAnimCoroutine;
+
         private void Start()
         {
             EnsureCanvasScaler();
+            CreateBITBackground();
             AutoSetupReferences();
             Initialize();
+            CreateEqualizerBar();
             EnsureSiblingOrder();
-            EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
+            EnsureSafeArea();
+        }
+
+        /// <summary>
+        /// BIT.jpg 배경 이미지 + 어두운 오버레이
+        /// </summary>
+        private void CreateBITBackground()
+        {
+            var existing = transform.Find("BIT_Background");
+            if (existing != null) return;
+
+            var bgGo = new GameObject("BIT_Background");
+            bgGo.transform.SetParent(transform, false);
+            bgGo.transform.SetAsFirstSibling();
+
+            var rect = bgGo.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var img = bgGo.AddComponent<Image>();
+            var tex = Resources.Load<Texture2D>("UI/BIT");
+            if (tex != null)
+            {
+                var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+                img.sprite = sprite;
+                img.type = Image.Type.Simple;
+                img.preserveAspect = false;
+                img.color = new Color(1f, 1f, 1f, 0.35f);
+            }
+            else
+            {
+                img.color = UIColorPalette.BG_DEEP;
+            }
+
+            // 오버레이
+            var overlayGo = new GameObject("DarkOverlay");
+            overlayGo.transform.SetParent(transform, false);
+            overlayGo.transform.SetSiblingIndex(1);
+            var overlayRect = overlayGo.AddComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+            var overlayImg = overlayGo.AddComponent<Image>();
+            overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.65f);
+        }
+
+        /// <summary>
+        /// 하단 이퀄라이저 바 (BIT.jpg 스타일)
+        /// </summary>
+        private void CreateEqualizerBar()
+        {
+            var eqContainer = new GameObject("EqualizerBar");
+            eqContainer.transform.SetParent(transform, false);
+
+            var containerRect = eqContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0, 0);
+            containerRect.anchorMax = new Vector2(1, 0);
+            containerRect.pivot = new Vector2(0.5f, 0);
+            containerRect.anchoredPosition = Vector2.zero;
+            containerRect.sizeDelta = new Vector2(0, 100);
+
+            int barCount = 25;
+            float barWidth = 1f / barCount;
+
+            for (int i = 0; i < barCount; i++)
+            {
+                var barGo = new GameObject($"EqBar_{i}");
+                barGo.transform.SetParent(eqContainer.transform, false);
+                var barRect = barGo.AddComponent<RectTransform>();
+                barRect.anchorMin = new Vector2(i * barWidth + 0.002f, 0);
+                barRect.anchorMax = new Vector2((i + 1) * barWidth - 0.002f, 0.4f);
+                barRect.offsetMin = Vector2.zero;
+                barRect.offsetMax = Vector2.zero;
+
+                var barImg = barGo.AddComponent<Image>();
+                float t = (float)i / barCount;
+                barImg.color = Color.Lerp(UIColorPalette.EQ_ORANGE, UIColorPalette.EQ_YELLOW, t);
+                eqBars.Add(barImg);
+            }
+
+            eqAnimCoroutine = StartCoroutine(AnimateEqualizer());
+        }
+
+        private IEnumerator AnimateEqualizer()
+        {
+            float[] phases = new float[eqBars.Count];
+            float[] speeds = new float[eqBars.Count];
+            for (int i = 0; i < phases.Length; i++)
+            {
+                phases[i] = Random.Range(0f, Mathf.PI * 2f);
+                speeds[i] = Random.Range(1.5f, 3.5f);
+            }
+            while (true)
+            {
+                for (int i = 0; i < eqBars.Count; i++)
+                {
+                    if (eqBars[i] == null) continue;
+                    float h = 0.15f + 0.85f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * speeds[i] + phases[i]));
+                    var r = eqBars[i].GetComponent<RectTransform>();
+                    r.anchorMax = new Vector2(r.anchorMax.x, h);
+                }
+                yield return null;
+            }
         }
 
         private void AutoSetupReferences()
         {
-            SetupBackground();
-
             // backButton: 씬에 "BackButton" 존재
             if (backButton == null)
             {
@@ -81,7 +193,7 @@ namespace AIBeat.UI
                     btnTmp.text = "\u2190";
                     btnTmp.fontSize = 60;
                     btnTmp.fontStyle = FontStyles.Bold;
-                    btnTmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+                    btnTmp.color = UIColorPalette.NEON_MAGENTA;
                     btnTmp.alignment = TextAlignmentOptions.MidlineLeft;
                 }
             }
@@ -100,13 +212,14 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 렌더링 순서 보장: Background(0) → LibraryPanel(1) → TitleBar(2) → BackButton(3)
-        /// 숫자가 클수록 위에 그려짐
+        /// 렌더링 순서 보장
         /// </summary>
         private void EnsureSiblingOrder()
         {
-            var bg = transform.Find("BackgroundImage");
-            if (bg != null) bg.SetAsFirstSibling(); // index 0 (맨 뒤)
+            var bitBg = transform.Find("BIT_Background");
+            if (bitBg != null) bitBg.SetAsFirstSibling();
+            var overlay = transform.Find("DarkOverlay");
+            if (overlay != null) overlay.SetSiblingIndex(1);
 
             // LibraryPanel은 SongLibraryUI가 생성 → index 1
             // TitleBar, BackButton은 그 위에 렌더링
@@ -135,7 +248,7 @@ namespace AIBeat.UI
             rect.sizeDelta = new Vector2(0, 120);
 
             var bg = titleBar.AddComponent<Image>();
-            bg.color = new Color(0.02f, 0.02f, 0.08f, 1f);
+            bg.color = UIColorPalette.BG_TOPBAR;
 
             // 타이틀 텍스트 (왼쪽 여백 확보하여 뒤로 버튼과 겹치지 않게)
             var textGo = new GameObject("TitleText");
@@ -149,9 +262,11 @@ namespace AIBeat.UI
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "내 라이브러리";
             tmp.fontSize = 52;
-            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+            tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
+            tmp.outlineWidth = 0.1f;
+            tmp.outlineColor = new Color32(0, 100, 255, 150);
         }
 
         /// <summary>
@@ -250,39 +365,7 @@ namespace AIBeat.UI
             GameManager.Instance?.ReturnToMenu();
         }
 
-        /// <summary>
-        /// 배경 이미지 설정 (SongSelectBG.jpg)
-        /// </summary>
-        private void SetupBackground()
-        {
-            var existing = transform.Find("BackgroundImage");
-            if (existing != null) return;
-
-            var bgGo = new GameObject("BackgroundImage");
-            bgGo.transform.SetParent(transform, false);
-            bgGo.transform.SetAsFirstSibling();
-
-            var rect = bgGo.AddComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-
-            var img = bgGo.AddComponent<Image>();
-            img.color = new Color(1f, 1f, 1f, 0.15f);
-
-            var tex = Resources.Load<Texture2D>("UI/SongSelectBG");
-            if (tex == null)
-            {
-                img.color = new Color(0.02f, 0.02f, 0.08f, 0.95f);
-                return;
-            }
-
-            var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-            img.sprite = sprite;
-            img.type = Image.Type.Simple;
-            img.preserveAspect = false;
-        }
+        // SetupBackground 제거됨 — CreateBITBackground()로 대체
 
         private void EnsureCanvasScaler()
         {
@@ -305,6 +388,7 @@ namespace AIBeat.UI
 
         private void OnDestroy()
         {
+            if (eqAnimCoroutine != null) StopCoroutine(eqAnimCoroutine);
             if (backButton != null) backButton.onClick.RemoveAllListeners();
         }
     }

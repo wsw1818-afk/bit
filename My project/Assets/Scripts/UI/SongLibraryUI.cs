@@ -15,11 +15,11 @@ namespace AIBeat.UI
     /// </summary>
     public class SongLibraryUI : MonoBehaviour
     {
-        // 색상 상수 (사이버펑크 네온 스타일)
-        private static readonly Color NEON_CYAN = new Color(0f, 0.8f, 1f, 0.5f);
-        private static readonly Color NEON_CYAN_BRIGHT = new Color(0f, 0.9f, 1f, 0.8f);
-        private static readonly Color CARD_BG = new Color(0.05f, 0.05f, 0.15f, 0.85f);
-        private static readonly Color DELETE_COLOR = new Color(0.8f, 0.1f, 0.1f, 0.8f);
+        // 색상 (UIColorPalette 기반)
+        private static readonly Color NEON_CYAN = UIColorPalette.BORDER_CYAN;
+        private static readonly Color NEON_CYAN_BRIGHT = UIColorPalette.NEON_CYAN_BRIGHT;
+        private static readonly Color CARD_BG = UIColorPalette.BG_CARD;
+        private static readonly Color DELETE_COLOR = UIColorPalette.ERROR_RED;
 
         // UI 참조
         private GameObject rootPanel;
@@ -70,9 +70,9 @@ namespace AIBeat.UI
             rootRect.offsetMin = new Vector2(0, 0);
             rootRect.offsetMax = new Vector2(0, -100); // 타이틀 바(100px) 아래부터
 
-            // 반투명 배경 (배경 이미지 위에서 텍스트 가독성 확보)
+            // 반투명 배경 (BIT.jpg 배경이 살짝 비침)
             var rootBg = rootPanel.AddComponent<Image>();
-            rootBg.color = new Color(0.02f, 0.02f, 0.08f, 1f); // 완전 불투명 (배경 이미지 차단)
+            rootBg.color = new Color(0.02f, 0.015f, 0.06f, 0.88f);
 
             // VerticalLayoutGroup 대신 앵커 기반 수동 배치
             // 1. 곡 수 표시 (상단 60px)
@@ -531,13 +531,13 @@ namespace AIBeat.UI
 
             return rank switch
             {
-                "S+" => new Color(1f, 0.85f, 0f),
-                "S" => Color.yellow,
-                "A" => Color.green,
-                "B" => Color.cyan,
-                "C" => Color.white,
-                "D" => Color.gray,
-                _ => Color.gray
+                "S+" => UIColorPalette.NEON_YELLOW,
+                "S" => UIColorPalette.EQ_YELLOW,
+                "A" => UIColorPalette.NEON_GREEN,
+                "B" => UIColorPalette.NEON_CYAN,
+                "C" => UIColorPalette.TEXT_WHITE,
+                "D" => UIColorPalette.TEXT_DIM,
+                _ => UIColorPalette.TEXT_DIM
             };
         }
 

@@ -15,14 +15,14 @@ namespace AIBeat.UI
     {
         public static LoadingScreen Instance { get; private set; }
 
-        // 게임 팁 배열
+        // 게임 팁 배열 (한국어)
         private static readonly string[] TIPS = new string[]
         {
-            "PERFECT judgement is within \u00b150ms",
-            "Maintain combo for score bonus",
-            "Note speed can be adjusted in Settings",
-            "Hold long notes until the end",
-            "Use S or L key for scratch notes"
+            "PERFECT 판정은 \u00b150ms 이내입니다",
+            "콤보를 유지하면 점수 보너스!",
+            "노트 속도는 설정에서 조절 가능합니다",
+            "롱노트를 끝까지 누르고 있으세요",
+            "S/L 키로 스크래치 노트를 처리하세요"
         };
 
         // UI 요소
@@ -33,11 +33,11 @@ namespace AIBeat.UI
         private TextMeshProUGUI loadingText;
         private TextMeshProUGUI percentText;
 
-        // 색상
-        private static readonly Color BG_COLOR = new Color(0.01f, 0.01f, 0.05f, 1f);
-        private static readonly Color CYAN = new Color(0f, 0.9f, 1f, 1f);
-        private static readonly Color CYAN_DIM = new Color(0f, 0.5f, 0.7f, 0.4f);
-        private static readonly Color TEXT_DIM = new Color(0.6f, 0.6f, 0.7f, 0.8f);
+        // 색상 (UIColorPalette 기반)
+        private static readonly Color BG_COLOR = UIColorPalette.BG_DEEP;
+        private static readonly Color CYAN = UIColorPalette.NEON_CYAN;
+        private static readonly Color CYAN_DIM = UIColorPalette.BORDER_CYAN;
+        private static readonly Color TEXT_DIM = UIColorPalette.TEXT_GRAY;
 
         private void Awake()
         {
@@ -102,7 +102,7 @@ namespace AIBeat.UI
             loadingRect.offsetMax = Vector2.zero;
 
             loadingText = loadingGo.AddComponent<TextMeshProUGUI>();
-            loadingText.text = "LOADING...";
+            loadingText.text = "로딩 중...";
             loadingText.fontSize = 32;
             loadingText.color = CYAN;
             loadingText.alignment = TextAlignmentOptions.Center;
@@ -184,7 +184,7 @@ namespace AIBeat.UI
             if (tipText != null)
             {
                 string tip = TIPS[Random.Range(0, TIPS.Length)];
-                tipText.text = $"TIP: {tip}";
+                tipText.text = $"팁: {tip}";
             }
 
             // 진행률 초기화
