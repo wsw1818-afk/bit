@@ -1,1 +1,1 @@
-📱 Android APK 빌드 성공: Portrait/ARM64 설정, AndroidBuilder 에디터 스크립트, 57.2MB APK 생성
+📱 Android APK 수정 빌드: autoPlay 끄기, Portrait 고정, 자동회전 비활성화
