@@ -143,8 +143,8 @@ namespace AIBeat.UI
             contentRect.anchorMin = new Vector2(0, 1);
             contentRect.anchorMax = new Vector2(1, 1);
             contentRect.pivot = new Vector2(0.5f, 1);
-            contentRect.offsetMin = new Vector2(0, 0);
-            contentRect.offsetMax = new Vector2(0, 0);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0, 0); // width=부모 stretch, height=ContentSizeFitter가 관리
 
             var contentSizeFitter = content.AddComponent<ContentSizeFitter>();
             contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -211,32 +211,25 @@ namespace AIBeat.UI
                 CreateSongCard(songs[i], i);
             }
 
-#if UNITY_EDITOR
+            // 한국어 폰트 적용 (동적 생성된 카드에도 적용)
+            KoreanFontManager.ApplyFontToAll(rootPanel);
+
+            // 레이아웃 강제 재계산 (동적 UI 생성 직후 필수)
+            Canvas.ForceUpdateCanvases();
+            if (contentContainer != null)
+            {
+                var contentRect = contentContainer.GetComponent<RectTransform>();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+            }
+
             Debug.Log($"[SongLibrary] Created {songs.Count} cards, container childCount={contentContainer?.childCount}");
-            // 레이아웃 디버그
-            if (rootPanel != null)
-            {
-                var rr = rootPanel.GetComponent<RectTransform>();
-                Debug.Log($"[SongLibrary] rootPanel rect={rr.rect}, anchoredPos={rr.anchoredPosition}");
-            }
-            if (scrollRect != null)
-            {
-                var sr = scrollRect.GetComponent<RectTransform>();
-                Debug.Log($"[SongLibrary] scrollView rect={sr.rect}, anchoredPos={sr.anchoredPosition}");
-                var vp = scrollRect.viewport;
-                if (vp != null) Debug.Log($"[SongLibrary] viewport rect={vp.rect}");
-                var ct = scrollRect.content;
-                if (ct != null) Debug.Log($"[SongLibrary] content rect={ct.rect}, childCount={ct.childCount}");
-            }
+            if (scrollRect != null && scrollRect.content != null)
+                Debug.Log($"[SongLibrary] content rect={scrollRect.content.rect}, childCount={scrollRect.content.childCount}");
             foreach (var item in songItems)
             {
                 var ir = item.GetComponent<RectTransform>();
                 Debug.Log($"[SongLibrary] card '{item.name}' rect={ir.rect}, sizeDelta={ir.sizeDelta}");
             }
-#endif
-
-            // 한국어 폰트 적용 (동적 생성된 카드에도 적용)
-            KoreanFontManager.ApplyFontToAll(rootPanel);
         }
 
         /// <summary>
