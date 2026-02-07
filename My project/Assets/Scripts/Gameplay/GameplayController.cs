@@ -779,12 +779,12 @@ namespace AIBeat.Gameplay
                 else // 72% Tap
                 {
                     notes.Add(new NoteData(t, lane, NoteType.Tap));
-                    // 가끔 16분음표 간격 (30% 확률)
-                    t += rng.NextDouble() < 0.3 ? sixteenthNote : eighthNote;
+                    // 가끔 16분음표 간격 (15% 확률, 엄지로 반응 가능한 빈도)
+                    t += rng.NextDouble() < 0.15 ? sixteenthNote : eighthNote;
                 }
             }
 
-            // === Climax (16.0s ~ 24.0s): dense, 다양한 타입 + 16분음표 빈번 ===
+            // === Climax (16.0s ~ 24.0s): dense, 다양한 타입 (모바일 엄지 조작 기준) ===
             while (t < 24.0f)
             {
                 int lane = rng.Next(1, 3);
@@ -794,19 +794,19 @@ namespace AIBeat.Gameplay
                 {
                     float duration = 0.5f + (float)(rng.NextDouble() * 0.5f);
                     notes.Add(new NoteData(t, lane, NoteType.Long, duration));
-                    t += duration + sixteenthNote; // 롱노트 끝난 후 16분음표 간격 보장
+                    t += duration + eighthNote; // 롱노트 release 후 충분한 간격 (엄지 복귀 시간)
                 }
                 else if (roll < 0.30f) // 12% Scratch
                 {
                     int scratchLane = rng.Next(0, 2) == 0 ? 0 : 3;
                     notes.Add(new NoteData(t, scratchLane, NoteType.Scratch));
-                    t += sixteenthNote;
+                    t += eighthNote; // 스크래치 후 엄지가 키 존으로 돌아올 시간 보장
                 }
                 else // 70% Tap
                 {
                     notes.Add(new NoteData(t, lane, NoteType.Tap));
-                    // 50% 확률로 16분음표 간격 (고밀도)
-                    t += rng.NextDouble() < 0.5 ? sixteenthNote : eighthNote;
+                    // 20% 확률로 16분음표 간격 (고밀도, 엄지로 가능한 수준)
+                    t += rng.NextDouble() < 0.2 ? sixteenthNote : eighthNote;
                 }
             }
 
