@@ -1,1 +1,1 @@
-🔧 SongSelect UI 렌더링 순서 수정: BackgroundPanel 삭제, EnsureSiblingOrder 추가, BackButton 한국어화
+🎨 SongSelect UI 가독성 개선: 배경 불투명도↑, 곡카드 높이 120px, 폰트 크기 확대, 렌더링 순서 수정

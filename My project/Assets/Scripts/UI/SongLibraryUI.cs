@@ -71,7 +71,7 @@ namespace AIBeat.UI
 
             // 반투명 배경 (배경 이미지 위에서 텍스트 가독성 확보)
             var rootBg = rootPanel.AddComponent<Image>();
-            rootBg.color = new Color(0.02f, 0.02f, 0.08f, 0.85f);
+            rootBg.color = new Color(0.02f, 0.02f, 0.08f, 0.93f);
 
             // 세로 레이아웃 — ScrollView가 남은 공간을 전부 채우도록
             var rootLayout = rootPanel.AddComponent<VerticalLayoutGroup>();
@@ -97,12 +97,12 @@ namespace AIBeat.UI
             var countBar = new GameObject("CountBar");
             countBar.transform.SetParent(parent, false);
             var countRect = countBar.AddComponent<RectTransform>();
-            countRect.sizeDelta = new Vector2(0, 25);
+            countRect.sizeDelta = new Vector2(0, 35);
             var countLayout = countBar.AddComponent<LayoutElement>();
-            countLayout.preferredHeight = 25;
+            countLayout.preferredHeight = 35;
             countLayout.flexibleHeight = 0;
 
-            songCountText = CreateTMPText(countBar, "SongCount", "0곡", 14,
+            songCountText = CreateTMPText(countBar, "SongCount", "0곡", 18,
                 new Color(0.6f, 0.6f, 0.7f), TextAlignmentOptions.MidlineRight);
         }
 
@@ -174,8 +174,8 @@ namespace AIBeat.UI
 
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
             emptyText.text = "아직 곡이 없습니다!\nMP3 파일을 추가해주세요.";
-            emptyText.fontSize = 22;
-            emptyText.color = new Color(0.4f, 0.4f, 0.5f);
+            emptyText.fontSize = 28;
+            emptyText.color = new Color(0.5f, 0.5f, 0.6f);
             emptyText.alignment = TextAlignmentOptions.Center;
         }
 
@@ -228,9 +228,9 @@ namespace AIBeat.UI
             var card = new GameObject($"SongCard_{index}");
             card.transform.SetParent(contentContainer, false);
             var cardRect = card.AddComponent<RectTransform>();
-            cardRect.sizeDelta = new Vector2(0, 90);
+            cardRect.sizeDelta = new Vector2(0, 120);
             var cardLayout = card.AddComponent<LayoutElement>();
-            cardLayout.preferredHeight = 90;
+            cardLayout.preferredHeight = 120;
 
             // 카드 배경
             var cardBg = card.AddComponent<Image>();
@@ -275,18 +275,18 @@ namespace AIBeat.UI
             infoVLayout.childForceExpandHeight = false;
 
             // 곡 제목
-            CreateTMPText(infoPanel, "Title", song.Title, 20, Color.white,
+            CreateTMPText(infoPanel, "Title", song.Title, 24, Color.white,
                 TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
 
             // BPM + 난이도
             string diffStars = new string('\u2605', Mathf.Clamp(song.DifficultyLevel, 0, 10));
             string bpmInfo = song.BPM > 0 ? $"{song.BPM} BPM  |  {diffStars}" : diffStars;
-            CreateTMPText(infoPanel, "Info", bpmInfo, 13,
+            CreateTMPText(infoPanel, "Info", bpmInfo, 16,
                 NEON_CYAN_BRIGHT, TextAlignmentOptions.MidlineLeft);
 
             // 플레이 횟수
             CreateTMPText(infoPanel, "Plays",
-                song.PlayCount > 0 ? $"{song.PlayCount}회 플레이" : "아직 플레이 안 함", 12,
+                song.PlayCount > 0 ? $"{song.PlayCount}회 플레이" : "아직 플레이 안 함", 14,
                 new Color(0.5f, 0.5f, 0.6f), TextAlignmentOptions.MidlineLeft);
 
             // 우측: 랭크 + 점수 + 삭제

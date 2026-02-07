@@ -150,7 +150,7 @@ namespace AIBeat.UI
             rect.offsetMax = Vector2.zero;
 
             var img = bgGo.AddComponent<Image>();
-            img.color = new Color(1f, 1f, 1f, 0.3f);
+            img.color = new Color(1f, 1f, 1f, 0.15f);
 
             var tex = Resources.Load<Texture2D>("UI/SongSelectBG");
             if (tex == null)
