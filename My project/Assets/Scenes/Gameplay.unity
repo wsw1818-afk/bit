@@ -2174,9 +2174,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff053fedb947b1f4ba9353595dabf5ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AIBeat.Gameplay.InputHandler
-  touchZoneCount: 2
+  touchZoneCount: 4
   touchAreaRatio: 0.85
-  scratchEdgeRatio: 0.12
   showTouchDebug: 1
   scratchThresholdMM: 7
   fallbackDPI: 160

@@ -1,1 +1,1 @@
-🔍 상단 UI 글자 3배 확대: TopBar 150px, 곡명/콤보 66pt, 점수 96pt, Stats 48pt, 일시정지 120px
+🐛 터치 완전 불능 수정: touchZoneCount=2→4 씬값 불일치 + IndexOutOfRange 크래시 → InputLoop 미시작 원인 해결, UI 3배 확대

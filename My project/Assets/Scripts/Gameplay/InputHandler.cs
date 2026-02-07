@@ -55,7 +55,15 @@ namespace AIBeat.Gameplay
         private void Start()
         {
             CacheScratchThreshold();
-            CacheLaneBoundaries();
+            try
+            {
+                CacheLaneBoundaries();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[InputHandler] CacheLaneBoundaries failed: {e.Message}. Using fallback.");
+                laneBoundaries = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
+            }
             StartCoroutine(InputLoop());
         }
 
@@ -90,7 +98,10 @@ namespace AIBeat.Gameplay
             laneBoundaries[0] = 0f;
             laneBoundaries[touchZoneCount] = 1f;
 
-            Debug.Log($"[InputHandler] Lane boundaries: {laneBoundaries[0]:F3}, {laneBoundaries[1]:F3}, {laneBoundaries[2]:F3}, {laneBoundaries[3]:F3}, {laneBoundaries[4]:F3}");
+            string boundaryStr = "";
+            for (int j = 0; j < laneBoundaries.Length; j++)
+                boundaryStr += (j > 0 ? ", " : "") + laneBoundaries[j].ToString("F3");
+            Debug.Log($"[InputHandler] Lane boundaries ({laneBoundaries.Length}): {boundaryStr}");
         }
 
         /// <summary>
