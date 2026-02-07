@@ -41,20 +41,25 @@
 - SettingsPanel은 SettingsButton 클릭 전까지 생성되지 않음 (정상 동작이나 실제 클릭 테스트는 미수행)
 
 ## 미구현 기능 목록
-1. **AI API 연동** — ISongGenerator 인터페이스만 존재, 실제 API 미연결 (FakeSongGenerator 사용 중)
-2. **실제 오디오 재생** — AudioManager에 더미 타이머 사용 (MP3 스트리밍 미구현)
+1. ~~**AI API 연동**~~ → **취소됨** (비용 문제로 Suno AI에서 수동 다운로드 방식으로 결정)
+2. **로컬 MP3 로드/재생** — AudioManager 로드 코드 존재, 실제 MP3 파일 연결 미완료. OfflineAudioAnalyzer + SmartBeatMapper로 자동 노트 생성 가능
 3. **캘리브레이션** — CalibrationManager 코드 존재하나 실제 탭 테스트 미수행
 4. **Android 빌드** — 빌드 파이프라인 미설정
 5. **터치 입력** — InputHandler에 터치 코드 존재, 실기기 테스트 미수행
-6. **곡 라이브러리** — SongLibrary에 0곡 (AI 생성 곡 저장/관리 미구현)
+6. **곡 라이브러리** — SongLibrary에 0곡 (다운로드한 곡 관리 UI 미구현)
 7. **에너지 시스템** — UI 존재, 실제 차감/충전 로직 미확인
+
+## 아키텍처 결정 (세션 35)
+- **음악 소스**: Suno AI에서 수동 생성 → MP3 다운로드 → 게임에 로컬 로드
+- **API 연동 취소**: 비용 문제로 AIApiClient 사용 안 함
+- **노트 생성**: OfflineAudioAnalyzer(FFT 분석) + SmartBeatMapper(온셋→노트)로 자동 생성
+- **기존 코드 활용도**: AudioManager(4가지 로드 방식), OfflineAudioAnalyzer, SmartBeatMapper 모두 이미 구현됨
 
 ## Next
 1) 2키+스크래치 레인 구조 변경 (계획 파일 존재)
-2) AI API 연동 (ISongGenerator → 실제 API)
-3) 실제 오디오 재생 (MP3 스트리밍)
-4) Android 빌드 파이프라인 설정
-5) 실기기 테스트
+2) 로컬 MP3 파일 로드 → 자동 분석 → 노트 생성 → 실제 재생 연결
+3) Android 빌드 파이프라인 설정
+4) 실기기 테스트
 
 ---
 ## Archive Rule (요약)
