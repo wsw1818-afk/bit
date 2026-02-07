@@ -74,19 +74,11 @@ namespace AIBeat.UI
             var rootBg = rootPanel.AddComponent<Image>();
             rootBg.color = new Color(0.02f, 0.02f, 0.08f, 1f); // 완전 불투명 (배경 이미지 차단)
 
-            // 세로 레이아웃 — ScrollView가 남은 공간을 전부 채우도록
-            var rootLayout = rootPanel.AddComponent<VerticalLayoutGroup>();
-            rootLayout.padding = new RectOffset(15, 15, 10, 10);
-            rootLayout.spacing = 8;
-            rootLayout.childControlWidth = true;
-            rootLayout.childControlHeight = true;
-            rootLayout.childForceExpandWidth = true;
-            rootLayout.childForceExpandHeight = false;
-
-            // 1. 곡 수 표시
+            // VerticalLayoutGroup 대신 앵커 기반 수동 배치
+            // 1. 곡 수 표시 (상단 60px)
             CreateSongCountBar(rootPanel.transform);
 
-            // 2. ScrollRect 곡 목록
+            // 2. ScrollRect 곡 목록 (CountBar 아래 전체 영역)
             CreateScrollArea(rootPanel.transform);
         }
 
@@ -98,10 +90,12 @@ namespace AIBeat.UI
             var countBar = new GameObject("CountBar");
             countBar.transform.SetParent(parent, false);
             var countRect = countBar.AddComponent<RectTransform>();
-            countRect.sizeDelta = new Vector2(0, 60);
-            var countLayout = countBar.AddComponent<LayoutElement>();
-            countLayout.preferredHeight = 60;
-            countLayout.flexibleHeight = 0;
+            // 상단에 고정, 높이 60px
+            countRect.anchorMin = new Vector2(0, 1);
+            countRect.anchorMax = new Vector2(1, 1);
+            countRect.pivot = new Vector2(0.5f, 1);
+            countRect.anchoredPosition = new Vector2(0, -10); // 상단 padding 10px
+            countRect.sizeDelta = new Vector2(-30, 60); // 좌우 padding 15px씩
 
             songCountText = CreateTMPText(countBar, "SongCount", "0곡", 36,
                 new Color(0.6f, 0.6f, 0.7f), TextAlignmentOptions.MidlineRight);
@@ -112,13 +106,14 @@ namespace AIBeat.UI
         /// </summary>
         private void CreateScrollArea(Transform parent)
         {
-            // ScrollView 컨테이너
+            // ScrollView 컨테이너 — CountBar(60px) + padding(10px) 아래부터 하단까지
             var scrollView = new GameObject("ScrollView");
             scrollView.transform.SetParent(parent, false);
             var scrollViewRect = scrollView.AddComponent<RectTransform>();
-            scrollViewRect.sizeDelta = new Vector2(0, 0);
-            var scrollViewLayout = scrollView.AddComponent<LayoutElement>();
-            scrollViewLayout.flexibleHeight = 1;
+            scrollViewRect.anchorMin = new Vector2(0, 0);
+            scrollViewRect.anchorMax = new Vector2(1, 1);
+            scrollViewRect.offsetMin = new Vector2(15, 10);    // 좌, 하 padding
+            scrollViewRect.offsetMax = new Vector2(-15, -78);  // 우 padding, 상단 = -(CountBar 60 + padding 10 + spacing 8)
 
             // ScrollRect 컴포넌트
             scrollRect = scrollView.AddComponent<ScrollRect>();
@@ -215,6 +210,30 @@ namespace AIBeat.UI
             {
                 CreateSongCard(songs[i], i);
             }
+
+#if UNITY_EDITOR
+            Debug.Log($"[SongLibrary] Created {songs.Count} cards, container childCount={contentContainer?.childCount}");
+            // 레이아웃 디버그
+            if (rootPanel != null)
+            {
+                var rr = rootPanel.GetComponent<RectTransform>();
+                Debug.Log($"[SongLibrary] rootPanel rect={rr.rect}, anchoredPos={rr.anchoredPosition}");
+            }
+            if (scrollRect != null)
+            {
+                var sr = scrollRect.GetComponent<RectTransform>();
+                Debug.Log($"[SongLibrary] scrollView rect={sr.rect}, anchoredPos={sr.anchoredPosition}");
+                var vp = scrollRect.viewport;
+                if (vp != null) Debug.Log($"[SongLibrary] viewport rect={vp.rect}");
+                var ct = scrollRect.content;
+                if (ct != null) Debug.Log($"[SongLibrary] content rect={ct.rect}, childCount={ct.childCount}");
+            }
+            foreach (var item in songItems)
+            {
+                var ir = item.GetComponent<RectTransform>();
+                Debug.Log($"[SongLibrary] card '{item.name}' rect={ir.rect}, sizeDelta={ir.sizeDelta}");
+            }
+#endif
 
             // 한국어 폰트 적용 (동적 생성된 카드에도 적용)
             KoreanFontManager.ApplyFontToAll(rootPanel);

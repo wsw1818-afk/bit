@@ -137,6 +137,16 @@ namespace AIBeat.UI
         {
             if (SongLibraryManager.Instance == null) return;
 
+            // AudioFileName이 비어있는 기존 곡 정리 (이전 버전 호환)
+            var existingSongs = SongLibraryManager.Instance.GetAllSongs();
+            foreach (var song in existingSongs)
+            {
+                if (string.IsNullOrEmpty(song.AudioFileName))
+                {
+                    SongLibraryManager.Instance.DeleteSong(song.Title);
+                }
+            }
+
             string streamingPath = Application.streamingAssetsPath;
             if (!Directory.Exists(streamingPath)) return;
 
