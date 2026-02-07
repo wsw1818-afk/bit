@@ -1,1 +1,1 @@
-🔧 곡 카드 레이아웃 버그 수정: Canvas.ForceUpdateCanvases + LayoutRebuilder로 동적 UI 레이아웃 강제 재계산
+🔧 곡 카드 가시성 버그 수정 + UI 개선: Mask→RectMask2D 전환, 카드 레이아웃/폰트 크기 조정, 제목 대문자 포맷
