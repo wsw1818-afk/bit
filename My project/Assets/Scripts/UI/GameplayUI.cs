@@ -79,6 +79,7 @@ namespace AIBeat.UI
 
         private void Awake()
         {
+            EnsureSafeArea();
             AutoSetupReferences();
             CreateStatsHUD();
             CreateEarlyLateText();
@@ -968,6 +969,13 @@ namespace AIBeat.UI
         {
             Time.timeScale = 1f;
             GameManager.Instance?.ReturnToMenu();
+        }
+
+        private void EnsureSafeArea()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.GetComponent<SafeAreaApplier>() == null)
+                canvas.gameObject.AddComponent<SafeAreaApplier>();
         }
 
         private void OnDestroy()

@@ -20,6 +20,7 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            EnsureSafeArea();
             AutoSetupReferences();
             Initialize();
             EnsureSiblingOrder();
@@ -232,6 +233,13 @@ namespace AIBeat.UI
             img.sprite = sprite;
             img.type = Image.Type.Simple;
             img.preserveAspect = false;
+        }
+
+        private void EnsureSafeArea()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.GetComponent<SafeAreaApplier>() == null)
+                canvas.gameObject.AddComponent<SafeAreaApplier>();
         }
 
         private void OnDestroy()

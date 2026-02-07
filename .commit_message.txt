@@ -1,1 +1,1 @@
-📦 Android APK 빌드 성공 (74.5MB): ClickPlayButton.cs Editor 폴더 이동, AndroidBuilder 빌드 결과 파일 기록 추가
+📱 Safe Area 적용: 노치/카메라 영역과 UI 겹침 방지 (3씬 모두 적용), APK 빌드+설치 완료

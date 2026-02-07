@@ -26,6 +26,7 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            EnsureSafeArea();
             AutoSetupReferences();
             Initialize();
         }
@@ -245,6 +246,13 @@ namespace AIBeat.UI
             {
                 UIAnimator.ScaleTo(this, settingsPanel, Vector3.zero, 0.2f, () => settingsPanel.SetActive(false));
             }
+        }
+
+        private void EnsureSafeArea()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.GetComponent<SafeAreaApplier>() == null)
+                canvas.gameObject.AddComponent<SafeAreaApplier>();
         }
 
         private void OnDestroy()
