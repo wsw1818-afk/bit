@@ -153,7 +153,7 @@ namespace AIBeat.UI
             contentLayout.spacing = 8;
             contentLayout.padding = new RectOffset(5, 5, 5, 5);
             contentLayout.childControlWidth = true;
-            contentLayout.childControlHeight = false;
+            contentLayout.childControlHeight = true;
             contentLayout.childForceExpandWidth = true;
             contentLayout.childForceExpandHeight = false;
 
