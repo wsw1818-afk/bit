@@ -6,6 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AIBeat.Core;
 using AIBeat.Data;
+#if UNITY_ANDROID && !UNITY_EDITOR
+using UnityEngine.Android;
+#endif
 
 namespace AIBeat.UI
 {
@@ -30,6 +33,43 @@ namespace AIBeat.UI
             EnsureCanvasScaler();
             CreateBITBackground();
             AutoSetupReferences();
+            RequestStoragePermissionAndInitialize();
+        }
+
+        private void RequestStoragePermissionAndInitialize()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Android 13+ (API 33): READ_MEDIA_AUDIO 권한 요청
+            if (!Permission.HasUserAuthorizedPermission("android.permission.READ_MEDIA_AUDIO")
+                && !Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
+            {
+                var callbacks = new PermissionCallbacks();
+                callbacks.PermissionGranted += (perm) => {
+                    Debug.Log($"[SongSelect] 권한 허용: {perm}");
+                    FinishInitialize();
+                };
+                callbacks.PermissionDenied += (perm) => {
+                    Debug.LogWarning($"[SongSelect] 권한 거부: {perm} — 내부 저장소만 사용");
+                    FinishInitialize();
+                };
+                callbacks.PermissionDeniedAndDontAskAgain += (perm) => {
+                    Debug.LogWarning($"[SongSelect] 권한 영구 거부: {perm}");
+                    FinishInitialize();
+                };
+                // API 33+ 먼저 시도, 실패 시 레거시 권한
+                Permission.RequestUserPermission("android.permission.READ_MEDIA_AUDIO", callbacks);
+            }
+            else
+            {
+                FinishInitialize();
+            }
+#else
+            FinishInitialize();
+#endif
+        }
+
+        private void FinishInitialize()
+        {
             Initialize();
             CreateEqualizerBar();
             EnsureSiblingOrder();
@@ -276,6 +316,7 @@ namespace AIBeat.UI
         /// 음악 파일을 스캔하여 라이브러리에 자동 등록
         /// 1) StreamingAssets 내장 곡 (빌드 시 포함, Android 호환)
         /// 2) persistentDataPath/Music 폴더 (사용자 추가 곡)
+        /// 3) Android 외부 저장소 (Music, Download 폴더)
         /// </summary>
         private void ScanAndRegisterStreamingAssets()
         {
@@ -292,61 +333,111 @@ namespace AIBeat.UI
             }
 
             // 1) StreamingAssets 내장 곡 등록 (Android에서는 Directory.GetFiles 불가)
-            // 빌드 시 포함된 파일 목록을 하드코딩
             string[] builtInFiles = { "jpop_energetic.mp3" };
             foreach (var fileName in builtInFiles)
             {
                 RegisterSongFile(fileName, "streaming");
             }
 
-            // 2) persistentDataPath/Music 폴더 스캔 (사용자 추가 곡 — 모든 플랫폼 지원)
+            // 2) persistentDataPath/Music 폴더 스캔 (모든 플랫폼)
             string musicPath = Path.Combine(Application.persistentDataPath, "Music");
             if (Directory.Exists(musicPath))
             {
-                string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
-                foreach (var ext in extensions)
-                {
-                    string[] files = Directory.GetFiles(musicPath, ext);
-                    foreach (var filePath in files)
-                    {
-                        string fileName = Path.GetFileName(filePath);
-                        RegisterSongFile(fileName, "persistent");
-                    }
-                }
+                ScanFolderForAudio(musicPath, "persistent");
             }
             else
             {
-                // Music 폴더가 없으면 생성 (사용자가 곡을 넣을 수 있도록)
                 Directory.CreateDirectory(musicPath);
                 Debug.Log($"[SongSelect] Music 폴더 생성: {musicPath}");
             }
 
-#if !UNITY_ANDROID || UNITY_EDITOR
-            // PC/에디터에서는 StreamingAssets 직접 스캔도 가능
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // 3) Android 외부 저장소 스캔 (Suno AI 등에서 다운로드한 곡)
+            string sdcard = "/sdcard";
+            string[] androidScanPaths = {
+                Path.Combine(sdcard, "Music"),
+                Path.Combine(sdcard, "Download"),
+                Path.Combine(sdcard, "Downloads"),
+                Path.Combine(sdcard, "DCIM", "Suno"),  // Suno AI 앱 저장 경로
+                Path.Combine(sdcard, "Android", "media", "com.suno.android", "Music"), // Suno 앱 미디어
+            };
+            foreach (var scanPath in androidScanPaths)
+            {
+                if (Directory.Exists(scanPath))
+                {
+                    ScanFolderForAudio(scanPath, "external");
+                    Debug.Log($"[SongSelect] Android 외부 폴더 스캔: {scanPath}");
+                }
+            }
+#else
+            // PC/에디터에서는 StreamingAssets 직접 스캔 + 사용자 Music 폴더
             string streamingPath = Application.streamingAssetsPath;
             if (Directory.Exists(streamingPath))
             {
-                string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
-                foreach (var ext in extensions)
+                ScanFolderForAudio(streamingPath, "streaming");
+            }
+
+            // PC: 사용자 Music 폴더도 스캔
+            string userMusicPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyMusic);
+            if (!string.IsNullOrEmpty(userMusicPath) && Directory.Exists(userMusicPath))
+            {
+                ScanFolderForAudio(userMusicPath, "external");
+            }
+
+            // PC: Downloads 폴더도 스캔 (Suno AI 웹에서 다운로드)
+            string userProfile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+            if (!string.IsNullOrEmpty(userProfile))
+            {
+                string downloadsPath = Path.Combine(userProfile, "Downloads");
+                if (Directory.Exists(downloadsPath))
                 {
-                    string[] files = Directory.GetFiles(streamingPath, ext);
-                    foreach (var filePath in files)
-                    {
-                        string fileName = Path.GetFileName(filePath);
-                        RegisterSongFile(fileName, "streaming");
-                    }
+                    ScanFolderForAudio(downloadsPath, "external");
                 }
             }
 #endif
         }
 
-        private void RegisterSongFile(string fileName, string source)
+        /// <summary>
+        /// 지정 폴더에서 오디오 파일(mp3/wav/ogg) 스캔 후 등록
+        /// </summary>
+        private void ScanFolderForAudio(string folderPath, string source)
+        {
+            string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
+            int count = 0;
+            foreach (var ext in extensions)
+            {
+                try
+                {
+                    string[] files = Directory.GetFiles(folderPath, ext);
+                    foreach (var filePath in files)
+                    {
+                        string fileName = Path.GetFileName(filePath);
+                        RegisterSongFile(fileName, source, filePath);
+                        count++;
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning($"[SongSelect] 폴더 스캔 실패 ({folderPath}): {e.Message}");
+                }
+            }
+            if (count > 0)
+                Debug.Log($"[SongSelect] {folderPath}: {count}개 오디오 파일 발견");
+        }
+
+        private void RegisterSongFile(string fileName, string source, string fullPath = null)
         {
             string titleFromFile = Path.GetFileNameWithoutExtension(fileName)
                 .Replace("_", " ");
 
-            // source prefix 추가하여 로드 시 구분
-            string audioRef = source == "persistent" ? "music:" + fileName : fileName;
+            // source prefix로 로드 시 경로 구분
+            string audioRef;
+            if (source == "persistent")
+                audioRef = "music:" + fileName;
+            else if (source == "external" && fullPath != null)
+                audioRef = "ext:" + fullPath;  // 외부 저장소: 전체 경로 저장
+            else
+                audioRef = fileName;  // StreamingAssets
 
             var record = new SongRecord
             {

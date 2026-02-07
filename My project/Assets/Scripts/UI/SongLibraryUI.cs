@@ -170,7 +170,7 @@ namespace AIBeat.UI
             emptyLayout.preferredHeight = 200;
 
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyText.text = "아직 곡이 없습니다!\nMP3 파일을 추가해주세요.";
+            emptyText.text = "아직 곡이 없습니다!\nMP3 파일을 Music 또는\nDownloads 폴더에 넣어주세요.";
             emptyText.fontSize = 52;
             emptyText.color = new Color(0.5f, 0.5f, 0.6f);
             emptyText.alignment = TextAlignmentOptions.Center;
@@ -422,6 +422,13 @@ namespace AIBeat.UI
                 string fullPath = System.IO.Path.Combine(Application.persistentDataPath, "Music", realName);
                 url = "file://" + fullPath;
                 audioFileName = realName;
+            }
+            else if (audioFileName.StartsWith("ext:"))
+            {
+                // 외부 저장소 (전체 경로 저장됨)
+                string fullPath = audioFileName.Substring(4); // "ext:" 제거
+                url = "file://" + fullPath;
+                audioFileName = System.IO.Path.GetFileName(fullPath);
             }
             else
             {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 using TMPro;
 using AIBeat.Data;
 using AIBeat.Core;
@@ -77,6 +78,12 @@ namespace AIBeat.UI
         private SongData currentSongData; // 결과 화면에 곡 정보 표시용
         private Button pauseButton; // 모바일용 일시정지 버튼
 
+        // 로딩 영상
+        private GameObject loadingVideoPanel;
+        private VideoPlayer videoPlayer;
+        private RawImage videoDisplay;
+        private RenderTexture videoRenderTexture;
+
         private void Awake()
         {
             EnsureCanvasScaler();
@@ -86,9 +93,11 @@ namespace AIBeat.UI
             CreateBonusScoreText();
             CreatePauseButton();
             CreateCountdownPanel();
+            CreateLoadingVideoPanel();
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기
+            if (loadingVideoPanel != null) loadingVideoPanel.SetActive(false);
             if (countdownPanel != null) countdownPanel.SetActive(false);
             if (pausePanel != null) pausePanel.SetActive(false);
             if (resultPanel != null) resultPanel.SetActive(false);
@@ -369,6 +378,90 @@ namespace AIBeat.UI
             countdownText.fontStyle = FontStyles.Bold;
             countdownText.outlineWidth = 0.2f;
             countdownText.outlineColor = new Color32(0, 120, 255, 200);
+        }
+
+        /// <summary>
+        /// 로딩 영상 패널 생성 (VideoPlayer + RawImage)
+        /// 곡 선택 후 오디오 분석 중 전체 화면으로 영상 재생
+        /// </summary>
+        private void CreateLoadingVideoPanel()
+        {
+            if (loadingVideoPanel != null) return;
+
+            // 패널: 전체 화면 커버
+            loadingVideoPanel = new GameObject("LoadingVideoPanel");
+            loadingVideoPanel.transform.SetParent(transform, false);
+
+            var panelRect = loadingVideoPanel.AddComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            // 검정 배경 (영상 로드 전/비율 불일치 시)
+            var bg = loadingVideoPanel.AddComponent<Image>();
+            bg.color = Color.black;
+            bg.raycastTarget = false;
+
+            // RawImage: 영상 표시용
+            var displayGo = new GameObject("VideoDisplay");
+            displayGo.transform.SetParent(loadingVideoPanel.transform, false);
+            var displayRect = displayGo.AddComponent<RectTransform>();
+            displayRect.anchorMin = Vector2.zero;
+            displayRect.anchorMax = Vector2.one;
+            displayRect.offsetMin = Vector2.zero;
+            displayRect.offsetMax = Vector2.zero;
+
+            videoDisplay = displayGo.AddComponent<RawImage>();
+            videoDisplay.color = Color.white;
+            videoDisplay.raycastTarget = false;
+
+            // RenderTexture 생성 (영상 출력용)
+            videoRenderTexture = new RenderTexture(1920, 1080, 0);
+            videoRenderTexture.Create();
+            videoDisplay.texture = videoRenderTexture;
+
+            // VideoPlayer 컴포넌트 (패널에 부착)
+            videoPlayer = loadingVideoPanel.AddComponent<VideoPlayer>();
+            videoPlayer.playOnAwake = false;
+            videoPlayer.isLooping = true;
+            videoPlayer.renderMode = VideoRenderMode.RenderTexture;
+            videoPlayer.targetTexture = videoRenderTexture;
+            videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // 음소거
+
+            // 영상 파일 경로 설정
+            videoPlayer.source = VideoSource.Url;
+            string videoPath = System.IO.Path.Combine(Application.streamingAssetsPath, "Videos", "loading_video.mp4");
+#if UNITY_ANDROID && !UNITY_EDITOR
+            videoPlayer.url = videoPath; // Android: jar:file:// 자동 포함
+#else
+            videoPlayer.url = "file://" + videoPath;
+#endif
+
+            // 카운트다운 패널보다 뒤에 위치 (카운트다운이 위에 표시)
+            loadingVideoPanel.transform.SetSiblingIndex(0);
+
+            Debug.Log($"[GameplayUI] Loading video panel created, URL: {videoPlayer.url}");
+        }
+
+        /// <summary>
+        /// 로딩 영상 표시/숨김
+        /// </summary>
+        public void ShowLoadingVideo(bool show)
+        {
+            if (loadingVideoPanel == null) return;
+
+            loadingVideoPanel.SetActive(show);
+            if (show)
+            {
+                videoPlayer.Play();
+                Debug.Log("[GameplayUI] Loading video started");
+            }
+            else
+            {
+                videoPlayer.Stop();
+                Debug.Log("[GameplayUI] Loading video stopped");
+            }
         }
 
         /// <summary>
@@ -1032,6 +1125,14 @@ namespace AIBeat.UI
             if (quitButton != null) quitButton.onClick.RemoveAllListeners();
             if (retryButton != null) retryButton.onClick.RemoveAllListeners();
             if (menuButton != null) menuButton.onClick.RemoveAllListeners();
+
+            // 영상 리소스 해제
+            if (videoPlayer != null) videoPlayer.Stop();
+            if (videoRenderTexture != null)
+            {
+                videoRenderTexture.Release();
+                Destroy(videoRenderTexture);
+            }
         }
     }
 }

@@ -84,9 +84,9 @@ namespace AIBeat.Core
                 return false;
             }
 
-            // 중복 체크 (같은 제목+BPM+장르)
+            // 중복 체크 (AudioFileName 기반 — 같은 파일은 한 번만 등록)
             var existing = libraryData.songs.Find(s =>
-                s.Title == record.Title && s.BPM == record.BPM && s.Genre == record.Genre);
+                !string.IsNullOrEmpty(s.AudioFileName) && s.AudioFileName == record.AudioFileName);
 
             if (existing != null)
             {

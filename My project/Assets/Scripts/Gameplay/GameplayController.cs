@@ -285,7 +285,8 @@ namespace AIBeat.Gameplay
         /// </summary>
         private System.Collections.IEnumerator DebugCountdownAndStart()
         {
-            // 카운트다운 표시
+            // 영상 정지 보장 + 카운트다운 표시
+            gameplayUI?.ShowLoadingVideo(false);
             gameplayUI?.ShowCountdown(true);
             for (int i = 3; i > 0; i--)
             {
@@ -489,8 +490,9 @@ namespace AIBeat.Gameplay
             Debug.Log($"[GameplayController] Starting offline audio analysis: {clip.name}");
 #endif
             gameplayUI?.Initialize(currentSong);
+            gameplayUI?.ShowLoadingVideo(true);
             gameplayUI?.ShowCountdown(true);
-            gameplayUI?.UpdateCountdown("Analyzing...");
+            gameplayUI?.UpdateCountdown("분석 중...");
 
             // 1프레임 대기 (UI 갱신)
             yield return null;
@@ -500,8 +502,11 @@ namespace AIBeat.Gameplay
             OfflineAudioAnalyzer.AnalysisResult result = null;
 
             yield return analyzer.AnalyzeAsync(clip,
-                progress => gameplayUI?.UpdateCountdown($"Analyzing... {Mathf.RoundToInt(progress * 100)}%"),
+                progress => gameplayUI?.UpdateCountdown($"분석 중... {Mathf.RoundToInt(progress * 100)}%"),
                 r => result = r);
+
+            // 분석 완료 → 영상 정지
+            gameplayUI?.ShowLoadingVideo(false);
 
             if (result == null)
             {
@@ -544,6 +549,7 @@ namespace AIBeat.Gameplay
 
         private System.Collections.IEnumerator StartCountdown()
         {
+            gameplayUI?.ShowLoadingVideo(false); // 영상 정지 보장
             gameplayUI?.ShowCountdown(true);
 
             for (int i = (int)countdownTime; i > 0; i--)
@@ -720,8 +726,9 @@ namespace AIBeat.Gameplay
         private System.Collections.IEnumerator DebugAnalyzeAndStart()
         {
             gameplayUI?.Initialize(currentSong);
+            gameplayUI?.ShowLoadingVideo(true);
             gameplayUI?.ShowCountdown(true);
-            gameplayUI?.UpdateCountdown("Analyzing...");
+            gameplayUI?.UpdateCountdown("분석 중...");
             yield return null;
 
             // 비동기 분석 (청크 단위)
@@ -729,7 +736,7 @@ namespace AIBeat.Gameplay
             OfflineAudioAnalyzer.AnalysisResult result = null;
 
             yield return analyzer.AnalyzeAsync(currentSong.AudioClip,
-                progress => gameplayUI?.UpdateCountdown($"Analyzing... {Mathf.RoundToInt(progress * 100)}%"),
+                progress => gameplayUI?.UpdateCountdown($"분석 중... {Mathf.RoundToInt(progress * 100)}%"),
                 r => result = r);
 
             List<NoteData> notes;
@@ -752,6 +759,9 @@ namespace AIBeat.Gameplay
 
             noteSpawner?.LoadNotes(notes);
             judgementSystem?.Initialize(notes.Count);
+
+            // 분석 완료 → 영상 정지
+            gameplayUI?.ShowLoadingVideo(false);
 
             // 카운트다운 표시 (노트 스폰/음악 재생 전에 완료)
             for (int i = 3; i > 0; i--)
