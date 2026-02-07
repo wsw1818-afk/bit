@@ -1,1 +1,1 @@
-🎮 Gameplay UI 상단바 리디자인 + 카메라 기반 터치 매핑: 점수/콤보/곡명/Stats 가로 한 줄, 레인 월드좌표→화면좌표 터치 존, 4레인 직접 Down+Scratch 판정
+🔍 상단 UI 글자 3배 확대: TopBar 150px, 곡명/콤보 66pt, 점수 96pt, Stats 48pt, 일시정지 120px

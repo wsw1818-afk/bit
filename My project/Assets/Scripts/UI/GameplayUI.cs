@@ -189,7 +189,7 @@ namespace AIBeat.UI
             topBarRect.anchorMax = new Vector2(1, 1);
             topBarRect.pivot = new Vector2(0.5f, 1);
             topBarRect.anchoredPosition = Vector2.zero;
-            topBarRect.sizeDelta = new Vector2(0, 56);
+            topBarRect.sizeDelta = new Vector2(0, 150);
 
             var topBarBg = topBar.AddComponent<Image>();
             topBarBg.color = new Color(0.02f, 0.01f, 0.06f, 0.85f);
@@ -200,8 +200,8 @@ namespace AIBeat.UI
 
             // HorizontalLayoutGroup
             var hLayout = topBar.AddComponent<HorizontalLayoutGroup>();
-            hLayout.padding = new RectOffset(8, 8, 4, 4);
-            hLayout.spacing = 8;
+            hLayout.padding = new RectOffset(16, 16, 8, 8);
+            hLayout.spacing = 12;
             hLayout.childAlignment = TextAnchor.MiddleCenter;
             hLayout.childControlWidth = false;
             hLayout.childControlHeight = true;
@@ -215,7 +215,7 @@ namespace AIBeat.UI
                 var titleLE = songTitleText.gameObject.AddComponent<LayoutElement>();
                 titleLE.flexibleWidth = 1;
                 titleLE.minWidth = 100;
-                songTitleText.fontSize = 22;
+                songTitleText.fontSize = 66;
                 songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
                 songTitleText.color = new Color(0.3f, 0.9f, 1f, 0.9f);
                 songTitleText.fontStyle = FontStyles.Bold;
@@ -243,10 +243,10 @@ namespace AIBeat.UI
 
                     scorePanel.SetParent(topBar.transform, false);
                     var scoreLE = scorePanel.gameObject.AddComponent<LayoutElement>();
-                    scoreLE.preferredWidth = 180;
+                    scoreLE.preferredWidth = 400;
                 }
 
-                scoreText.fontSize = 32;
+                scoreText.fontSize = 96;
                 scoreText.alignment = TextAlignmentOptions.Center;
                 scoreText.color = new Color(1f, 1f, 1f, 1f);
                 scoreText.fontStyle = FontStyles.Bold;
@@ -259,8 +259,8 @@ namespace AIBeat.UI
             {
                 comboText.transform.SetParent(topBar.transform, false);
                 var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
-                comboLE.preferredWidth = 130;
-                comboText.fontSize = 22;
+                comboLE.preferredWidth = 350;
+                comboText.fontSize = 66;
                 comboText.alignment = TextAlignmentOptions.MidlineRight;
                 comboText.color = new Color(1f, 0.9f, 0.3f, 0.95f);
                 comboText.fontStyle = FontStyles.Bold;
@@ -274,8 +274,8 @@ namespace AIBeat.UI
             {
                 pauseButton.transform.SetParent(topBar.transform, false);
                 var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
-                pauseLE.preferredWidth = 48;
-                pauseLE.preferredHeight = 48;
+                pauseLE.preferredWidth = 120;
+                pauseLE.preferredHeight = 120;
             }
 
             // === JudgementText → 판정선 약간 위 (하단 30% 지점) ===
@@ -310,7 +310,7 @@ namespace AIBeat.UI
             btnRect.anchorMax = new Vector2(1, 1);
             btnRect.pivot = new Vector2(1, 1);
             btnRect.anchoredPosition = new Vector2(-10, -10);
-            btnRect.sizeDelta = new Vector2(48, 48);
+            btnRect.sizeDelta = new Vector2(120, 120);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
             btnImage.color = new Color(0.05f, 0.03f, 0.15f, 0.7f);
@@ -324,7 +324,7 @@ namespace AIBeat.UI
             textRect.sizeDelta = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
             iconText.text = "\u2759\u2759"; // ❚❚
-            iconText.fontSize = 20;
+            iconText.fontSize = 60;
             iconText.color = new Color(0.6f, 0.7f, 1f, 0.9f);
             iconText.alignment = TextAlignmentOptions.Center;
 
@@ -367,11 +367,11 @@ namespace AIBeat.UI
             rect.anchorMin = new Vector2(0, 1);
             rect.anchorMax = new Vector2(0, 1);
             rect.pivot = new Vector2(0, 1);
-            rect.anchoredPosition = new Vector2(15, -90);
-            rect.sizeDelta = new Vector2(250f, 30f);
+            rect.anchoredPosition = new Vector2(15, -230);
+            rect.sizeDelta = new Vector2(400f, 60f);
 
             bonusScoreText = go.AddComponent<TextMeshProUGUI>();
-            bonusScoreText.fontSize = 20;
+            bonusScoreText.fontSize = 40;
             bonusScoreText.alignment = TextAlignmentOptions.Left;
             bonusScoreText.fontStyle = FontStyles.Bold;
             bonusScoreText.color = new Color(1f, 0.85f, 0.2f, 1f); // 골드
@@ -423,8 +423,8 @@ namespace AIBeat.UI
             statsRect.anchorMin = new Vector2(0, 1);
             statsRect.anchorMax = new Vector2(1, 1);
             statsRect.pivot = new Vector2(0.5f, 1);
-            statsRect.anchoredPosition = new Vector2(0, -56); // TopBar(56px) 바로 아래
-            statsRect.sizeDelta = new Vector2(0, 28);
+            statsRect.anchoredPosition = new Vector2(0, -150); // TopBar(150px) 바로 아래
+            statsRect.sizeDelta = new Vector2(0, 72);
 
             // 반투명 배경
             var bgImage = statsPanel.AddComponent<Image>();
@@ -432,8 +432,8 @@ namespace AIBeat.UI
 
             // HorizontalLayoutGroup으로 5개 판정을 가로 정렬
             var layout = statsPanel.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 2, 2);
-            layout.spacing = 4;
+            layout.padding = new RectOffset(20, 20, 4, 4);
+            layout.spacing = 8;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -459,7 +459,7 @@ namespace AIBeat.UI
             // 통합 텍스트 (라벨+값을 하나의 TMP로)
             var tmp = cell.AddComponent<TextMeshProUGUI>();
             tmp.text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{label}</color> {value}";
-            tmp.fontSize = 16;
+            tmp.fontSize = 48;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
