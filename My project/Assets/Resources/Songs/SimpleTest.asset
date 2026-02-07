@@ -1,0 +1,311 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eb1638839b2d7e4780e9d5c22b233c3, type: 3}
+  m_Name: SimpleTest
+  m_EditorClassIdentifier: Assembly-CSharp:AIBeat.Data:SongData
+  Id: 
+  Title: Simple Test
+  Artist: Debug
+  BPM: 100
+  Duration: 30
+  AudioUrl: 
+  AudioClip: {fileID: 0}
+  Sections: []
+  Notes:
+  - HitTime: 3
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 3.6
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 4.2
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 4.8
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 5.4
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 6
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 6.6
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 7.2
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 7.8
+    LaneIndex: 0
+    Type: 2
+    Duration: 0
+  - HitTime: 8.4
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 9
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 9.6
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 10.2
+    LaneIndex: 3
+    Type: 1
+    Duration: 1.2
+  - HitTime: 10.2
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 11.4
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 11.7
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 12
+    LaneIndex: 6
+    Type: 2
+    Duration: 0
+  - HitTime: 12.3
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 12.6
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 13.2
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 13.2
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 13.8
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 14.4
+    LaneIndex: 5
+    Type: 1
+    Duration: 1.2
+  - HitTime: 14.7
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 15
+    LaneIndex: 0
+    Type: 2
+    Duration: 0
+  - HitTime: 15.3
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 15.6
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 15.6
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 16.2
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 16.8
+    LaneIndex: 4
+    Type: 1
+    Duration: 1.8
+  - HitTime: 17.1
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 17.4
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 17.7
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 18
+    LaneIndex: 6
+    Type: 2
+    Duration: 0
+  - HitTime: 18.3
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 18.6
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 19.2
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 19.2
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 19.5
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 20.1
+    LaneIndex: 2
+    Type: 1
+    Duration: 1.5
+  - HitTime: 20.4
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 20.7
+    LaneIndex: 0
+    Type: 2
+    Duration: 0
+  - HitTime: 21
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 21
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 21.3
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 21.6
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 21.9
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 22.2
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 22.2
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 22.5
+    LaneIndex: 6
+    Type: 2
+    Duration: 0
+  - HitTime: 22.8
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 23.1
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 23.4
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 23.4
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 23.7
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 24
+    LaneIndex: 3
+    Type: 1
+    Duration: 1.2
+  - HitTime: 24
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 24.3
+    LaneIndex: 0
+    Type: 2
+    Duration: 0
+  - HitTime: 24.6
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 24.6
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 24.9
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 25.2
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 25.5
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 25.5
+    LaneIndex: 6
+    Type: 2
+    Duration: 0
+  - HitTime: 25.8
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 26.1
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  - HitTime: 26.4
+    LaneIndex: 1
+    Type: 0
+    Duration: 0
+  - HitTime: 26.4
+    LaneIndex: 5
+    Type: 0
+    Duration: 0
+  - HitTime: 26.7
+    LaneIndex: 3
+    Type: 0
+    Duration: 0
+  - HitTime: 27
+    LaneIndex: 2
+    Type: 0
+    Duration: 0
+  - HitTime: 27
+    LaneIndex: 4
+    Type: 0
+    Duration: 0
+  Difficulty: 1
+  Genre: 
+  Mood: 
+  CreatorId: 

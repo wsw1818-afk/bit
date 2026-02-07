@@ -1,0 +1,804 @@
+using UnityEngine;
+using System;
+using System.Collections.Generic;
+using AIBeat.Core;
+using AIBeat.Data;
+using AIBeat.Audio;
+using AIBeat.UI;
+
+namespace AIBeat.Gameplay
+{
+    /// <summary>
+    /// 게임플레이 씬의 메인 컨트롤러
+    /// </summary>
+    public class GameplayController : MonoBehaviour
+    {
+        [Header("References")]
+        [SerializeField] private NoteSpawner noteSpawner;
+        [SerializeField] private JudgementSystem judgementSystem;
+        [SerializeField] private InputHandler inputHandler;
+        [SerializeField] private AudioAnalyzer audioAnalyzer;
+        [SerializeField] private BeatMapper beatMapper;
+        [SerializeField] private SmartBeatMapper smartBeatMapper;
+
+        [Header("UI References")]
+        [SerializeField] private GameplayUI gameplayUI;
+
+        [Header("Settings")]
+        [SerializeField] private float countdownTime = 3f;
+
+        [Header("Debug")]
+        [SerializeField] private bool debugMode = true;
+        [SerializeField] private bool autoPlay = false;
+        [SerializeField] private SongData debugSongData;
+
+        private SongData currentSong;
+        private bool isPlaying;
+        private bool isPaused;
+        private float gameStartTime;
+
+        // 이벤트 핸들러 참조 (구독 해제용)
+        private Action<int> scoreChangedHandler;
+        private Action<int> comboChangedHandler;
+
+        private void Start()
+        {
+            // timeScale 강제 복원
+            Time.timeScale = 1f;
+            // 포커스를 잃어도 게임 루프가 계속 실행되도록 설정
+            Application.runInBackground = true;
+            // 모바일 세로 모드 고정
+            Screen.orientation = ScreenOrientation.Portrait;
+            Initialize();
+            StartCoroutine(InputLoop());
+        }
+
+        /// <summary>
+        /// 코루틴 기반 입력 루프 (Update() 미호출 문제 우회)
+        /// </summary>
+        private System.Collections.IEnumerator InputLoop()
+        {
+            while (true)
+            {
+                yield return null;
+                // ESC 키로 일시정지/재개
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    if (isPaused)
+                        ResumeGame();
+                    else if (isPlaying)
+                        PauseGame();
+                }
+            }
+        }
+
+        private void Initialize()
+        {
+            // 디버그 모드: 테스트 곡 데이터 사용
+            if (debugMode && debugSongData != null)
+            {
+                currentSong = debugSongData;
+#if UNITY_EDITOR
+                Debug.Log($"[GameplayController] Debug mode: Using {debugSongData.Title}");
+#endif
+            }
+            else
+            {
+                currentSong = GameManager.Instance?.CurrentSongData;
+            }
+
+            if (currentSong == null)
+            {
+                currentSong = Resources.Load<SongData>("Songs/SimpleTest");
+                if (currentSong == null)
+                {
+                    Debug.LogError("[GameplayController] No song data found!");
+                    return;
+                }
+#if UNITY_EDITOR
+                Debug.Log("[GameplayController] Loaded test song from Resources");
+#endif
+            }
+
+            // 컴포넌트 참조 자동 연결
+            if (noteSpawner == null)
+                noteSpawner = FindFirstObjectByType<NoteSpawner>();
+            if (judgementSystem == null)
+                judgementSystem = FindFirstObjectByType<JudgementSystem>();
+            if (inputHandler == null)
+                inputHandler = FindFirstObjectByType<InputHandler>();
+            if (smartBeatMapper == null)
+                smartBeatMapper = FindFirstObjectByType<SmartBeatMapper>();
+
+            if (noteSpawner == null || judgementSystem == null || inputHandler == null)
+            {
+                string missing = "";
+                if (noteSpawner == null) missing += "NoteSpawner ";
+                if (judgementSystem == null) missing += "JudgementSystem ";
+                if (inputHandler == null) missing += "InputHandler ";
+                Debug.LogError($"[GameplayController] Missing critical components: {missing}. Returning to menu.");
+                StartCoroutine(SafeReturnToMenu(2f));
+                return;
+            }
+
+            // LaneVisualFeedback 자동 생성 (씬에 없으면)
+            if (FindFirstObjectByType<LaneVisualFeedback>() == null)
+            {
+                var feedbackGo = new GameObject("LaneVisualFeedback");
+                feedbackGo.AddComponent<LaneVisualFeedback>();
+            }
+
+            // 이벤트 연결
+            if (inputHandler != null)
+                inputHandler.OnLaneInput += HandleInput;
+            if (judgementSystem != null)
+            {
+                judgementSystem.OnJudgement += HandleJudgement;
+                scoreChangedHandler = (score) => gameplayUI?.UpdateScore(score);
+                comboChangedHandler = (combo) => gameplayUI?.UpdateCombo(combo);
+                judgementSystem.OnScoreChanged += scoreChangedHandler;
+                judgementSystem.OnComboChanged += comboChangedHandler;
+            }
+
+            // 디버그 모드: 즉시 시작
+            if (debugMode)
+            {
+                StartDebugGame();
+                return;
+            }
+
+            // 일반 모드 (중복 등록 방지를 위해 먼저 해제)
+            AudioManager.Instance.OnBGMLoaded -= OnAudioLoaded;
+            AudioManager.Instance.OnBGMEnded -= OnSongEnd;
+            AudioManager.Instance.OnBGMLoadFailed -= OnAudioLoadFailed;
+            AudioManager.Instance.OnBGMLoaded += OnAudioLoaded;
+            AudioManager.Instance.OnBGMEnded += OnSongEnd;
+            AudioManager.Instance.OnBGMLoadFailed += OnAudioLoadFailed;
+
+            if (currentSong.AudioClip != null)
+                OnAudioLoaded();
+            else if (!string.IsNullOrEmpty(currentSong.AudioUrl))
+                AudioManager.Instance.LoadBGMFromUrl(currentSong.AudioUrl);
+            else
+            {
+                Debug.LogWarning("[GameplayController] No audio source, starting without music");
+                OnAudioLoaded();
+            }
+
+            gameplayUI?.Initialize(currentSong);
+        }
+
+        /// <summary>
+        /// 디버그 모드: Start()에서 직접 호출하여 즉시 게임 시작
+        /// </summary>
+        private void StartDebugGame()
+        {
+#if UNITY_EDITOR
+            Debug.Log("[GameplayController] === Starting Debug Game ===");
+#endif
+
+            // AudioClip이 있으면 오프라인 분석으로 노트 생성
+            if (currentSong.AudioClip != null && smartBeatMapper != null &&
+                (currentSong.Notes == null || currentSong.Notes.Length == 0))
+            {
+                StartCoroutine(DebugAnalyzeAndStart());
+                return;
+            }
+
+            // 노트 데이터 로드
+            List<NoteData> notes;
+            if (currentSong.Notes != null && currentSong.Notes.Length > 0)
+            {
+                notes = new List<NoteData>(currentSong.Notes);
+            }
+            else
+            {
+                notes = GenerateDebugFallbackNotes();
+#if UNITY_EDITOR
+                Debug.Log($"[GameplayController] Debug fallback notes generated: {notes.Count}");
+#endif
+            }
+
+            noteSpawner?.LoadNotes(notes);
+            judgementSystem?.Initialize(notes.Count);
+            gameplayUI?.Initialize(currentSong);
+
+            // AudioManager 디버그 모드 설정 및 즉시 시작
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.OnBGMEnded -= OnSongEnd;
+                AudioManager.Instance.OnBGMEnded += OnSongEnd;
+                AudioManager.Instance.EnableDebugMode(currentSong?.Duration ?? 60f);
+                AudioManager.Instance.StartDebugPlayback();
+#if UNITY_EDITOR
+                Debug.Log($"[GameplayController] AudioManager debug started, CurrentTime={AudioManager.Instance.CurrentTime}");
+#endif
+            }
+            else
+            {
+                Debug.LogWarning("[GameplayController] AudioManager.Instance is null!");
+            }
+
+            // 노트 스폰 시작
+            if (noteSpawner != null)
+            {
+                noteSpawner.StartSpawning();
+#if UNITY_EDITOR
+                Debug.Log("[GameplayController] NoteSpawner started");
+#endif
+            }
+            else
+            {
+                Debug.LogError("[GameplayController] noteSpawner is NULL!");
+            }
+
+            isPlaying = true;
+            gameStartTime = Time.time;
+
+            if (autoPlay)
+            {
+                StartCoroutine(AutoPlayLoop());
+#if UNITY_EDITOR
+                Debug.Log("[GameplayController] === Auto Play ENABLED ===");
+#endif
+            }
+
+#if UNITY_EDITOR
+            Debug.Log($"[GameplayController] === Debug Game RUNNING === isPlaying={isPlaying}");
+#endif
+        }
+
+        /// <summary>
+        /// 오토 플레이: 노트 타이밍에 자동으로 판정
+        /// isPlaying이 false가 되면 종료 (일시정지는 isPaused로 처리)
+        /// </summary>
+        private System.Collections.IEnumerator AutoPlayLoop()
+        {
+            while (isPlaying || isPaused)
+            {
+                yield return null;
+                if (isPaused || !isPlaying) continue;
+
+                float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
+
+                // 활성 노트 중 판정 시간이 된 것을 자동 처리
+                if (noteSpawner == null) continue;
+
+                for (int lane = 0; lane <= 3; lane++)
+                {
+                    Note note = noteSpawner.GetNearestNote(lane);
+                    if (note == null) continue;
+
+                    float diff = Mathf.Abs(currentTime - note.HitTime);
+                    // PERFECT 타이밍에 자동 히트 (±20ms)
+                    if (diff <= 0.020f)
+                    {
+                        // Auto Play Visual Feedback
+                        LaneVisualFeedback.Flash(lane);
+
+                        var result = judgementSystem.Judge(currentTime, note.HitTime);
+                        if (result != JudgementResult.Miss)
+                        {
+                            note.MarkAsJudged();
+                            noteSpawner.RemoveNote(note);
+                            LaneVisualFeedback.PlayJudgementEffect(lane, result);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void OnAudioLoaded()
+        {
+            // AudioClip이 있으면 오프라인 분석으로 노트 생성 시도
+            var clip = AudioManager.Instance?.GetAudioClip() ?? currentSong.AudioClip;
+            if (clip != null && smartBeatMapper != null &&
+                (currentSong.Notes == null || currentSong.Notes.Length == 0))
+            {
+                StartCoroutine(AnalyzeAndGenerateNotes(clip));
+                return;
+            }
+
+            // 기존 노트 데이터 또는 BPM 기반 생성
+            List<NoteData> notes;
+            if (currentSong.Notes != null && currentSong.Notes.Length > 0)
+            {
+                notes = new List<NoteData>(currentSong.Notes);
+            }
+            else
+            {
+                var sections = currentSong.Sections ?? BeatMapper.CreateDefaultSections(currentSong.Duration);
+                notes = beatMapper.GenerateNotesFromBPM(currentSong.BPM, currentSong.Duration, sections);
+            }
+
+            StartGameWithNotes(notes);
+        }
+
+        /// <summary>
+        /// 오프라인 오디오 분석 → 노트 생성 → 게임 시작
+        /// </summary>
+        private System.Collections.IEnumerator AnalyzeAndGenerateNotes(AudioClip clip)
+        {
+#if UNITY_EDITOR
+            Debug.Log($"[GameplayController] Starting offline audio analysis: {clip.name}");
+#endif
+            gameplayUI?.Initialize(currentSong);
+            gameplayUI?.ShowCountdown(true);
+            gameplayUI?.UpdateCountdown("Analyzing...");
+
+            // 1프레임 대기 (UI 갱신)
+            yield return null;
+
+            // 오프라인 분석 (메인 스레드에서 실행, 큰 파일은 잠깐 멈출 수 있음)
+            var analyzer = new OfflineAudioAnalyzer();
+            var result = analyzer.Analyze(clip);
+
+            if (result == null)
+            {
+                Debug.LogWarning("[GameplayController] Audio analysis failed, using BPM fallback");
+                var fallbackSections = currentSong.Sections ?? BeatMapper.CreateDefaultSections(currentSong.Duration);
+                var fallbackNotes = beatMapper.GenerateNotesFromBPM(currentSong.BPM, currentSong.Duration, fallbackSections);
+                StartGameWithNotes(fallbackNotes);
+                yield break;
+            }
+
+            // 분석 결과로 노트 생성
+            var notes = smartBeatMapper.GenerateNotes(result);
+
+            // SongData에 분석 결과 반영
+            if (currentSong.BPM <= 0) currentSong.BPM = result.BPM;
+            currentSong.Sections = smartBeatMapper.ConvertSections(result);
+
+#if UNITY_EDITOR
+            Debug.Log($"[GameplayController] Analysis complete: BPM={result.BPM}, notes={notes.Count}, sections={result.Sections.Count}");
+#endif
+
+            StartGameWithNotes(notes);
+        }
+
+        /// <summary>
+        /// 노트 데이터로 게임 시작 준비 (카운트다운 → 시작)
+        /// </summary>
+        private void StartGameWithNotes(List<NoteData> notes)
+        {
+            noteSpawner.LoadNotes(notes);
+            judgementSystem.Initialize(notes.Count);
+            gameplayUI?.Initialize(currentSong);
+
+            var audioSource = AudioManager.Instance?.GetComponent<AudioSource>();
+            if (audioAnalyzer != null && audioSource != null)
+                audioAnalyzer.Initialize(audioSource);
+
+            StartCoroutine(StartCountdown());
+        }
+
+        private System.Collections.IEnumerator StartCountdown()
+        {
+            gameplayUI?.ShowCountdown(true);
+
+            for (int i = (int)countdownTime; i > 0; i--)
+            {
+                gameplayUI?.UpdateCountdown(i.ToString());
+                yield return new WaitForSeconds(1f);
+            }
+
+            gameplayUI?.UpdateCountdown("GO!");
+            yield return new WaitForSeconds(0.5f);
+
+            gameplayUI?.ShowCountdown(false);
+            StartGame();
+        }
+
+        private void StartGame()
+        {
+            isPlaying = true;
+            gameStartTime = Time.time;
+
+            GameManager.Instance?.ChangeState(GameManager.GameState.Gameplay);
+            noteSpawner.StartSpawning();
+            AudioManager.Instance.PlayBGM();
+
+#if UNITY_EDITOR
+            Debug.Log("[GameplayController] Game started!");
+#endif
+        }
+
+        private void HandleInput(int lane, InputHandler.InputType inputType)
+        {
+            if (!isPlaying) return;
+
+            float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
+
+            switch (inputType)
+            {
+                case InputHandler.InputType.Down:
+                    LaneVisualFeedback.Flash(lane);
+                    ProcessNoteHit(lane, currentTime);
+                    break;
+
+                case InputHandler.InputType.Up:
+                    LaneVisualFeedback.SetHighlight(lane, false);
+                    ProcessNoteRelease(lane, currentTime);
+                    break;
+
+                case InputHandler.InputType.Scratch:
+                    LaneVisualFeedback.Flash(lane);
+                    ProcessScratch(lane, currentTime);
+                    break;
+            }
+        }
+
+        private void ProcessNoteHit(int lane, float currentTime)
+        {
+            Note nearestNote = noteSpawner.GetNearestNote(lane);
+            if (nearestNote == null) return;
+
+            if (nearestNote.NoteType == NoteType.Long)
+            {
+                nearestNote.StartHold(currentTime);
+                var holdResult = judgementSystem.Judge(currentTime, nearestNote.HitTime);
+                if (holdResult != JudgementResult.Miss)
+                {
+                    nearestNote.MarkAsJudged();
+                    LaneVisualFeedback.PlayJudgementEffect(lane, holdResult);
+                }
+                LaneVisualFeedback.SetHighlight(lane, true); // Keep highlighted for long note
+                return;
+            }
+
+            var result = judgementSystem.Judge(currentTime, nearestNote.HitTime);
+            if (result != JudgementResult.Miss)
+            {
+                nearestNote.MarkAsJudged();
+                noteSpawner.RemoveNote(nearestNote);
+                LaneVisualFeedback.PlayJudgementEffect(lane, result);
+            }
+        }
+
+        private void ProcessNoteRelease(int lane, float currentTime)
+        {
+            Note nearestNote = noteSpawner.GetNearestNote(lane);
+            if (nearestNote == null || !nearestNote.IsHolding) return;
+
+            bool success = nearestNote.EndHold(currentTime);
+            if (success)
+            {
+                // 롱노트 끝 시간 = HitTime + Duration
+                float longNoteEndTime = nearestNote.HitTime + nearestNote.Duration;
+                var releaseResult = judgementSystem.Judge(currentTime, longNoteEndTime);
+                if (releaseResult != JudgementResult.Miss)
+                    LaneVisualFeedback.PlayJudgementEffect(lane, releaseResult);
+            }
+            else
+            {
+                judgementSystem.RegisterMiss();
+            }
+            
+            LaneVisualFeedback.SetHighlight(lane, false); // Ensure highlight is off
+            noteSpawner.RemoveNote(nearestNote);
+        }
+
+        private void ProcessScratch(int lane, float currentTime)
+        {
+            if (lane != 0 && lane != 3) return;
+
+            Note nearestNote = noteSpawner.GetNearestNote(lane);
+            if (nearestNote == null || nearestNote.NoteType != NoteType.Scratch) return;
+
+            var result = judgementSystem.Judge(currentTime, nearestNote.HitTime);
+            if (result != JudgementResult.Miss)
+            {
+                nearestNote.MarkAsJudged();
+                AudioManager.Instance?.PlayScratchSound();
+                noteSpawner.RemoveNote(nearestNote);
+                LaneVisualFeedback.PlayJudgementEffect(lane, result);
+            }
+        }
+
+        private void HandleJudgement(JudgementResult result, int combo)
+        {
+            gameplayUI?.ShowJudgement(result);
+        }
+
+        /// <summary>
+        /// 디버그 모드: AudioClip 분석 → 실제 오디오로 게임 시작
+        /// </summary>
+        private System.Collections.IEnumerator DebugAnalyzeAndStart()
+        {
+            gameplayUI?.Initialize(currentSong);
+            gameplayUI?.ShowCountdown(true);
+            gameplayUI?.UpdateCountdown("Analyzing...");
+            yield return null;
+
+            var analyzer = new OfflineAudioAnalyzer();
+            var result = analyzer.Analyze(currentSong.AudioClip);
+
+            List<NoteData> notes;
+            if (result != null)
+            {
+                notes = smartBeatMapper.GenerateNotes(result);
+                if (currentSong.BPM <= 0) currentSong.BPM = result.BPM;
+                currentSong.Sections = smartBeatMapper.ConvertSections(result);
+#if UNITY_EDITOR
+                Debug.Log($"[GameplayController] Debug analysis: BPM={result.BPM}, notes={notes.Count}");
+#endif
+            }
+            else
+            {
+                notes = GenerateDebugFallbackNotes();
+#if UNITY_EDITOR
+                Debug.Log($"[GameplayController] Debug fallback notes generated: {notes.Count}");
+#endif
+            }
+
+            noteSpawner?.LoadNotes(notes);
+            judgementSystem?.Initialize(notes.Count);
+
+            // 카운트다운 표시 (노트 스폰/음악 재생 전에 완료)
+            for (int i = 3; i > 0; i--)
+            {
+                gameplayUI?.UpdateCountdown(i.ToString());
+                yield return new WaitForSeconds(1f);
+            }
+            gameplayUI?.UpdateCountdown("GO!");
+            yield return new WaitForSeconds(0.5f);
+            gameplayUI?.ShowCountdown(false);
+
+            // 카운트다운 완료 후 실제 오디오 재생 및 노트 스폰 시작
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.OnBGMEnded -= OnSongEnd;
+                AudioManager.Instance.OnBGMEnded += OnSongEnd;
+                AudioManager.Instance.SetBGM(currentSong.AudioClip);
+                AudioManager.Instance.PlayBGM();
+#if UNITY_EDITOR
+                Debug.Log("[GameplayController] Playing actual audio");
+#endif
+            }
+
+            noteSpawner?.StartSpawning();
+            isPlaying = true;
+            gameStartTime = Time.time;
+
+            if (autoPlay)
+            {
+                StartCoroutine(AutoPlayLoop());
+#if UNITY_EDITOR
+                Debug.Log("[GameplayController] === Auto Play ENABLED ===");
+#endif
+            }
+        }
+
+        private void OnSongEnd()
+        {
+            if (!isPlaying && !isPaused) return;
+
+            isPlaying = false;
+            isPaused = false;
+
+            // 남은 활성 노트를 MISS 처리 후 정리
+            if (noteSpawner != null && judgementSystem != null)
+            {
+                noteSpawner.FlushRemainingAsMiss(judgementSystem);
+                noteSpawner.StopSpawning();
+            }
+            audioAnalyzer?.StopAnalysis();
+
+            if (judgementSystem != null)
+            {
+                var gameResult = judgementSystem.GetResult();
+#if UNITY_EDITOR
+                Debug.Log($"[GameplayController] Game ended - Score:{gameResult.Score}, Rank:{gameResult.Rank}, P:{gameResult.PerfectCount} G:{gameResult.GreatCount} Good:{gameResult.GoodCount} B:{gameResult.BadCount} M:{gameResult.MissCount}");
+#endif
+                ShowResult(gameResult);
+            }
+            else
+            {
+                Debug.LogError("[GameplayController] JudgementSystem is null at game end");
+                StartCoroutine(SafeReturnToMenu(2f));
+            }
+        }
+
+        private void ShowResult(GameResult result)
+        {
+            GameManager.Instance?.ChangeState(GameManager.GameState.Result);
+            gameplayUI?.ShowResult(result);
+
+            // SongLibraryManager에 최고 기록 업데이트
+            if (currentSong != null && SongLibraryManager.Instance != null)
+            {
+                SongLibraryManager.Instance.UpdateBestRecord(
+                    currentSong.Title, result.Score, result.MaxCombo, result.Rank);
+            }
+        }
+
+        public void PauseGame()
+        {
+            if (!isPlaying || isPaused) return;
+
+            isPaused = true;
+            isPlaying = false;
+
+            if (GameManager.Instance != null)
+                GameManager.Instance.PauseGame();
+            else
+                Time.timeScale = 0f;
+
+            AudioManager.Instance?.PauseBGM();
+            if (noteSpawner != null) noteSpawner.enabled = false;
+            gameplayUI?.ShowPauseMenu(true);
+#if UNITY_EDITOR
+            Debug.Log("[GameplayController] Game paused");
+#endif
+        }
+
+        public void ResumeGame()
+        {
+            if (!isPaused) return;
+
+            isPaused = false;
+            isPlaying = true;
+
+            if (GameManager.Instance != null)
+                GameManager.Instance.ResumeGame();
+            else
+                Time.timeScale = 1f;
+
+            AudioManager.Instance?.ResumeBGM();
+            if (noteSpawner != null) noteSpawner.enabled = true;
+            gameplayUI?.ShowPauseMenu(false);
+#if UNITY_EDITOR
+            Debug.Log("[GameplayController] Game resumed");
+#endif
+        }
+
+        /// <summary>
+        /// 디버그 모드 폴백: BPM 100 기반 다양한 노트 패턴 생성 (30초 곡 기준, 35개)
+        /// 구간별 밀도 변화: Intro(sparse) → Build(normal) → Climax(dense) → Outro(sparse)
+        /// 타입 비율: Tap 70%, Long 20%, Scratch 10%
+        /// </summary>
+        private List<NoteData> GenerateDebugFallbackNotes()
+        {
+            var notes = new List<NoteData>();
+            var rng = new System.Random(42); // seed 고정으로 재현성 보장
+
+            // BPM 100 기준: 8분음표 = 0.3초, 16분음표 = 0.15초
+            const float bpm = 100f;
+            const float beatInterval = 60f / bpm;          // 0.6초 (4분음표)
+            const float eighthNote = beatInterval / 2f;     // 0.3초 (8분음표)
+            const float sixteenthNote = beatInterval / 4f;  // 0.15초 (16분음표)
+
+            // 구간 정의: (시작시간, 종료시간, 노트간격, 구간이름)
+            // Intro: sparse (8분음표 간격)
+            // Build: normal (8분음표 + 가끔 16분음표)
+            // Climax: dense (8분음표 + 빈번한 16분음표)
+            // Outro: sparse (8분음표 간격)
+            float t = 2.0f; // 시작 오프셋 (2초 여유)
+
+            // === Intro (2.0s ~ 8.0s): sparse, Tap 위주 ===
+            while (t < 8.0f)
+            {
+                int lane = rng.Next(1, 3); // 1~2 레인
+                notes.Add(new NoteData(t, lane, NoteType.Tap));
+                t += eighthNote + (float)(rng.NextDouble() * 0.1); // 0.3s + 약간의 랜덤
+            }
+
+            // === Build (8.0s ~ 16.0s): normal, Long 노트 등장 ===
+            while (t < 16.0f)
+            {
+                int lane = rng.Next(1, 3);
+                float roll = (float)rng.NextDouble();
+
+                if (roll < 0.20f) // 20% Long
+                {
+                    float duration = 0.5f + (float)(rng.NextDouble() * 0.5f); // 0.5~1.0초
+                    notes.Add(new NoteData(t, lane, NoteType.Long, duration));
+                    t += eighthNote + duration * 0.3f; // Long 노트 후 약간의 여유
+                }
+                else if (roll < 0.28f) // 8% Scratch
+                {
+                    int scratchLane = rng.Next(0, 2) == 0 ? 0 : 3; // 스크래치 레인
+                    notes.Add(new NoteData(t, scratchLane, NoteType.Scratch));
+                    t += eighthNote;
+                }
+                else // 72% Tap
+                {
+                    notes.Add(new NoteData(t, lane, NoteType.Tap));
+                    // 가끔 16분음표 간격 (30% 확률)
+                    t += rng.NextDouble() < 0.3 ? sixteenthNote : eighthNote;
+                }
+            }
+
+            // === Climax (16.0s ~ 24.0s): dense, 다양한 타입 + 16분음표 빈번 ===
+            while (t < 24.0f)
+            {
+                int lane = rng.Next(1, 3);
+                float roll = (float)rng.NextDouble();
+
+                if (roll < 0.18f) // 18% Long
+                {
+                    float duration = 0.5f + (float)(rng.NextDouble() * 0.5f);
+                    notes.Add(new NoteData(t, lane, NoteType.Long, duration));
+                    t += sixteenthNote * 2 + duration * 0.2f;
+                }
+                else if (roll < 0.30f) // 12% Scratch
+                {
+                    int scratchLane = rng.Next(0, 2) == 0 ? 0 : 3;
+                    notes.Add(new NoteData(t, scratchLane, NoteType.Scratch));
+                    t += sixteenthNote;
+                }
+                else // 70% Tap
+                {
+                    notes.Add(new NoteData(t, lane, NoteType.Tap));
+                    // 50% 확률로 16분음표 간격 (고밀도)
+                    t += rng.NextDouble() < 0.5 ? sixteenthNote : eighthNote;
+                }
+            }
+
+            // === Outro (24.0s ~ 29.0s): sparse, Tap 위주 ===
+            while (t < 29.0f)
+            {
+                int lane = rng.Next(1, 3);
+                float roll = (float)rng.NextDouble();
+
+                if (roll < 0.10f) // 10% Scratch (마무리 악센트)
+                {
+                    int scratchLane = rng.Next(0, 2) == 0 ? 0 : 3;
+                    notes.Add(new NoteData(t, scratchLane, NoteType.Scratch));
+                }
+                else
+                {
+                    notes.Add(new NoteData(t, lane, NoteType.Tap));
+                }
+                t += eighthNote + (float)(rng.NextDouble() * 0.15); // 느슨한 간격
+            }
+
+            // 시간순 정렬 (이미 순서대로 생성하지만 안전장치)
+            notes.Sort((a, b) => a.HitTime.CompareTo(b.HitTime));
+
+            return notes;
+        }
+
+        private void OnAudioLoadFailed(string error)
+        {
+            Debug.LogError($"[GameplayController] Audio load failed: {error}");
+            gameplayUI?.ShowCountdown(true);
+            gameplayUI?.UpdateCountdown("Load Failed\nReturning...");
+            StartCoroutine(SafeReturnToMenu(3f));
+        }
+
+        private System.Collections.IEnumerator SafeReturnToMenu(float delay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+            Time.timeScale = 1f;
+            GameManager.Instance?.ReturnToMenu();
+        }
+
+        private void OnDestroy()
+        {
+            StopAllCoroutines();
+
+            // timeScale 복원 (일시정지 상태에서 파괴될 수 있음)
+            Time.timeScale = 1f;
+
+            if (inputHandler != null)
+                inputHandler.OnLaneInput -= HandleInput;
+
+            if (judgementSystem != null)
+            {
+                judgementSystem.OnJudgement -= HandleJudgement;
+                if (scoreChangedHandler != null)
+                    judgementSystem.OnScoreChanged -= scoreChangedHandler;
+                if (comboChangedHandler != null)
+                    judgementSystem.OnComboChanged -= comboChangedHandler;
+            }
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.OnBGMLoaded -= OnAudioLoaded;
+                AudioManager.Instance.OnBGMEnded -= OnSongEnd;
+                AudioManager.Instance.OnBGMLoadFailed -= OnAudioLoadFailed;
+            }
+        }
+    }
+}
