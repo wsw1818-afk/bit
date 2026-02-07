@@ -69,14 +69,14 @@ namespace AIBeat.UI
             rootRect.offsetMin = new Vector2(0, 0);
             rootRect.offsetMax = new Vector2(0, -56); // 타이틀 바(56px) 아래부터
 
-            // 세로 레이아웃
+            // 세로 레이아웃 — ScrollView가 남은 공간을 전부 채우도록
             var rootLayout = rootPanel.AddComponent<VerticalLayoutGroup>();
             rootLayout.padding = new RectOffset(15, 15, 10, 10);
             rootLayout.spacing = 8;
             rootLayout.childControlWidth = true;
-            rootLayout.childControlHeight = false;
+            rootLayout.childControlHeight = true;
             rootLayout.childForceExpandWidth = true;
-            rootLayout.childForceExpandHeight = false;
+            rootLayout.childForceExpandHeight = true;
 
             // 1. 곡 수 표시
             CreateSongCountBar(rootPanel.transform);
@@ -96,6 +96,7 @@ namespace AIBeat.UI
             countRect.sizeDelta = new Vector2(0, 25);
             var countLayout = countBar.AddComponent<LayoutElement>();
             countLayout.preferredHeight = 25;
+            countLayout.flexibleHeight = 0;
 
             songCountText = CreateTMPText(countBar, "SongCount", "0곡", 14,
                 new Color(0.6f, 0.6f, 0.7f), TextAlignmentOptions.MidlineRight);

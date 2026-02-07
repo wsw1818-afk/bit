@@ -1,1 +1,1 @@
-🔥 SongSelect+SongLibrary 대폭 단순화: 곡 생성/에너지/필터/정렬 전부 제거, 순수 곡 목록만 표시
+📐 SongLibrary 레이아웃 수정: 곡 목록이 화면 전체를 채우도록 VerticalLayoutGroup 설정 변경
