@@ -1,1 +1,1 @@
-✨ SongSelectUI BPM 슬라이더 네온 디자인: SettingsUI 스타일 적용, 핸들 네온 효과, 색상 전환
+✨ SongSelectUI BPM UX 개편: 슬라이더→버튼 리스트 방식, 직관적인 선택 인터페이스 (80~180)
