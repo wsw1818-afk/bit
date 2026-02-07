@@ -30,6 +30,7 @@ namespace AIBeat.Gameplay
         private int currentScore;
         private int currentCombo;
         private int maxCombo;
+        private int bonusScore;  // 롱노트 홀드 보너스 점수 (별도 누적)
 
         // 판정 카운트
         private int perfectCount;
@@ -47,11 +48,14 @@ namespace AIBeat.Gameplay
         public int GoodCount => goodCount;
         public int BadCount => badCount;
         public int MissCount => missCount;
+        public int BonusScore => bonusScore;
+        public int TotalScore => currentScore + bonusScore;
 
         public event Action<JudgementResult, int> OnJudgement; // (결과, 콤보)
         public event Action<JudgementResult, float> OnJudgementDetailed; // (결과, rawDiff: 양수=late, 음수=early)
         public event Action<int> OnScoreChanged;
         public event Action<int> OnComboChanged;
+        public event Action<int, int> OnBonusScore; // (이번 틱 보너스, 누적 보너스)
 
         public void Initialize(int noteCount)
         {
@@ -59,6 +63,7 @@ namespace AIBeat.Gameplay
             currentScore = 0;
             currentCombo = 0;
             maxCombo = 0;
+            bonusScore = 0;
             perfectCount = 0;
             greatCount = 0;
             goodCount = 0;
@@ -153,18 +158,28 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
             if (showDebugLogs)
             {
-                Debug.Log($"[Judge] {result} | diff: {diff*1000:F1}ms | combo: {currentCombo} | score: +{scoreGained} (total: {currentScore})");
+                Debug.Log($"[Judge] {result} | diff: {diff*1000:F1}ms | combo: {currentCombo} | score: +{scoreGained} (total: {TotalScore})");
             }
 #endif
 
             OnJudgement?.Invoke(result, currentCombo);
             OnJudgementDetailed?.Invoke(result, rawDiff);
-            OnScoreChanged?.Invoke(currentScore);
+            OnScoreChanged?.Invoke(TotalScore);
 
             // 히트사운드 재생
             AudioManager.Instance?.PlayHitSound(result);
 
             return result;
+        }
+
+        /// <summary>
+        /// 롱노트 홀드 중 보너스 점수 추가 (틱마다 호출)
+        /// </summary>
+        public void AddBonusScore(int amount)
+        {
+            bonusScore += amount;
+            OnBonusScore?.Invoke(amount, bonusScore);
+            OnScoreChanged?.Invoke(TotalScore);
         }
 
         /// <summary>
@@ -242,7 +257,9 @@ namespace AIBeat.Gameplay
         {
             return new GameResult
             {
-                Score = currentScore,
+                Score = TotalScore,
+                BaseScore = currentScore,
+                BonusScore = bonusScore,
                 MaxCombo = maxCombo,
                 Accuracy = Accuracy,
                 PerfectCount = perfectCount,
@@ -276,7 +293,9 @@ namespace AIBeat.Gameplay
     [Serializable]
     public struct GameResult
     {
-        public int Score;
+        public int Score;       // 총점 (BaseScore + BonusScore)
+        public int BaseScore;   // 기본 노트 점수
+        public int BonusScore;  // 롱노트 홀드 보너스 점수
         public int MaxCombo;
         public float Accuracy;
         public int PerfectCount;

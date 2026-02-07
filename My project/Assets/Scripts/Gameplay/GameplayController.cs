@@ -37,9 +37,15 @@ namespace AIBeat.Gameplay
         private bool isPaused;
         private float gameStartTime;
 
+        // 롱노트 홀드 보너스 추적
+        private const float HOLD_BONUS_TICK_INTERVAL = 0.1f;  // 0.1초마다 보너스
+        private const int HOLD_BONUS_PER_TICK = 50;            // 틱당 50점 보너스
+        private Dictionary<Note, float> holdingNotes = new Dictionary<Note, float>(); // 노트 → 마지막 틱 시간
+
         // 이벤트 핸들러 참조 (구독 해제용)
         private Action<int> scoreChangedHandler;
         private Action<int> comboChangedHandler;
+        private Action<int, int> bonusScoreHandler;
 
         private void Start()
         {
@@ -51,6 +57,7 @@ namespace AIBeat.Gameplay
             Screen.orientation = ScreenOrientation.Portrait;
             Initialize();
             StartCoroutine(InputLoop());
+            StartCoroutine(HoldBonusTickLoop());
         }
 
         /// <summary>
@@ -70,6 +77,69 @@ namespace AIBeat.Gameplay
                         PauseGame();
                 }
             }
+        }
+
+        /// <summary>
+        /// 롱노트 홀드 중 보너스 점수 틱 루프
+        /// 0.1초마다 홀드 중인 노트에 보너스 점수 부여
+        /// </summary>
+        private System.Collections.IEnumerator HoldBonusTickLoop()
+        {
+            var notesToRemove = new List<Note>();
+            var notesToUpdate = new List<KeyValuePair<Note, float>>();
+
+            while (true)
+            {
+                yield return null;
+                if (!isPlaying || isPaused || holdingNotes.Count == 0) continue;
+
+                float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
+                notesToRemove.Clear();
+                notesToUpdate.Clear();
+
+                foreach (var kvp in holdingNotes)
+                {
+                    Note note = kvp.Key;
+                    float lastTickTime = kvp.Value;
+
+                    // 노트가 null이거나 더 이상 홀드 중이 아니면 제거 예약
+                    if (note == null || !note.IsHolding)
+                    {
+                        notesToRemove.Add(note);
+                        continue;
+                    }
+
+                    // 틱 간격마다 보너스 점수 추가
+                    if (currentTime - lastTickTime >= HOLD_BONUS_TICK_INTERVAL)
+                    {
+                        judgementSystem?.AddBonusScore(HOLD_BONUS_PER_TICK);
+                        notesToUpdate.Add(new KeyValuePair<Note, float>(note, currentTime));
+                    }
+                }
+
+                // 순회 완료 후 업데이트/제거 (Collection modified 방지)
+                foreach (var kvp in notesToUpdate)
+                    holdingNotes[kvp.Key] = kvp.Value;
+                foreach (var note in notesToRemove)
+                    holdingNotes.Remove(note);
+            }
+        }
+
+        /// <summary>
+        /// 홀드 보너스 추적 시작
+        /// </summary>
+        private void RegisterHoldBonus(Note note)
+        {
+            float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
+            holdingNotes[note] = currentTime;
+        }
+
+        /// <summary>
+        /// 홀드 보너스 추적 종료
+        /// </summary>
+        private void UnregisterHoldBonus(Note note)
+        {
+            holdingNotes.Remove(note);
         }
 
         private void Initialize()
@@ -137,8 +207,10 @@ namespace AIBeat.Gameplay
                 judgementSystem.OnJudgementDetailed += HandleJudgementDetailed;
                 scoreChangedHandler = (score) => gameplayUI?.UpdateScore(score);
                 comboChangedHandler = (combo) => gameplayUI?.UpdateCombo(combo);
+                bonusScoreHandler = (tick, total) => gameplayUI?.ShowBonusScore(tick, total);
                 judgementSystem.OnScoreChanged += scoreChangedHandler;
                 judgementSystem.OnComboChanged += comboChangedHandler;
+                judgementSystem.OnBonusScore += bonusScoreHandler;
             }
 
             // 디버그 모드: 즉시 시작
@@ -287,6 +359,7 @@ namespace AIBeat.Gameplay
                         float releaseTime = note.HitTime + note.Duration;
                         if (currentTime >= releaseTime - 0.040f)
                         {
+                            UnregisterHoldBonus(note);
                             note.EndHold(currentTime);
                             var releaseResult = judgementSystem.Judge(currentTime, releaseTime);
                             if (releaseResult != JudgementResult.Miss)
@@ -345,6 +418,7 @@ namespace AIBeat.Gameplay
                             if (note.NoteType == NoteType.Long)
                             {
                                 note.StartHold(currentTime);
+                                RegisterHoldBonus(note);
                                 LaneVisualFeedback.SetHighlight(lane, true);
                                 LaneVisualFeedback.PlayJudgementEffect(lane, result);
                             }
@@ -519,6 +593,7 @@ namespace AIBeat.Gameplay
                     LaneVisualFeedback.PlayJudgementEffect(lane, holdResult);
                 }
                 LaneVisualFeedback.SetHighlight(lane, true);
+                RegisterHoldBonus(nearestNote);
                 return;
             }
 
@@ -536,6 +611,8 @@ namespace AIBeat.Gameplay
             // 홀드 중인 롱노트를 activeNotes에서 직접 검색
             Note holdingNote = FindHoldingNote(lane);
             if (holdingNote == null) return;
+
+            UnregisterHoldBonus(holdingNote);
 
             bool success = holdingNote.EndHold(currentTime);
             if (success)
@@ -894,6 +971,8 @@ namespace AIBeat.Gameplay
                     judgementSystem.OnScoreChanged -= scoreChangedHandler;
                 if (comboChangedHandler != null)
                     judgementSystem.OnComboChanged -= comboChangedHandler;
+                if (bonusScoreHandler != null)
+                    judgementSystem.OnBonusScore -= bonusScoreHandler;
             }
 
             if (AudioManager.Instance != null)

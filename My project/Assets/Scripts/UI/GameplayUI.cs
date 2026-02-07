@@ -49,6 +49,11 @@ namespace AIBeat.UI
         // 결과 화면 추가 요소 (동적 생성)
         private TMP_Text resultSongInfoText;
         private TMP_Text resultNewRecordText;
+        private TMP_Text resultBonusScoreText;
+
+        // 보너스 점수 표시
+        private TMP_Text bonusScoreText;
+        private Coroutine bonusScoreCoroutine;
 
         [Header("Colors")]
         [SerializeField] private Color perfectColor = Color.yellow;
@@ -77,6 +82,7 @@ namespace AIBeat.UI
             AutoSetupReferences();
             CreateStatsHUD();
             CreateEarlyLateText();
+            CreateBonusScoreText();
             CreatePauseButton();
             RepositionHUD();
 
@@ -311,6 +317,60 @@ namespace AIBeat.UI
             earlyLateText.fontStyle = FontStyles.Bold;
             earlyLateText.text = "";
             go.SetActive(false);
+        }
+
+        /// <summary>
+        /// 보너스 점수 팝업 텍스트 동적 생성 (콤보 텍스트 아래)
+        /// </summary>
+        private void CreateBonusScoreText()
+        {
+            var go = new GameObject("BonusScoreText");
+            go.transform.SetParent(transform, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0, 1);
+            rect.anchorMax = new Vector2(0, 1);
+            rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = new Vector2(15, -100);
+            rect.sizeDelta = new Vector2(250f, 30f);
+
+            bonusScoreText = go.AddComponent<TextMeshProUGUI>();
+            bonusScoreText.fontSize = 20;
+            bonusScoreText.alignment = TextAlignmentOptions.Left;
+            bonusScoreText.fontStyle = FontStyles.Bold;
+            bonusScoreText.color = new Color(1f, 0.85f, 0.2f, 1f); // 골드
+            bonusScoreText.outlineWidth = 0.15f;
+            bonusScoreText.outlineColor = new Color32(0, 0, 0, 180);
+            bonusScoreText.text = "";
+            go.SetActive(false);
+        }
+
+        /// <summary>
+        /// 보너스 점수 표시 (홀드 중 틱마다 호출)
+        /// </summary>
+        public void ShowBonusScore(int tickAmount, int totalBonus)
+        {
+            if (bonusScoreText == null) return;
+
+            bonusScoreText.gameObject.SetActive(true);
+            bonusScoreText.text = $"BONUS +{totalBonus}";
+            bonusScoreText.color = new Color(1f, 0.85f, 0.2f, 1f);
+
+            // 작은 팝업 효과
+            bonusScoreText.transform.localScale = Vector3.one * 1.15f;
+            UIAnimator.ScaleTo(this, bonusScoreText.gameObject, Vector3.one, 0.1f);
+
+            // 기존 숨기기 코루틴 취소 후 재시작
+            if (bonusScoreCoroutine != null)
+                StopCoroutine(bonusScoreCoroutine);
+            bonusScoreCoroutine = StartCoroutine(HideBonusScore());
+        }
+
+        private System.Collections.IEnumerator HideBonusScore()
+        {
+            yield return new WaitForSecondsRealtime(0.8f);
+            if (bonusScoreText != null)
+                bonusScoreText.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -673,6 +733,9 @@ namespace AIBeat.UI
             if (resultScoreText != null)
                 resultScoreText.text = result.Score.ToString("N0");
 
+            // 보너스 점수가 있으면 별도 표시
+            CreateResultBonusScore(result);
+
             if (resultComboText != null)
                 resultComboText.text = $"MAX COMBO: {result.MaxCombo}";
 
@@ -735,6 +798,48 @@ namespace AIBeat.UI
             resultSongInfoText.fontSize = 18;
             resultSongInfoText.color = new Color(0f, 0.9f, 1f, 0.7f);
             resultSongInfoText.alignment = TextAlignmentOptions.Center;
+        }
+
+        /// <summary>
+        /// 결과 화면에 보너스 점수 표시 (동적 생성)
+        /// </summary>
+        private void CreateResultBonusScore(GameResult result)
+        {
+            if (resultPanel == null || result.BonusScore <= 0) return;
+
+            if (resultBonusScoreText == null)
+            {
+                var bonusGo = new GameObject("ResultBonusScore");
+                bonusGo.transform.SetParent(resultPanel.transform, false);
+
+                // ResultScoreText 아래에 배치
+                var bonusRect = bonusGo.AddComponent<RectTransform>();
+                // resultScoreText의 위치를 기준으로 아래에 배치
+                if (resultScoreText != null)
+                {
+                    var scoreRect = resultScoreText.GetComponent<RectTransform>();
+                    bonusRect.anchorMin = scoreRect.anchorMin;
+                    bonusRect.anchorMax = scoreRect.anchorMax;
+                    bonusRect.anchoredPosition = scoreRect.anchoredPosition + new Vector2(0, -30);
+                    bonusRect.sizeDelta = scoreRect.sizeDelta;
+                }
+                else
+                {
+                    bonusRect.anchorMin = new Vector2(0.1f, 0.7f);
+                    bonusRect.anchorMax = new Vector2(0.9f, 0.76f);
+                    bonusRect.offsetMin = Vector2.zero;
+                    bonusRect.offsetMax = Vector2.zero;
+                }
+
+                resultBonusScoreText = bonusGo.AddComponent<TextMeshProUGUI>();
+                resultBonusScoreText.fontSize = 18;
+                resultBonusScoreText.alignment = TextAlignmentOptions.Center;
+                resultBonusScoreText.fontStyle = FontStyles.Bold;
+            }
+
+            resultBonusScoreText.text = $"(BONUS +{result.BonusScore:N0})";
+            resultBonusScoreText.color = new Color(1f, 0.85f, 0.2f, 0.9f); // 골드
+            resultBonusScoreText.gameObject.SetActive(true);
         }
 
         /// <summary>

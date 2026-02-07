@@ -7,25 +7,18 @@
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 34)
+## What changed (세션 36)
 
-### 전체 플로우 종합 재검증 (3개 씬 모두 통과)
+### 롱노트 홀드 보너스 점수 시스템 추가
+- **JudgementSystem**: `bonusScore` 필드, `AddBonusScore()`, `OnBonusScore` 이벤트, `TotalScore` 프로퍼티
+- **GameplayController**: `HoldBonusTickLoop` 코루틴 — 홀드 중 0.1초마다 +50 BONUS 누적
+- **GameplayUI**: 게임 중 "BONUS +N" 골드색 팝업 표시 (좌상단 콤보 아래)
+- **GameResult**: `BaseScore` + `BonusScore` 분리, 결과 화면에 "(BONUS +N)" 별도 표시
+- **AutoPlay 판정 다양화**: Perfect 55% / Great 25% / Good 15% / Bad 5% 분포
 
-| 씬 | Play 모드 | 에러 | 경고 | UI 요소 검증 |
-|----|-----------|------|------|-------------|
-| MainMenu | 정상 | 0 | 0 | PlayButton("PLAY"), LibraryButton("LIBRARY"), SettingsButton("SETTINGS"), ExitButton("EXIT"), TutorialUI 자동시작 |
-| SongSelect | 정상 | 0 | 0 | GenerateButton("GENERATE"), BackButton("BACK"), GenreContainer(8개), MoodContainer(8개), BpmSlider(80-180, val=140), LoadingPanel(대기) |
-| Gameplay | 정상 | 0 | 1 (중복노트 필터링) | AutoPlay Perfect 연속 (combo 22+), Tap/Scratch/Long 노트 모두 스폰, 점수 23,265+ |
-
-### 코드 레벨 검증
-- **씬 전환 플로우**: MainMenu→SongSelect→Gameplay→MainMenu 순환 확인
-  - Play → `LoadScene("SongSelect")`
-  - Generate → `StartGame(songData)` → `LoadScene("Gameplay")`
-  - Quit → `ReturnToMenu()` → `LoadScene("MainMenu")`
-  - Retry → `SceneManager.LoadScene("Gameplay")` (씬 재로드)
-- **결과 화면**: Score/Combo/Accuracy/Rank + PERFECT~MISS 5단계 카운트 + NEW RECORD
-- **일시정지**: Resume/Restart/Quit 3버튼
-- **설정**: 5개 슬라이더 + CALIBRATE + RESET/CLOSE
+### 테스트 결과
+- recompile_scripts → **0 에러, 0 경고**
+- Gameplay Play Mode → **에러 0**, Score 62,908 (보너스 포함), Miss 0
 
 ## Commands & Results
 - recompile_scripts → **0 에러, 0 경고**
