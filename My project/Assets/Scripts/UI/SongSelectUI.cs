@@ -771,6 +771,19 @@ namespace AIBeat.UI
             // generateTabContent이 Inspector에서 설정되어 있으면 그것도 제어
             if (generateTabContent != null)
                 generateTabContent.gameObject.SetActive(visible);
+
+            // 동적으로 생성된 섹션 라벨 숨기기
+            var genreLabel = transform.Find("GenreLabel");
+            if (genreLabel != null)
+                genreLabel.gameObject.SetActive(visible);
+
+            var moodLabel = transform.Find("MoodLabel");
+            if (moodLabel != null)
+                moodLabel.gameObject.SetActive(visible);
+
+            var bpmLabel = transform.Find("BpmLabel");
+            if (bpmLabel != null)
+                bpmLabel.gameObject.SetActive(visible);
         }
 
         private void CreateOptionButtons()
