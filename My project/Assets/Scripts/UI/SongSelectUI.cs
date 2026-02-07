@@ -317,7 +317,7 @@ namespace AIBeat.UI
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
             tmp.fontSize = 24;
-            tmp.color = Color.white;
+            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (MainMenuUI와 일치)
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
 
@@ -458,7 +458,7 @@ namespace AIBeat.UI
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
             tmp.fontSize = fontSize;
-            tmp.color = Color.white;
+            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (MainMenuUI와 일치)
             tmp.alignment = TextAlignmentOptions.Center;
 
             return tmp;
@@ -494,15 +494,16 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "Option";
-            tmp.fontSize = 18;
-            tmp.color = Color.white;
+            tmp.fontSize = 20;  // 18→20 (MainMenuUI와 일관성)
+            tmp.fontStyle = FontStyles.Bold;  // Bold 추가
+            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (MainMenuUI와 일치)
             tmp.alignment = TextAlignmentOptions.Center;
 
             return go;
         }
 
         /// <summary>
-        /// 섹션 라벨 동적 생성 (중복 방지)
+        /// 섹션 라벨 동적 생성 (중복 방지) - MainMenuUI 스타일 적용
         /// </summary>
         private void CreateSectionLabel(string name, string text, Vector2 anchoredPos)
         {
@@ -515,11 +516,11 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(0.5f, 1);
             rect.pivot = new Vector2(0, 1);
             rect.anchoredPosition = anchoredPos;
-            rect.sizeDelta = new Vector2(0, 28);
+            rect.sizeDelta = new Vector2(0, 32);  // 28→32 (높이 확대)
 
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 16;
+            tmp.fontSize = 20;  // 16→20 (MainMenuUI 섹션 헤더와 일치)
             tmp.color = new Color(0.5f, 0.8f, 1f);
             tmp.fontStyle = FontStyles.Bold;
         }
@@ -680,7 +681,7 @@ namespace AIBeat.UI
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
             tmp.fontSize = 20;
-            tmp.color = Color.white;
+            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (MainMenuUI와 일치)
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
 
