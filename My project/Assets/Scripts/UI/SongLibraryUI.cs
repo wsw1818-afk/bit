@@ -400,7 +400,9 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// StreamingAssets에서 MP3 로드 후 게임 시작
+        /// 오디오 파일 로드 후 게임 시작
+        /// AudioFileName이 "music:" 접두사면 persistentDataPath/Music 폴더에서 로드
+        /// 그 외에는 StreamingAssets에서 로드
         /// </summary>
         private IEnumerator LoadAudioAndStartGame(SongRecord song)
         {
@@ -408,12 +410,33 @@ namespace AIBeat.UI
             if (songCountText != null)
                 songCountText.text = "로딩 중...";
 
-            string path = System.IO.Path.Combine(Application.streamingAssetsPath, song.AudioFileName);
-            AudioType audioType = AudioType.MPEG;
-            if (song.AudioFileName.EndsWith(".wav")) audioType = AudioType.WAV;
-            else if (song.AudioFileName.EndsWith(".ogg")) audioType = AudioType.OGGVORBIS;
+            string audioFileName = song.AudioFileName;
+            string url;
 
-            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + path, audioType))
+            if (audioFileName.StartsWith("music:"))
+            {
+                // persistentDataPath/Music 폴더
+                string realName = audioFileName.Substring(6); // "music:" 제거
+                string fullPath = System.IO.Path.Combine(Application.persistentDataPath, "Music", realName);
+                url = "file://" + fullPath;
+                audioFileName = realName;
+            }
+            else
+            {
+                // StreamingAssets (Android는 jar:file:// 형식, 그대로 사용)
+                string fullPath = System.IO.Path.Combine(Application.streamingAssetsPath, audioFileName);
+#if UNITY_ANDROID && !UNITY_EDITOR
+                url = fullPath; // Android StreamingAssets는 이미 jar:file:// 포함
+#else
+                url = "file://" + fullPath;
+#endif
+            }
+
+            AudioType audioType = AudioType.MPEG;
+            if (audioFileName.EndsWith(".wav")) audioType = AudioType.WAV;
+            else if (audioFileName.EndsWith(".ogg")) audioType = AudioType.OGGVORBIS;
+
+            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(url, audioType))
             {
                 yield return www.SendWebRequest();
 
@@ -430,7 +453,7 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    Debug.LogError($"[SongLibrary] Audio load failed: {www.error}");
+                    Debug.LogError($"[SongLibrary] Audio load failed: {www.error} (URL: {url})");
                     if (songCountText != null)
                         songCountText.text = "로드 실패!";
                     yield return new WaitForSeconds(2f);

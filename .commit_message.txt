@@ -1,1 +1,1 @@
-📱 모바일 UI 최적화: Canvas Scaler 1080x1920 통일, SafeArea 순서 수정(Find 후 적용), 버튼/텍스트 크기 확대
+📱 모바일 UI+음악 로드 수정: Canvas Scaler 1080x1920 통일, SafeArea 순서 수정, Android StreamingAssets 호환, persistentDataPath/Music 스캔 추가

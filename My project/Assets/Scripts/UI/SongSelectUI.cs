@@ -153,7 +153,9 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// StreamingAssets 폴더의 MP3/WAV/OGG 파일을 스캔하여 라이브러리에 자동 등록
+        /// 음악 파일을 스캔하여 라이브러리에 자동 등록
+        /// 1) StreamingAssets 내장 곡 (빌드 시 포함, Android 호환)
+        /// 2) persistentDataPath/Music 폴더 (사용자 추가 곡)
         /// </summary>
         private void ScanAndRegisterStreamingAssets()
         {
@@ -169,34 +171,76 @@ namespace AIBeat.UI
                 }
             }
 
-            string streamingPath = Application.streamingAssetsPath;
-            if (!Directory.Exists(streamingPath)) return;
-
-            string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
-            foreach (var ext in extensions)
+            // 1) StreamingAssets 내장 곡 등록 (Android에서는 Directory.GetFiles 불가)
+            // 빌드 시 포함된 파일 목록을 하드코딩
+            string[] builtInFiles = { "jpop_energetic.mp3" };
+            foreach (var fileName in builtInFiles)
             {
-                string[] files = Directory.GetFiles(streamingPath, ext);
-                foreach (var filePath in files)
+                RegisterSongFile(fileName, "streaming");
+            }
+
+            // 2) persistentDataPath/Music 폴더 스캔 (사용자 추가 곡 — 모든 플랫폼 지원)
+            string musicPath = Path.Combine(Application.persistentDataPath, "Music");
+            if (Directory.Exists(musicPath))
+            {
+                string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
+                foreach (var ext in extensions)
                 {
-                    string fileName = Path.GetFileName(filePath);
-                    string titleFromFile = Path.GetFileNameWithoutExtension(filePath)
-                        .Replace("_", " ");
-
-                    var record = new SongRecord
+                    string[] files = Directory.GetFiles(musicPath, ext);
+                    foreach (var filePath in files)
                     {
-                        Title = titleFromFile,
-                        Artist = "Unknown",
-                        Genre = "EDM",
-                        Mood = "Energetic",
-                        BPM = 0, // 0 = 자동 분석 예정
-                        DifficultyLevel = 5,
-                        Duration = 0, // 0 = 로드 시 자동 설정
-                        AudioFileName = fileName
-                    };
-
-                    SongLibraryManager.Instance.AddSong(record);
+                        string fileName = Path.GetFileName(filePath);
+                        RegisterSongFile(fileName, "persistent");
+                    }
                 }
             }
+            else
+            {
+                // Music 폴더가 없으면 생성 (사용자가 곡을 넣을 수 있도록)
+                Directory.CreateDirectory(musicPath);
+                Debug.Log($"[SongSelect] Music 폴더 생성: {musicPath}");
+            }
+
+#if !UNITY_ANDROID || UNITY_EDITOR
+            // PC/에디터에서는 StreamingAssets 직접 스캔도 가능
+            string streamingPath = Application.streamingAssetsPath;
+            if (Directory.Exists(streamingPath))
+            {
+                string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
+                foreach (var ext in extensions)
+                {
+                    string[] files = Directory.GetFiles(streamingPath, ext);
+                    foreach (var filePath in files)
+                    {
+                        string fileName = Path.GetFileName(filePath);
+                        RegisterSongFile(fileName, "streaming");
+                    }
+                }
+            }
+#endif
+        }
+
+        private void RegisterSongFile(string fileName, string source)
+        {
+            string titleFromFile = Path.GetFileNameWithoutExtension(fileName)
+                .Replace("_", " ");
+
+            // source prefix 추가하여 로드 시 구분
+            string audioRef = source == "persistent" ? "music:" + fileName : fileName;
+
+            var record = new SongRecord
+            {
+                Title = titleFromFile,
+                Artist = "Unknown",
+                Genre = "EDM",
+                Mood = "Energetic",
+                BPM = 0,
+                DifficultyLevel = 5,
+                Duration = 0,
+                AudioFileName = audioRef
+            };
+
+            SongLibraryManager.Instance.AddSong(record);
         }
 
         private void OnBackClicked()
