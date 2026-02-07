@@ -12,17 +12,18 @@ namespace AIBeat.UI
     /// </summary>
     public class SettingsUI : MonoBehaviour
     {
-        // 네온 스타일 색상
-        private static readonly Color BG_COLOR = new Color(0.02f, 0.02f, 0.08f, 0.95f);
-        private static readonly Color BORDER_COLOR = new Color(0f, 0.8f, 1f, 0.5f);
-        private static readonly Color LABEL_COLOR = new Color(0f, 0.9f, 1f, 1f);
+        // 네온 스타일 색상 (개선)
+        private static readonly Color BG_COLOR = new Color(0.01f, 0.01f, 0.05f, 0.98f);  // 더 어두운 배경
+        private static readonly Color CARD_BG_COLOR = new Color(0.03f, 0.03f, 0.12f, 0.95f);  // 카드 배경
+        private static readonly Color BORDER_COLOR = new Color(0f, 0.9f, 1f, 0.6f);  // 더 밝은 테두리
+        private static readonly Color LABEL_COLOR = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
         private static readonly Color VALUE_COLOR = Color.white;
         private static readonly Color TITLE_COLOR = new Color(0f, 1f, 1f, 1f);
-        private static readonly Color BUTTON_BG = new Color(0.05f, 0.05f, 0.15f, 0.9f);
-        private static readonly Color BUTTON_TEXT_COLOR = new Color(0f, 0.9f, 1f, 1f);
-        private static readonly Color SLIDER_BG_COLOR = new Color(0.1f, 0.1f, 0.2f, 0.8f);
-        private static readonly Color SLIDER_FILL_COLOR = new Color(0f, 0.7f, 1f, 0.8f);
-        private static readonly Color SLIDER_HANDLE_COLOR = new Color(0f, 1f, 1f, 1f);
+        private static readonly Color BUTTON_BG = new Color(0.05f, 0.05f, 0.15f, 0.95f);
+        private static readonly Color BUTTON_TEXT_COLOR = new Color(0f, 0.95f, 1f, 1f);
+        private static readonly Color SLIDER_BG_COLOR = new Color(0.08f, 0.08f, 0.18f, 0.9f);  // 더 어두운 슬라이더 배경
+        private static readonly Color SLIDER_FILL_COLOR = new Color(0f, 0.85f, 1f, 1f);  // 밝은 네온 시안
+        private static readonly Color SLIDER_HANDLE_COLOR = Color.white;  // 흰색 핸들 (명확성)
 
         // 슬라이더 참조 (기본값 복원 시 사용)
         private Slider noteSpeedSlider;
@@ -106,8 +107,8 @@ namespace AIBeat.UI
 
             // VerticalLayoutGroup으로 항목 정렬
             var layout = contentGo.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 10, 10);
-            layout.spacing = 8;
+            layout.padding = new RectOffset(15, 15, 15, 15);
+            layout.spacing = 12;  // 8→12 (카드 간 여백 확대)
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -131,6 +132,9 @@ namespace AIBeat.UI
             float currentBGM = settings != null ? settings.BGMVolume : 0.8f;
             float currentSFX = settings != null ? settings.SFXVolume : 0.8f;
             float currentDim = settings != null ? settings.BackgroundDim : 0.5f;
+
+            // 게임플레이 섹션 헤더
+            CreateSectionHeader(contentGo.transform, "🎮 게임플레이");
 
             // 노트 속도 슬라이더 (1.0 ~ 10.0, 0.5 단위)
             noteSpeedSlider = CreateSliderRow(contentGo.transform, "노트 속도",
@@ -160,6 +164,15 @@ namespace AIBeat.UI
                 },
                 "ms", true);
 
+            // 캘리브레이션 카드 (판정 오프셋 바로 아래)
+            CreateCalibrationButton(contentGo.transform);
+
+            // 구분선
+            CreateSeparator(contentGo.transform);
+
+            // 오디오 섹션 헤더
+            CreateSectionHeader(contentGo.transform, "🔊 오디오");
+
             // BGM 볼륨 슬라이더
             bgmVolumeSlider = CreateSliderRow(contentGo.transform, "배경음악 볼륨",
                 0f, 1f, currentBGM, out bgmVolumeValueText,
@@ -182,6 +195,12 @@ namespace AIBeat.UI
                 },
                 "%");
 
+            // 구분선
+            CreateSeparator(contentGo.transform);
+
+            // 비주얼 섹션 헤더
+            CreateSectionHeader(contentGo.transform, "🎨 비주얼");
+
             // 배경 밝기 슬라이더
             backgroundDimSlider = CreateSliderRow(contentGo.transform, "배경 어둡게",
                 0f, 1f, currentDim, out backgroundDimValueText,
@@ -193,10 +212,7 @@ namespace AIBeat.UI
                 },
                 "%");
 
-            // 캘리브레이션 버튼 (오프셋 슬라이더 아래)
-            CreateCalibrationButton(contentGo.transform);
-
-            // 구분선
+            // 최종 구분선
             CreateSeparator(contentGo.transform);
 
             // 초기 값 표시 업데이트
@@ -214,7 +230,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 타이틀 텍스트 생성
+        /// 타이틀 텍스트 생성 (네온 효과 강화)
         /// </summary>
         private void CreateTitle(Transform parent, string text)
         {
@@ -223,18 +239,48 @@ namespace AIBeat.UI
 
             var rect = titleGo.AddComponent<RectTransform>();
             var layoutElem = titleGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 40;
+            layoutElem.preferredHeight = 50;  // 40→50 (타이틀 높이 확대)
 
             var tmp = titleGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 32;
+            tmp.fontSize = 38;  // 32→38 (폰트 크기 확대)
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = TITLE_COLOR;
             tmp.alignment = TextAlignmentOptions.Center;
+
+            // 네온 효과 (Outline)
+            var outline = titleGo.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0.6f, 1f, 0.8f);
+            outline.effectDistance = new Vector2(2, -2);
         }
 
         /// <summary>
-        /// 구분선 생성
+        /// 섹션 헤더 생성 (게임플레이/오디오/비주얼 구분)
+        /// </summary>
+        private void CreateSectionHeader(Transform parent, string text)
+        {
+            var headerGo = new GameObject($"SectionHeader_{text}");
+            headerGo.transform.SetParent(parent, false);
+
+            var rect = headerGo.AddComponent<RectTransform>();
+            var layoutElem = headerGo.AddComponent<LayoutElement>();
+            layoutElem.preferredHeight = 32;
+
+            var tmp = headerGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = 20;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.color = new Color(0.8f, 0.9f, 1f, 0.9f);  // 밝은 시안
+            tmp.alignment = TextAlignmentOptions.MidlineLeft;
+
+            // 네온 효과
+            var outline = headerGo.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0.7f, 1f, 0.5f);
+            outline.effectDistance = new Vector2(1, -1);
+        }
+
+        /// <summary>
+        /// 구분선 생성 (네온 효과 강화)
         /// </summary>
         private void CreateSeparator(Transform parent)
         {
@@ -243,31 +289,45 @@ namespace AIBeat.UI
 
             var rect = sepGo.AddComponent<RectTransform>();
             var layoutElem = sepGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 2;
+            layoutElem.preferredHeight = 3;  // 2→3 (두께 확대)
 
             var img = sepGo.AddComponent<Image>();
-            img.color = new Color(0f, 0.8f, 1f, 0.3f);
+            img.color = new Color(0f, 0.9f, 1f, 0.5f);  // 더 밝고 진한 네온
+
+            // 네온 효과
+            var outline = sepGo.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 1f, 1f, 0.8f);
+            outline.effectDistance = new Vector2(0, 1);
         }
 
         /// <summary>
-        /// 슬라이더 행 생성 (라벨 + 슬라이더 + 값 표시)
+        /// 슬라이더 행 생성 (카드 스타일, 라벨 + 슬라이더 + 값 통합)
         /// </summary>
         private Slider CreateSliderRow(Transform parent, string label,
             float min, float max, float currentValue,
             out TMP_Text valueText, UnityEngine.Events.UnityAction<float> onChanged,
             string suffix = "", bool wholeNumbers = false)
         {
-            // 행 컨테이너
-            var rowGo = new GameObject($"Setting_{label.Replace(" ", "")}");
-            rowGo.transform.SetParent(parent, false);
+            // 카드 컨테이너 (배경 + 테두리)
+            var cardGo = new GameObject($"Card_{label.Replace(" ", "")}");
+            cardGo.transform.SetParent(parent, false);
 
-            var rowRect = rowGo.AddComponent<RectTransform>();
-            var rowLayout = rowGo.AddComponent<LayoutElement>();
-            rowLayout.preferredHeight = 70; // 60→70 (전체 행 높이 확대)
+            var cardRect = cardGo.AddComponent<RectTransform>();
+            var cardLayout = cardGo.AddComponent<LayoutElement>();
+            cardLayout.preferredHeight = 85;  // 70→85 (카드 스타일로 높이 확대)
 
-            var vertLayout = rowGo.AddComponent<VerticalLayoutGroup>();
-            vertLayout.padding = new RectOffset(5, 5, 2, 2);
-            vertLayout.spacing = 2;
+            // 카드 배경 + 테두리
+            var cardImg = cardGo.AddComponent<Image>();
+            cardImg.color = CARD_BG_COLOR;
+
+            var cardOutline = cardGo.AddComponent<Outline>();
+            cardOutline.effectColor = BORDER_COLOR;
+            cardOutline.effectDistance = new Vector2(1, -1);
+
+            // 카드 내부 레이아웃
+            var vertLayout = cardGo.AddComponent<VerticalLayoutGroup>();
+            vertLayout.padding = new RectOffset(12, 12, 8, 8);  // 패딩 확대
+            vertLayout.spacing = 4;
             vertLayout.childControlWidth = true;
             vertLayout.childControlHeight = true;
             vertLayout.childForceExpandWidth = true;
@@ -275,11 +335,11 @@ namespace AIBeat.UI
 
             // 상단: 라벨 + 값 텍스트 (가로 배치)
             var headerGo = new GameObject("Header");
-            headerGo.transform.SetParent(rowGo.transform, false);
+            headerGo.transform.SetParent(cardGo.transform, false);
 
             var headerRect = headerGo.AddComponent<RectTransform>();
             var headerLayout = headerGo.AddComponent<LayoutElement>();
-            headerLayout.preferredHeight = 24;
+            headerLayout.preferredHeight = 26;  // 24→26 (라벨 높이 확대)
 
             var hLayout = headerGo.AddComponent<HorizontalLayoutGroup>();
             hLayout.childControlWidth = true;
@@ -287,7 +347,7 @@ namespace AIBeat.UI
             hLayout.childForceExpandWidth = true;
             hLayout.childForceExpandHeight = true;
 
-            // 라벨
+            // 라벨 (더 눈에 띄게)
             var labelGo = new GameObject("Label");
             labelGo.transform.SetParent(headerGo.transform, false);
             labelGo.AddComponent<RectTransform>();
@@ -295,51 +355,51 @@ namespace AIBeat.UI
             labelLayout2.flexibleWidth = 1;
             var labelTmp = labelGo.AddComponent<TextMeshProUGUI>();
             labelTmp.text = label;
-            labelTmp.fontSize = 18;
+            labelTmp.fontSize = 20;  // 18→20 (라벨 크기 확대)
             labelTmp.fontStyle = FontStyles.Bold;
             labelTmp.color = LABEL_COLOR;
             labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
 
-            // 값 표시 텍스트
+            // 값 표시 텍스트 (더 강조)
             var valueGo = new GameObject("Value");
             valueGo.transform.SetParent(headerGo.transform, false);
             valueGo.AddComponent<RectTransform>();
             var valueLayout2 = valueGo.AddComponent<LayoutElement>();
-            valueLayout2.preferredWidth = 80;
+            valueLayout2.preferredWidth = 90;  // 80→90 (값 영역 확대)
             var valueTmp = valueGo.AddComponent<TextMeshProUGUI>();
-            valueTmp.fontSize = 18;
+            valueTmp.fontSize = 22;  // 18→22 (값 크기 확대)
             valueTmp.fontStyle = FontStyles.Bold;
             valueTmp.color = VALUE_COLOR;
             valueTmp.alignment = TextAlignmentOptions.MidlineRight;
             valueText = valueTmp;
 
-            // 슬라이더
+            // 슬라이더 (개선된 디자인)
             var sliderGo = new GameObject("Slider");
-            sliderGo.transform.SetParent(rowGo.transform, false);
+            sliderGo.transform.SetParent(cardGo.transform, false);
 
             var sliderRect = sliderGo.AddComponent<RectTransform>();
             var sliderLayout = sliderGo.AddComponent<LayoutElement>();
-            sliderLayout.preferredHeight = 48; // 36→48 (슬라이더 높이 확대)
+            sliderLayout.preferredHeight = 40;  // 48→40 (슬라이더 높이 최적화)
 
-            // 슬라이더 배경
+            // 슬라이더 배경 (둥근 모서리 시뮬레이션)
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(sliderGo.transform, false);
             var bgRect = bgGo.AddComponent<RectTransform>();
-            bgRect.anchorMin = new Vector2(0, 0.25f);
-            bgRect.anchorMax = new Vector2(1, 0.75f);
+            bgRect.anchorMin = new Vector2(0, 0.2f);
+            bgRect.anchorMax = new Vector2(1, 0.8f);
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
             var bgImg = bgGo.AddComponent<Image>();
             bgImg.color = SLIDER_BG_COLOR;
 
-            // 슬라이더 필 영역
+            // 슬라이더 필 영역 (밝은 네온 시안)
             var fillAreaGo = new GameObject("Fill Area");
             fillAreaGo.transform.SetParent(sliderGo.transform, false);
             var fillAreaRect = fillAreaGo.AddComponent<RectTransform>();
-            fillAreaRect.anchorMin = new Vector2(0, 0.25f);
-            fillAreaRect.anchorMax = new Vector2(1, 0.75f);
-            fillAreaRect.offsetMin = new Vector2(5, 0);
-            fillAreaRect.offsetMax = new Vector2(-5, 0);
+            fillAreaRect.anchorMin = new Vector2(0, 0.2f);
+            fillAreaRect.anchorMax = new Vector2(1, 0.8f);
+            fillAreaRect.offsetMin = new Vector2(4, 0);
+            fillAreaRect.offsetMax = new Vector2(-4, 0);
 
             var fillGo = new GameObject("Fill");
             fillGo.transform.SetParent(fillAreaGo.transform, false);
@@ -363,9 +423,14 @@ namespace AIBeat.UI
             var handleGo = new GameObject("Handle");
             handleGo.transform.SetParent(handleAreaGo.transform, false);
             var handleRect = handleGo.AddComponent<RectTransform>();
-            handleRect.sizeDelta = new Vector2(44, 44); // 32→44 (터치 타겟 확대)
+            handleRect.sizeDelta = new Vector2(48, 48);  // 44→48 (핸들 크기 최대화)
             var handleImg = handleGo.AddComponent<Image>();
             handleImg.color = SLIDER_HANDLE_COLOR;
+
+            // 핸들 네온 효과 (Outline)
+            var handleOutline = handleGo.AddComponent<Outline>();
+            handleOutline.effectColor = SLIDER_FILL_COLOR;
+            handleOutline.effectDistance = new Vector2(2, -2);
 
             // Slider 컴포넌트 설정
             var slider = sliderGo.AddComponent<Slider>();
@@ -378,50 +443,114 @@ namespace AIBeat.UI
             slider.value = currentValue;
             slider.onValueChanged.AddListener(onChanged);
 
-            // 슬라이더 색상 전환 설정
+            // 슬라이더 색상 전환 설정 (개선)
             var colors = slider.colors;
             colors.normalColor = SLIDER_HANDLE_COLOR;
-            colors.highlightedColor = Color.white;
-            colors.pressedColor = new Color(0f, 0.6f, 0.8f, 1f);
+            colors.highlightedColor = new Color(1f, 1f, 1f, 1f);  // 밝은 흰색
+            colors.pressedColor = SLIDER_FILL_COLOR;  // 눌렀을 때 네온 시안
+            colors.selectedColor = SLIDER_FILL_COLOR;
+            colors.colorMultiplier = 1f;
             slider.colors = colors;
 
             return slider;
         }
 
         /// <summary>
-        /// 캘리브레이션 시작 버튼 + 상태 텍스트
+        /// 캘리브레이션 카드 (버튼 + 상태 텍스트)
         /// </summary>
         private void CreateCalibrationButton(Transform parent)
         {
-            var rowGo = new GameObject("CalibrationRow");
-            rowGo.transform.SetParent(parent, false);
+            // 카드 컨테이너
+            var cardGo = new GameObject("CalibrationCard");
+            cardGo.transform.SetParent(parent, false);
 
-            var rowLayout = rowGo.AddComponent<LayoutElement>();
-            rowLayout.preferredHeight = 56;
+            var cardLayout = cardGo.AddComponent<LayoutElement>();
+            cardLayout.preferredHeight = 70;
 
-            var hLayout = rowGo.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 10;
-            hLayout.childAlignment = TextAnchor.MiddleCenter;
-            hLayout.childControlWidth = true;
-            hLayout.childControlHeight = true;
-            hLayout.childForceExpandWidth = true;
-            hLayout.childForceExpandHeight = true;
+            // 카드 배경 + 테두리
+            var cardImg = cardGo.AddComponent<Image>();
+            cardImg.color = CARD_BG_COLOR;
 
-            // CALIBRATE 버튼
-            CreateButton(rowGo.transform, "자동 조정", OnCalibrateClicked);
+            var cardOutline = cardGo.AddComponent<Outline>();
+            cardOutline.effectColor = new Color(0.8f, 0.6f, 0f, 0.6f);  // 오렌지 테두리 (구분용)
+            cardOutline.effectDistance = new Vector2(1, -1);
+
+            // 카드 내부 레이아웃
+            var vertLayout = cardGo.AddComponent<VerticalLayoutGroup>();
+            vertLayout.padding = new RectOffset(12, 12, 8, 8);
+            vertLayout.spacing = 6;
+            vertLayout.childControlWidth = true;
+            vertLayout.childControlHeight = true;
+            vertLayout.childForceExpandWidth = true;
+            vertLayout.childForceExpandHeight = false;
+
+            // 버튼 영역
+            var btnRowGo = new GameObject("ButtonRow");
+            btnRowGo.transform.SetParent(cardGo.transform, false);
+            var btnRowLayout = btnRowGo.AddComponent<LayoutElement>();
+            btnRowLayout.preferredHeight = 36;
+
+            // 자동 조정 버튼 (카드 내부)
+            CreateInlineButton(btnRowGo.transform, "🎯 자동 조정", OnCalibrateClicked);
 
             // 상태 텍스트
             var statusGo = new GameObject("CalibrationStatus");
-            statusGo.transform.SetParent(rowGo.transform, false);
+            statusGo.transform.SetParent(cardGo.transform, false);
             statusGo.AddComponent<RectTransform>();
             var statusLayout = statusGo.AddComponent<LayoutElement>();
-            statusLayout.flexibleWidth = 2;
+            statusLayout.preferredHeight = 20;
 
             calibrationStatusText = statusGo.AddComponent<TextMeshProUGUI>();
-            calibrationStatusText.fontSize = 16;
-            calibrationStatusText.color = VALUE_COLOR;
-            calibrationStatusText.alignment = TextAlignmentOptions.MidlineLeft;
+            calibrationStatusText.fontSize = 14;
+            calibrationStatusText.color = new Color(0.7f, 0.7f, 0.8f, 1f);  // 연한 회색
+            calibrationStatusText.alignment = TextAlignmentOptions.Center;
             calibrationStatusText.text = "탭 테스트로 오프셋 자동 감지";
+        }
+
+        /// <summary>
+        /// 인라인 버튼 생성 (카드 내부용, 작은 버튼)
+        /// </summary>
+        private void CreateInlineButton(Transform parent, string text, UnityEngine.Events.UnityAction onClick)
+        {
+            var btnGo = new GameObject($"InlineBtn_{text}");
+            btnGo.transform.SetParent(parent, false);
+
+            var btnRect = btnGo.AddComponent<RectTransform>();
+            btnRect.anchorMin = Vector2.zero;
+            btnRect.anchorMax = Vector2.one;
+            btnRect.offsetMin = Vector2.zero;
+            btnRect.offsetMax = Vector2.zero;
+
+            // 버튼 배경
+            var btnImg = btnGo.AddComponent<Image>();
+            btnImg.color = new Color(0.6f, 0.4f, 0f, 0.3f);  // 오렌지 톤
+
+            // Button 컴포넌트
+            var btn = btnGo.AddComponent<Button>();
+            btn.targetGraphic = btnImg;
+            btn.onClick.AddListener(onClick);
+
+            var colors = btn.colors;
+            colors.normalColor = new Color(0.6f, 0.4f, 0f, 0.3f);
+            colors.highlightedColor = new Color(0.8f, 0.5f, 0f, 0.5f);
+            colors.pressedColor = new Color(1f, 0.6f, 0f, 0.7f);
+            btn.colors = colors;
+
+            // 텍스트
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(btnGo.transform, false);
+            var textRect = textGo.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            var tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = 16;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.color = new Color(1f, 0.8f, 0.4f, 1f);  // 밝은 오렌지
+            tmp.alignment = TextAlignmentOptions.Center;
         }
 
         private void OnCalibrateClicked()
@@ -513,7 +642,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 네온 스타일 버튼 생성
+        /// 네온 스타일 버튼 생성 (개선)
         /// </summary>
         private void CreateButton(Transform parent, string text, UnityEngine.Events.UnityAction onClick)
         {
@@ -526,10 +655,10 @@ namespace AIBeat.UI
             var btnImg = btnGo.AddComponent<Image>();
             btnImg.color = BUTTON_BG;
 
-            // 네온 테두리
+            // 네온 테두리 (더 두껍게)
             var btnOutline = btnGo.AddComponent<Outline>();
             btnOutline.effectColor = BORDER_COLOR;
-            btnOutline.effectDistance = new Vector2(1, -1);
+            btnOutline.effectDistance = new Vector2(2, -2);  // 1→2 (테두리 두께 확대)
 
             // Button 컴포넌트
             var btn = btnGo.AddComponent<Button>();
@@ -538,9 +667,13 @@ namespace AIBeat.UI
 
             var colors = btn.colors;
             colors.normalColor = BUTTON_BG;
-            colors.highlightedColor = new Color(0.1f, 0.1f, 0.25f, 0.9f);
-            colors.pressedColor = new Color(0f, 0.3f, 0.5f, 0.9f);
+            colors.highlightedColor = new Color(0.08f, 0.08f, 0.2f, 0.95f);
+            colors.pressedColor = new Color(0f, 0.4f, 0.6f, 1f);  // 더 밝은 네온
             btn.colors = colors;
+
+            // 최소 터치 영역 보장
+            var layoutElem = btnGo.AddComponent<LayoutElement>();
+            layoutElem.minHeight = 50;  // 최소 50px
 
             // 텍스트
             var textGo = new GameObject("Text");
@@ -553,7 +686,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 20;
+            tmp.fontSize = 22;  // 20→22 (폰트 크기 확대)
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = BUTTON_TEXT_COLOR;
             tmp.alignment = TextAlignmentOptions.Center;
