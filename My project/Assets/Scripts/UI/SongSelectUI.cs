@@ -55,6 +55,7 @@ namespace AIBeat.UI
             rect.offsetMax = Vector2.zero;
 
             var img = bgGo.AddComponent<Image>();
+            img.raycastTarget = false; // 배경은 터치 차단 안 함
             var tex = Resources.Load<Texture2D>("UI/BIT");
             if (tex != null)
             {
@@ -79,6 +80,7 @@ namespace AIBeat.UI
             overlayRect.offsetMin = Vector2.zero;
             overlayRect.offsetMax = Vector2.zero;
             var overlayImg = overlayGo.AddComponent<Image>();
+            overlayImg.raycastTarget = false; // 오버레이도 터치 차단 안 함
             overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.65f);
         }
 
@@ -111,6 +113,7 @@ namespace AIBeat.UI
                 barRect.offsetMax = Vector2.zero;
 
                 var barImg = barGo.AddComponent<Image>();
+                barImg.raycastTarget = false; // 이퀄라이저 바는 터치 차단 안 함
                 float t = (float)i / barCount;
                 barImg.color = Color.Lerp(UIColorPalette.EQ_ORANGE, UIColorPalette.EQ_YELLOW, t);
                 eqBars.Add(barImg);

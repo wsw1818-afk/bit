@@ -5,7 +5,7 @@ namespace AIBeat.Core
 {
     /// <summary>
     /// 한국어 TMP 폰트를 관리하는 유틸리티.
-    /// Resources에서 SDF 폰트 에셋을 로드합니다.
+    /// TTF로부터 Dynamic SDF 폰트를 런타임 생성하여 확실한 한국어 렌더링 보장.
     /// </summary>
     public static class KoreanFontManager
     {
@@ -26,24 +26,49 @@ namespace AIBeat.Core
         {
             _initialized = true;
 
-            // 여러 경로에서 SDF 에셋 로드 시도
+            // 1단계: 기존 SDF 에셋 로드 시도 (글리프가 있는 경우만 사용)
             string[] paths = {
-                "Fonts & Materials/MalgunGothicBold SDF",  // TMP Resources
-                "Fonts/MalgunGothicBold SDF",              // Custom Resources
-                "MalgunGothicBold SDF",                    // Root Resources
+                "Fonts & Materials/MalgunGothicBold SDF",
+                "Fonts/MalgunGothicBold SDF",
+                "MalgunGothicBold SDF",
             };
 
             foreach (var path in paths)
             {
-                _koreanFont = Resources.Load<TMP_FontAsset>(path);
-                if (_koreanFont != null)
+                var loaded = Resources.Load<TMP_FontAsset>(path);
+                if (loaded != null)
                 {
-                    Debug.Log($"[KoreanFontManager] 한국어 폰트 로드 성공: {path}");
-                    return;
+                    // Static 모드이고 글리프가 있으면 바로 사용
+                    if (loaded.atlasPopulationMode == AtlasPopulationMode.Static
+                        && loaded.characterTable != null
+                        && loaded.characterTable.Count > 0)
+                    {
+                        _koreanFont = loaded;
+                        Debug.Log($"[KoreanFontManager] Static SDF 폰트 로드 성공: {path} (글리프 {loaded.characterTable.Count}개)");
+                        return;
+                    }
+
+                    // Dynamic 모드: 소스 폰트 파일이 연결되어 있고 아틀라스가 유효하면 사용
+                    if (loaded.atlasPopulationMode == AtlasPopulationMode.Dynamic
+                        && loaded.sourceFontFile != null)
+                    {
+                        // 한국어 테스트 문자 추가 시도
+                        bool canAddChars = loaded.TryAddCharacters("가나다라마바사");
+                        if (canAddChars)
+                        {
+                            _koreanFont = loaded;
+                            Debug.Log($"[KoreanFontManager] Dynamic SDF 폰트 사용 (소스 폰트 연결됨): {path}");
+                            return;
+                        }
+                        else
+                        {
+                            Debug.Log($"[KoreanFontManager] Dynamic SDF 폰트가 글리프 추가 실패: {path}, TTF 폴백 시도");
+                        }
+                    }
                 }
             }
 
-            // LiberationSans SDF에 Fallback으로 등록된 폰트 확인
+            // 2단계: LiberationSans SDF Fallback 확인
             var defaultFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
             if (defaultFont != null && defaultFont.fallbackFontAssetTable != null)
             {
@@ -58,13 +83,13 @@ namespace AIBeat.Core
                 }
             }
 
-            // 마지막 수단: TMP_FontAsset을 런타임에 TTF로부터 생성
+            // 3단계: TTF로부터 Dynamic SDF 생성 (가장 확실한 방법)
             CreateFromTTF();
         }
 
         private static void CreateFromTTF()
         {
-            // Resources에서 TTF 폰트 로드 후 Dynamic SDF 에셋 생성
+            // Resources에서 TTF 폰트 로드
             var ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
             if (ttfFont == null)
             {
@@ -91,7 +116,6 @@ namespace AIBeat.Core
                 return;
             }
 
-            // TMP_FontAsset.CreateFontAsset은 에디터/빌드 모두 사용 가능 (Unity 2021.2+)
             _koreanFont = TMP_FontAsset.CreateFontAsset(ttfFont);
             if (_koreanFont != null)
             {

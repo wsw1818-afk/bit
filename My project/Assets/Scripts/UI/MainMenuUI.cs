@@ -59,6 +59,7 @@ namespace AIBeat.UI
             rect.offsetMax = Vector2.zero;
 
             var img = bgGo.AddComponent<Image>();
+            img.raycastTarget = false;
             var tex = Resources.Load<Texture2D>("UI/BIT");
             if (tex != null)
             {
@@ -83,6 +84,7 @@ namespace AIBeat.UI
             overlayRect.offsetMin = Vector2.zero;
             overlayRect.offsetMax = Vector2.zero;
             var overlayImg = overlayGo.AddComponent<Image>();
+            overlayImg.raycastTarget = false;
             overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.55f);
         }
 
@@ -116,6 +118,7 @@ namespace AIBeat.UI
                 barRect.offsetMax = Vector2.zero;
 
                 var barImg = barGo.AddComponent<Image>();
+                barImg.raycastTarget = false;
                 // 오렌지→옐로우 그라데이션 (BIT.jpg 이퀄라이저 색상)
                 float t = (float)i / barCount;
                 barImg.color = Color.Lerp(UIColorPalette.EQ_ORANGE, UIColorPalette.EQ_YELLOW, t);

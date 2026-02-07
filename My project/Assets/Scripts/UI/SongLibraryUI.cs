@@ -131,6 +131,8 @@ namespace AIBeat.UI
             viewportRect.offsetMin = Vector2.zero;
             viewportRect.offsetMax = Vector2.zero;
 
+            var viewportImg = viewport.AddComponent<Image>();
+            viewportImg.color = Color.clear; // 투명 — 스크롤 터치 감지용
             viewport.AddComponent<RectMask2D>(); // Mask 대신 RectMask2D 사용 (stencil 문제 방지)
 
             scrollRect.viewport = viewportRect;
