@@ -31,7 +31,15 @@ namespace AIBeat.Gameplay
                 if (hasBeenJudged) return true;
                 // 롱노트가 홀드 중이면 만료되지 않음
                 if (isHolding) return false;
-                float currentTime = AudioManager.Instance != null ? AudioManager.Instance.CurrentTime : 0f;
+
+                // AudioManager null 체크
+                if (AudioManager.Instance == null)
+                {
+                    Debug.LogWarning("[Note] AudioManager.Instance is null in IsExpired");
+                    return false; // AudioManager가 없으면 만료 안됨 (안전)
+                }
+
+                float currentTime = AudioManager.Instance.CurrentTime;
                 // 롱노트는 HitTime + Duration + 여유시간 이후에 만료
                 float expireAfter = noteData.Type == NoteType.Long
                     ? noteData.HitTime + noteData.Duration + 0.5f
@@ -162,6 +170,13 @@ namespace AIBeat.Gameplay
             isHolding = false;
             float holdDuration = time - holdStartTime;
             float targetDuration = noteData.Duration;
+
+            // Duration이 0 이하인 경우 방어 (잘못된 데이터)
+            if (targetDuration <= 0f)
+            {
+                Debug.LogWarning($"[Note] Invalid duration: {targetDuration}");
+                return true; // 기본 성공 처리
+            }
 
             // 홀드 시간이 목표의 80% 이상이면 성공
             return holdDuration >= targetDuration * 0.8f;

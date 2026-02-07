@@ -658,5 +658,322 @@ namespace AIBeat.Editor
             Debug.Log("[GameSetupEditor] TMP Essential Resources 임포트 완료!");
         }
     }
+
+    /// <summary>
+    /// Inspector에서 게임 설정을 일괄 조정하는 EditorWindow
+    /// </summary>
+    public class GameSettingsWindow : EditorWindow
+    {
+        // Lane settings
+        private int laneCount = 4;
+        private float laneWidth = 1f;
+        private float laneStartX = -1.5f;
+
+        // Judgement windows (ms)
+        private float perfectWindowMs = 50f;
+        private float greatWindowMs = 100f;
+        private float goodWindowMs = 200f;
+        private float badWindowMs = 350f;
+
+        // Note settings
+        private float noteSpeed = 5f;
+        private float spawnDistance = 10f;
+        private float lookAhead = 2f;
+        private int poolSize = 100;
+
+        // Score settings
+        private int baseScorePerNote = 1000;
+        private float maxComboBonus = 0.5f;
+        private int comboForMaxBonus = 100;
+
+        // Gameplay
+        private float countdownTime = 3f;
+        private bool debugMode = true;
+        private bool autoPlay = false;
+
+        private Vector2 scrollPos;
+        private bool showLaneSettings = true;
+        private bool showJudgementSettings = true;
+        private bool showNoteSettings = true;
+        private bool showScoreSettings = true;
+        private bool showGameplaySettings = true;
+
+        [MenuItem("Window/A.I. BEAT/Game Settings")]
+        public static void ShowWindow()
+        {
+            var window = GetWindow<GameSettingsWindow>("A.I. BEAT Settings");
+            window.minSize = new Vector2(320, 400);
+            window.LoadFromScene();
+        }
+
+        private void OnEnable()
+        {
+            LoadFromScene();
+        }
+
+        /// <summary>
+        /// 씬의 현재 컴포넌트 값을 읽어서 윈도우에 반영
+        /// </summary>
+        public void LoadFromScene()
+        {
+            var spawner = FindFirstObjectByType<Gameplay.NoteSpawner>();
+            if (spawner != null)
+            {
+                var so = new SerializedObject(spawner);
+                var speedProp = so.FindProperty("noteSpeed");
+                var distProp = so.FindProperty("spawnDistance");
+                var lookProp = so.FindProperty("lookAhead");
+                var poolProp = so.FindProperty("poolSize");
+                if (speedProp != null) noteSpeed = speedProp.floatValue;
+                if (distProp != null) spawnDistance = distProp.floatValue;
+                if (lookProp != null) lookAhead = lookProp.floatValue;
+                if (poolProp != null) poolSize = poolProp.intValue;
+            }
+
+            var judgement = FindFirstObjectByType<Gameplay.JudgementSystem>();
+            if (judgement != null)
+            {
+                var so = new SerializedObject(judgement);
+                var pProp = so.FindProperty("perfectWindow");
+                var grProp = so.FindProperty("greatWindow");
+                var goProp = so.FindProperty("goodWindow");
+                var bProp = so.FindProperty("badWindow");
+                var baseProp = so.FindProperty("baseScorePerNote");
+                var comboBonusProp = so.FindProperty("maxComboBonus");
+                var comboMaxProp = so.FindProperty("comboForMaxBonus");
+                if (pProp != null) perfectWindowMs = pProp.floatValue * 1000f;
+                if (grProp != null) greatWindowMs = grProp.floatValue * 1000f;
+                if (goProp != null) goodWindowMs = goProp.floatValue * 1000f;
+                if (bProp != null) badWindowMs = bProp.floatValue * 1000f;
+                if (baseProp != null) baseScorePerNote = baseProp.intValue;
+                if (comboBonusProp != null) maxComboBonus = comboBonusProp.floatValue;
+                if (comboMaxProp != null) comboForMaxBonus = comboMaxProp.intValue;
+            }
+
+            var controller = FindFirstObjectByType<Gameplay.GameplayController>();
+            if (controller != null)
+            {
+                var so = new SerializedObject(controller);
+                var cdProp = so.FindProperty("countdownTime");
+                var dbgProp = so.FindProperty("debugMode");
+                var autoProp = so.FindProperty("autoPlay");
+                if (cdProp != null) countdownTime = cdProp.floatValue;
+                if (dbgProp != null) debugMode = dbgProp.boolValue;
+                if (autoProp != null) autoPlay = autoProp.boolValue;
+            }
+
+            Repaint();
+        }
+
+        private new Object FindFirstObjectByType<T>() where T : Object
+        {
+            return Object.FindFirstObjectByType<T>();
+        }
+
+        private void OnGUI()
+        {
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+
+            EditorGUILayout.LabelField("A.I. BEAT: Infinite Mix", EditorStyles.boldLabel);
+            EditorGUILayout.Space(4);
+
+            // --- Lane Settings ---
+            showLaneSettings = EditorGUILayout.Foldout(showLaneSettings, "Lane Settings", true);
+            if (showLaneSettings)
+            {
+                EditorGUI.indentLevel++;
+                laneCount = EditorGUILayout.IntSlider("Lane Count", laneCount, 2, 8);
+                laneWidth = EditorGUILayout.Slider("Lane Width", laneWidth, 0.5f, 3f);
+                laneStartX = EditorGUILayout.FloatField("Lane Start X", laneStartX);
+                EditorGUILayout.HelpBox("0=ScratchL, 1=Key1, 2=Key2, 3=ScratchR", MessageType.Info);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space(4);
+
+            // --- Judgement Windows ---
+            showJudgementSettings = EditorGUILayout.Foldout(showJudgementSettings, "Judgement Windows (ms)", true);
+            if (showJudgementSettings)
+            {
+                EditorGUI.indentLevel++;
+                perfectWindowMs = EditorGUILayout.Slider("Perfect", perfectWindowMs, 10f, 100f);
+                greatWindowMs = EditorGUILayout.Slider("Great", greatWindowMs, 50f, 200f);
+                goodWindowMs = EditorGUILayout.Slider("Good", goodWindowMs, 100f, 400f);
+                badWindowMs = EditorGUILayout.Slider("Bad", badWindowMs, 200f, 600f);
+
+                // Validation
+                if (greatWindowMs <= perfectWindowMs)
+                    EditorGUILayout.HelpBox("Great must be > Perfect", MessageType.Warning);
+                if (goodWindowMs <= greatWindowMs)
+                    EditorGUILayout.HelpBox("Good must be > Great", MessageType.Warning);
+                if (badWindowMs <= goodWindowMs)
+                    EditorGUILayout.HelpBox("Bad must be > Good", MessageType.Warning);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space(4);
+
+            // --- Note Settings ---
+            showNoteSettings = EditorGUILayout.Foldout(showNoteSettings, "Note Settings", true);
+            if (showNoteSettings)
+            {
+                EditorGUI.indentLevel++;
+                noteSpeed = EditorGUILayout.Slider("Note Speed", noteSpeed, 1f, 15f);
+                spawnDistance = EditorGUILayout.Slider("Spawn Distance", spawnDistance, 5f, 20f);
+                lookAhead = EditorGUILayout.Slider("Look Ahead (sec)", lookAhead, 0.5f, 5f);
+                poolSize = EditorGUILayout.IntSlider("Pool Size", poolSize, 20, 300);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space(4);
+
+            // --- Score Settings ---
+            showScoreSettings = EditorGUILayout.Foldout(showScoreSettings, "Score Settings", true);
+            if (showScoreSettings)
+            {
+                EditorGUI.indentLevel++;
+                baseScorePerNote = EditorGUILayout.IntSlider("Base Score/Note", baseScorePerNote, 100, 5000);
+                maxComboBonus = EditorGUILayout.Slider("Max Combo Bonus", maxComboBonus, 0f, 2f);
+                comboForMaxBonus = EditorGUILayout.IntSlider("Combo for Max", comboForMaxBonus, 10, 500);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space(4);
+
+            // --- Gameplay Settings ---
+            showGameplaySettings = EditorGUILayout.Foldout(showGameplaySettings, "Gameplay Settings", true);
+            if (showGameplaySettings)
+            {
+                EditorGUI.indentLevel++;
+                countdownTime = EditorGUILayout.Slider("Countdown (sec)", countdownTime, 1f, 5f);
+                debugMode = EditorGUILayout.Toggle("Debug Mode", debugMode);
+                autoPlay = EditorGUILayout.Toggle("Auto Play", autoPlay);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space(8);
+
+            // --- Buttons ---
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Apply to Scene", GUILayout.Height(30)))
+            {
+                ApplyToScene();
+            }
+            if (GUILayout.Button("Reload", GUILayout.Height(30)))
+            {
+                LoadFromScene();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(4);
+
+            if (GUILayout.Button("Reset to Defaults", GUILayout.Height(24)))
+            {
+                ResetDefaults();
+            }
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        /// <summary>
+        /// 윈도우의 값을 씬 컴포넌트에 적용
+        /// </summary>
+        private void ApplyToScene()
+        {
+            Undo.SetCurrentGroupName("Apply Game Settings");
+            int undoGroup = Undo.GetCurrentGroup();
+
+            // NoteSpawner
+            var spawner = Object.FindFirstObjectByType<Gameplay.NoteSpawner>();
+            if (spawner != null)
+            {
+                Undo.RecordObject(spawner, "Modify NoteSpawner");
+                var so = new SerializedObject(spawner);
+                SetFloat(so, "noteSpeed", noteSpeed);
+                SetFloat(so, "spawnDistance", spawnDistance);
+                SetFloat(so, "lookAhead", lookAhead);
+                SetInt(so, "poolSize", poolSize);
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(spawner);
+            }
+
+            // JudgementSystem
+            var judgement = Object.FindFirstObjectByType<Gameplay.JudgementSystem>();
+            if (judgement != null)
+            {
+                Undo.RecordObject(judgement, "Modify JudgementSystem");
+                var so = new SerializedObject(judgement);
+                SetFloat(so, "perfectWindow", perfectWindowMs / 1000f);
+                SetFloat(so, "greatWindow", greatWindowMs / 1000f);
+                SetFloat(so, "goodWindow", goodWindowMs / 1000f);
+                SetFloat(so, "badWindow", badWindowMs / 1000f);
+                SetInt(so, "baseScorePerNote", baseScorePerNote);
+                SetFloat(so, "maxComboBonus", maxComboBonus);
+                SetInt(so, "comboForMaxBonus", comboForMaxBonus);
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(judgement);
+            }
+
+            // GameplayController
+            var controller = Object.FindFirstObjectByType<Gameplay.GameplayController>();
+            if (controller != null)
+            {
+                Undo.RecordObject(controller, "Modify GameplayController");
+                var so = new SerializedObject(controller);
+                SetFloat(so, "countdownTime", countdownTime);
+                SetBool(so, "debugMode", debugMode);
+                SetBool(so, "autoPlay", autoPlay);
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(controller);
+            }
+
+            Undo.CollapseUndoOperations(undoGroup);
+
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+
+            Debug.Log("[GameSettingsWindow] Settings applied to scene");
+        }
+
+        private static void SetFloat(SerializedObject so, string name, float value)
+        {
+            var prop = so.FindProperty(name);
+            if (prop != null) prop.floatValue = value;
+        }
+
+        private static void SetInt(SerializedObject so, string name, int value)
+        {
+            var prop = so.FindProperty(name);
+            if (prop != null) prop.intValue = value;
+        }
+
+        private static void SetBool(SerializedObject so, string name, bool value)
+        {
+            var prop = so.FindProperty(name);
+            if (prop != null) prop.boolValue = value;
+        }
+
+        private void ResetDefaults()
+        {
+            laneCount = 4;
+            laneWidth = 1f;
+            laneStartX = -1.5f;
+            perfectWindowMs = 50f;
+            greatWindowMs = 100f;
+            goodWindowMs = 200f;
+            badWindowMs = 350f;
+            noteSpeed = 5f;
+            spawnDistance = 10f;
+            lookAhead = 2f;
+            poolSize = 100;
+            baseScorePerNote = 1000;
+            maxComboBonus = 0.5f;
+            comboForMaxBonus = 100;
+            countdownTime = 3f;
+            debugMode = true;
+            autoPlay = false;
+            Repaint();
+        }
+    }
 #endif
 }

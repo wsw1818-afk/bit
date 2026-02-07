@@ -63,8 +63,10 @@ namespace AIBeat.Audio
             int prevLane = -1;
             int sameCount = 0;
 
-            foreach (var onset in analysis.Onsets)
+            for (int idx = 0; idx < analysis.Onsets.Count; idx++)
             {
+                var onset = analysis.Onsets[idx];
+
                 // 강도 필터링 (약한 온셋은 스킵)
                 float normalizedStrength = onset.Strength / maxStrength;
                 if (normalizedStrength < strengthThreshold) continue;
@@ -80,8 +82,9 @@ namespace AIBeat.Audio
                 if (densityMult < 1f && normalizedStrength < strengthThreshold / densityMult)
                     continue;
 
-                // 레인 결정
-                int lane = BAND_TO_LANE[Mathf.Clamp(onset.DominantBand, 0, 7)];
+                // 레인 결정 (DominantBand 범위 검증)
+                int bandIndex = Mathf.Clamp(onset.DominantBand, 0, 7);
+                int lane = BAND_TO_LANE[bandIndex];
 
                 // 같은 레인 연속 방지 (3회 이상이면 이웃 레인으로)
                 if (lane == prevLane)
@@ -103,15 +106,11 @@ namespace AIBeat.Audio
                 float duration = (type == NoteType.Long) ? longNoteDuration : 0f;
 
                 // 롱노트일 때 다음 온셋과의 간격으로 지속시간 조절
-                if (type == NoteType.Long)
+                if (type == NoteType.Long && idx < analysis.Onsets.Count - 1)
                 {
-                    int idx = analysis.Onsets.IndexOf(onset);
-                    if (idx >= 0 && idx < analysis.Onsets.Count - 1)
-                    {
-                        float gap = analysis.Onsets[idx + 1].Time - onset.Time;
-                        duration = Mathf.Min(gap * 0.8f, 2f); // 최대 2초
-                        duration = Mathf.Max(duration, 0.3f);  // 최소 0.3초
-                    }
+                    float gap = analysis.Onsets[idx + 1].Time - onset.Time;
+                    duration = Mathf.Min(gap * 0.8f, 2f); // 최대 2초
+                    duration = Mathf.Max(duration, 0.3f);  // 최소 0.3초
                 }
 
                 notes.Add(new NoteData(onset.Time, lane, type, duration));

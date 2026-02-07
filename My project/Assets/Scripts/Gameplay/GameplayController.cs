@@ -255,15 +255,26 @@ namespace AIBeat.Gameplay
         /// </summary>
         private System.Collections.IEnumerator AutoPlayLoop()
         {
-            while (isPlaying || isPaused)
+            while (true)
             {
                 yield return null;
-                if (isPaused || !isPlaying) continue;
 
-                float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
+                // 게임 종료 시 루프 탈출
+                if (!isPlaying && !isPaused) break;
 
-                // 활성 노트 중 판정 시간이 된 것을 자동 처리
-                if (noteSpawner == null) continue;
+                // 일시정지 중에는 처리 스킵
+                if (isPaused) continue;
+
+                // AudioManager null 체크
+                if (AudioManager.Instance == null || noteSpawner == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning("[GameplayController] AutoPlay: Missing required components");
+#endif
+                    break;
+                }
+
+                float currentTime = AudioManager.Instance.CurrentTime;
 
                 for (int lane = 0; lane <= 3; lane++)
                 {

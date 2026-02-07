@@ -213,8 +213,10 @@ namespace AIBeat.Gameplay
                 _ => 0f
             };
 
-            // 콤보 보너스 계산
-            float comboRatio = Mathf.Min(1f, (float)currentCombo / comboForMaxBonus);
+            // 콤보 보너스 계산 (division by zero 방지)
+            float comboRatio = comboForMaxBonus > 0
+                ? Mathf.Min(1f, (float)currentCombo / comboForMaxBonus)
+                : 0f;
             float comboBonus = 1f + (comboRatio * maxComboBonus);
 
             return Mathf.RoundToInt(baseScorePerNote * scoreMultiplier * comboBonus);

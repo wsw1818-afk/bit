@@ -1,71 +1,51 @@
 # PROGRESS.md (현재 진행: 얇게 유지)
 
 ## Dashboard
-- Progress: 100% (세션 29 - 8개 TODO 전체 구현 완료)
+- Progress: 100% (세션 30 - 코드 품질 개선 + 문서 완성 + 에디터 도구 구현)
 - Risk: 낮음
 
 ## Today Goal
-- 다른 AI가 분석한 8개 TODO 항목 코드 반영
+- 팀 기반 병렬 작업으로 앱 완성도 높이기
 
-## What changed (세션 29)
+## What changed (세션 30)
 
-### TODO-1: 4레인 잔여 정리
-- **SimpleTest.asset**: 71개 노트 전수 리매핑 (LaneIndex 4-6 → 0-3 범위)
-- **AIBeatEditorTests.cs**: Assert 20→71, LaneIndex 검증 ≤6 → ≤3
-- **AudioAnalyzer.cs**: MapBandToLane 7레인→4레인 매핑 재작성
+### 코드 리뷰 + 버그 수정 (9개 파일, 15개 이슈)
+- **GameplayController.cs**: AutoPlayLoop 종료 조건 명확화, AudioManager null 체크
+- **NoteSpawner.cs**: JudgementSystem null 경고, GetNearestNote 레인 인덱스 검증
+- **InputHandler.cs**: TouchZoneToLane Clamp, GetScratchLane 범위 검증
+- **BeatMapper.cs**: BPM 유효성 검증 (0 이하/300 초과 방어), notes.Count 체크
+- **SmartBeatMapper.cs**: IndexOf() → for 루프 (O(n²)→O(n)), DominantBand Clamp
+- **AudioAnalyzer.cs**: outputSampleRate 0 방어 (기본값 44100)
+- **OfflineAudioAnalyzer.cs**: sampleRate/BAND_EDGES 범위 검증, EstimateBPM null 체크
+- **Note.cs**: IsExpired AudioManager null 체크, EndHold Duration 0 방어
+- **JudgementSystem.cs**: comboForMaxBonus division by zero 방지
 
-### TODO-2: 롱노트 라이프사이클 수정
-- **Note.cs**: IsExpired에 `isHolding` 가드 추가, 롱노트 만료시간 HitTime+Duration+0.5s
-- **GameplayController.cs**: ProcessNoteHit에서 롱노트 press 시 MarkAsJudged 제거 (release로 이동)
-- **GameplayController.cs**: ProcessNoteRelease → FindHoldingNote 헬퍼로 재작성
-- **GameplayController.cs**: AutoPlayLoop 롱노트 hold/release 처리 추가
-- **NoteSpawner.cs**: GetNearestNote 홀딩 노트 우선 반환
+### MEMORY.md 완성 (17개 섹션, 521줄)
+- 프로젝트 개요/기술 스택/경로 구조/네임스페이스별 역할
+- 레인 구조/판정 시스템/에너지 시스템/ISongGenerator 패턴
+- 씬 구조/오디오 분석 상세/BeatMapper 시드/주요 상수
+- 빌드 방법/코딩 규칙/알려진 제한사항/Phase 로드맵/문서 관리 규칙
 
-### TODO-3: 스크래치/키 이중 트리거 해결
-- **InputHandler.cs**: scratchEdgeRatio 12% 가장자리 전용 스크래치존 추가
-- IsScratchOnly 터치 → Scratch 즉시 발동 (Key Down 미발생)
-
-### TODO-4: BeatMapper 결정론적 시드
-- **BeatMapper.cs**: System.Random(seed) 인스턴스 기반으로 전환, UnityEngine.Random 제거
-
-### TODO-5: ISongGenerator 토글
-- **ISongGenerator.cs**: 신규 인터페이스
-- **FakeSongGenerator.cs**, **AIApiClient.cs**: ISongGenerator 구현
-- **SongSelectUI.cs**: useApiClient 토글 + activeGenerator 패턴
-
-### TODO-6: 에너지 UX
-- **SongSelectUI.cs**: RechargeEnergyFromTime(), EnergyRechargeLoop(), ShowNoEnergyDialog()
-
-### TODO-7: OfflineAudioAnalyzer 비동기화
-- **OfflineAudioAnalyzer.cs**: AnalyzeAsync(IEnumerator) 추가, FRAMES_PER_CHUNK=64 단위 yield
-- **GameplayController.cs**: 두 호출부 모두 AnalyzeAsync로 전환, 진행률 UI 표시
-
-### TODO-8: 오프셋 캘리브레이션 + Early/Late 피드백
-- **CalibrationManager.cs**: 신규 (탭 테스트, 메트로놈 틱 생성, IQR 이상치 제거)
-- **JudgementSystem.cs**: OnJudgementDetailed 이벤트 추가 (rawDiff: early/late)
-- **GameplayUI.cs**: ShowJudgementDetailed + EarlyLateText 동적 생성
-- **SettingsUI.cs**: CALIBRATE 버튼 + Update()에서 탭 감지
+### 에디터 유틸리티 5개 파일 구현
+- **GameSetupEditor.cs**: GameSettingsWindow EditorWindow (판정/노트/스코어 설정 일괄 조정)
+- **ScreenCapture.cs**: F12 단축키 캡처 + 투명 배경 + 해상도 배율(1x~4x)
+- **TestSongCreator.cs**: 7종 프리셋 패턴 (Simple/TapOnly/LongNotes/Scratch/Simultaneous/Speed/FullMix)
+- **TextureGenerator.cs**: 노트/레인/이펙트 텍스처 10종 프로시저럴 생성
+- **AIBeatEditorTests.cs**: 49개 EditMode 테스트 (11개 카테고리) - 전체 통과
 
 ## Commands & Results
 - recompile_scripts → **0 에러, 0 경고**
+- run_tests (EditMode) → **49/49 통과**, 0 실패
+- get_console_logs(error) → **0개**
 
 ## Open issues
 - Unity Play 모드 진입 후 MCP로 종료 불가 (수동 ▶ 필요)
-
-## Analysis / TODO (2026-02-07)
-- ✅ DONE: Align 4-lane leftovers
-- ✅ DONE: Fix long-note lifecycle
-- ✅ DONE: Resolve scratch vs key double-trigger
-- ✅ DONE: Make BeatMapper deterministic per seed
-- ✅ DONE: Integrate ISongGenerator toggle
-- ✅ DONE: Implement Energy UX
-- ✅ DONE: Move OfflineAudioAnalyzer off main thread
-- ✅ DONE: Add offset calibration + early/late feedback
 
 ## Next
 1) Unity Play 모드에서 AutoPlay 테스트 (롱노트 hold/release 동작 확인)
 2) 캘리브레이션 탭 테스트 → 오프셋 자동 측정 확인
 3) 실기기(스마트폰) 테스트: 스크래치 가장자리존 + Early/Late 피드백
+4) Android 빌드 파이프라인 설정
 
 ---
 ## Archive Rule (요약)

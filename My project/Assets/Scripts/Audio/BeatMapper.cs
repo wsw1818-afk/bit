@@ -63,6 +63,14 @@ namespace AIBeat.Audio
         public List<NoteData> GenerateNotesFromBPM(float bpm, float duration, SongSection[] sections, int seed = 0)
         {
             var notes = new List<NoteData>();
+
+            // BPM 유효성 검증
+            if (bpm <= 0f || bpm > 300f)
+            {
+                Debug.LogWarning($"[BeatMapper] Invalid BPM: {bpm}, using default 120");
+                bpm = 120f;
+            }
+
             float beatInterval = 60f / bpm;
             float currentTime = 0f;
 
@@ -85,8 +93,8 @@ namespace AIBeat.Audio
                     notes.Add(new NoteData(currentTime, lane, type, noteDuration));
                 }
 
-                // 동시타 생성 (Drop 구간에서)
-                if (section.Name == "drop" && random.NextDouble() < 0.3)
+                // 동시타 생성 (Drop 구간에서) - notes가 비어있지 않은 경우만
+                if (section.Name == "drop" && notes.Count > 0 && random.NextDouble() < 0.3)
                 {
                     int secondLane = GetRandomLane("drop", random);
                     if (secondLane != notes[notes.Count - 1].LaneIndex)

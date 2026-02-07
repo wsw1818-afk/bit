@@ -76,6 +76,12 @@ namespace AIBeat.Audio
             // Band 7: Air (12k-20k Hz)
 
             int sampleRate = AudioSettings.outputSampleRate;
+            if (sampleRate <= 0)
+            {
+                Debug.LogWarning("[AudioAnalyzer] Invalid sample rate, using default 44100");
+                sampleRate = 44100;
+            }
+
             float freqPerBin = (float)sampleRate / 2 / spectrumSize;
 
             for (int i = 0; i < BAND_COUNT; i++)

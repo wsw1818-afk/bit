@@ -216,7 +216,9 @@ namespace AIBeat.Gameplay
         /// </summary>
         private int TouchZoneToLane(int zone)
         {
-            return zone + 1;
+            // 안전한 범위로 클램핑 (0-1 → 1-2)
+            int clampedZone = Mathf.Clamp(zone, 0, touchZoneCount - 1);
+            return clampedZone + 1;
         }
 
         /// <summary>
@@ -225,6 +227,9 @@ namespace AIBeat.Gameplay
         /// </summary>
         private int GetScratchLane(int zone)
         {
+            // 범위 검증
+            if (zone < 0 || zone >= touchZoneCount) return -1;
+
             if (zone == 0) return 0;                      // Scratch L
             if (zone == touchZoneCount - 1) return 3;     // Scratch R
             return -1; // 스크래치 불가

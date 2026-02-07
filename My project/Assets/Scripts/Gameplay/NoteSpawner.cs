@@ -56,8 +56,12 @@ namespace AIBeat.Gameplay
             activeNotes = new List<Note>();
             notePools = new Dictionary<NoteType, Queue<Note>>();
 
-            // JudgementSystem 캐싱
+            // JudgementSystem 캐싱 (null이면 경고)
             judgementSystem = FindFirstObjectByType<JudgementSystem>();
+            if (judgementSystem == null)
+            {
+                Debug.LogWarning("[NoteSpawner] JudgementSystem not found - miss registration will be disabled");
+            }
 
             // 자동으로 참조 설정 (에디터에서 설정되지 않은 경우)
             AutoSetupReferences();
@@ -522,9 +526,23 @@ namespace AIBeat.Gameplay
         /// </summary>
         public Note GetNearestNote(int laneIndex)
         {
+            // 레인 인덱스 유효성 검사 (0-3)
+            if (laneIndex < 0 || laneIndex > 3)
+            {
+                Debug.LogWarning($"[NoteSpawner] Invalid lane index: {laneIndex}");
+                return null;
+            }
+
+            // AudioManager null 체크
+            if (Core.AudioManager.Instance == null)
+            {
+                Debug.LogWarning("[NoteSpawner] AudioManager.Instance is null");
+                return null;
+            }
+
             Note nearest = null;
             float minTimeDiff = float.MaxValue;
-            float currentTime = Core.AudioManager.Instance?.CurrentTime ?? 0f;
+            float currentTime = Core.AudioManager.Instance.CurrentTime;
 
             // 판정 가능 최대 윈도우 (350ms = badWindow)
             const float maxJudgeWindow = 0.350f;

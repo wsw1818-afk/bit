@@ -342,10 +342,25 @@ namespace AIBeat.Audio
         private float[] ComputeBandEnergies(float[] spectrum, float sampleRate)
         {
             float[] energies = new float[8];
+
+            // sampleRate 유효성 검증
+            if (sampleRate <= 0f)
+            {
+                Debug.LogWarning("[OfflineAudioAnalyzer] Invalid sample rate");
+                return energies; // 모든 밴드 에너지 0 반환
+            }
+
             float freqResolution = sampleRate / FFT_SIZE;
 
             for (int band = 0; band < 8; band++)
             {
+                // BAND_EDGES 배열 범위 검증 (0-8 인덱스, 9개 요소)
+                if (band + 1 >= BAND_EDGES.Length)
+                {
+                    Debug.LogError($"[OfflineAudioAnalyzer] Band index out of range: {band}");
+                    continue;
+                }
+
                 int startBin = Mathf.Max(1, Mathf.FloorToInt(BAND_EDGES[band] / freqResolution));
                 int endBin = Mathf.Min(FFT_SIZE / 2 - 1, Mathf.FloorToInt(BAND_EDGES[band + 1] / freqResolution));
 
@@ -412,7 +427,7 @@ namespace AIBeat.Audio
         /// </summary>
         private float EstimateBPM(List<OnsetData> onsets, float duration)
         {
-            if (onsets.Count < 4) return 120f; // 기본값
+            if (onsets == null || onsets.Count < 4) return 120f; // 기본값
 
             // IOI (Inter-Onset Interval) 히스토그램
             float[] iois = new float[onsets.Count - 1];
