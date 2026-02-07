@@ -458,12 +458,14 @@ namespace AIBeat.UI
                     btnRect.sizeDelta = new Vector2(0, 50); 
                 }
 
-                // 텍스트 설정
+                // 텍스트 설정 (폰트 크기+색상 강제 적용)
                 var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)
                 {
-                    btnText.text = $"{bpm} BPM"; 
-                    btnText.fontSize = 20;
+                    btnText.text = $"{bpm} BPM";
+                    btnText.fontSize = 22;  // 20→22 (더 크게)
+                    btnText.fontStyle = FontStyles.Bold;
+                    btnText.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (명확히 보이도록)
                 }
 
                 // 버튼 이벤트
