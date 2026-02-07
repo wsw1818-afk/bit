@@ -131,8 +131,7 @@ namespace AIBeat.UI
             viewportRect.offsetMin = Vector2.zero;
             viewportRect.offsetMax = Vector2.zero;
 
-            viewport.AddComponent<Image>().color = Color.clear;
-            viewport.AddComponent<Mask>().showMaskGraphic = false;
+            viewport.AddComponent<RectMask2D>(); // Mask 대신 RectMask2D 사용 (stencil 문제 방지)
 
             scrollRect.viewport = viewportRect;
 
