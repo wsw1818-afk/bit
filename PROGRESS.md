@@ -1,36 +1,47 @@
 # PROGRESS.md (현재 진행: 얇게 유지)
 
 ## Dashboard
-- Progress: 100% (세션 32 - 모바일 플레이어빌리티 검증 + 난이도 조정)
+- Progress: 100% (세션 33 - 전체 게임 플로우 테스트 + UI 참조 수정)
 - Risk: 낮음
 
 ## Today Goal
-- 사람 손(스마트폰 엄지)으로 플레이 가능한지 검증 + 난이도 조정
+- MainMenu → SongSelect → Gameplay 전체 플로우 테스트
 
-## What changed (세션 32)
+## What changed (세션 33)
 
-### 모바일 플레이어빌리티 분석 결과
-- **판정 시스템**: Perfect/Great/Good/Bad/Miss 5단계 이미 존재 (추가 불필요)
-- **터치 존**: Key 38% × 2 + Scratch 12% × 2 → 엄지 조작 충분
-- **반응 시간**: 노트 스폰→판정선 2초 (lookAhead=2) → 충분
-- **판정 윈도우**: Good ±200ms, Bad ±350ms → 모바일에 관대
+### 치명적 버그 발견 및 수정: UI 참조 전부 null
+- **원인**: MainMenu.unity, SongSelect.unity의 SerializeField 참조가 모두 `{fileID: 0}` (null)
+- **영향**: 게임 시작 화면 버튼 동작 불가, 곡 선택 화면 UI 전부 미표시
 
-### 난이도 조정 (사람 엄지 기준)
-| 변경 항목 | 수정 전 | 수정 후 | 이유 |
-|----------|--------|--------|------|
-| Climax 16분음표 확률 | 50% | **20%** | 150ms 연타는 엄지로 불가능 |
-| Climax 스크래치 후 간격 | 16분음표(150ms) | **8분음표(300ms)** | 가장자리→키존 엄지 복귀 시간 |
-| Climax 롱노트 후 간격 | 16분음표(150ms) | **8분음표(300ms)** | release→다음 노트 반응 시간 |
-| Build 16분음표 확률 | 30% | **15%** | 초중반 난이도 완화 |
+### MainMenuUI 수정
+- `AutoSetupReferences()` 추가: `transform.Find()`로 PlayButton, LibraryButton, SettingsButton, ExitButton, TitleText 자동 탐색
+- SettingsPanel 동적 생성 (SettingsUI 컴포넌트 자동 연결)
+- Play 모드 검증: 모든 버튼 참조 정상 연결 확인
 
-### AutoPlay 테스트 결과 (난이도 조정 후)
-- Score: **77,055** | Rank: **S+** | Perfect: 66 | Miss: **0** | 풀콤보 유지
+### SongSelectUI 수정 (대규모)
+- `AutoSetupReferences()` 추가: 모든 UI 요소를 동적 생성
+  - GenreContainer/MoodContainer: 가로 스크롤 컨테이너 (ScrollRect + Mask + HorizontalLayoutGroup)
+  - BpmSlider: Fill Area + Handle 포함 완전한 슬라이더
+  - GenerateButton, BackButton, EnergyText, PreviewTexts
+  - LoadingPanel: 반투명 배경 + LoadingText + ProgressSlider
+  - OptionButtonTemplate: 프리팹 대체 동적 생성
+  - 섹션 라벨: GENRE, MOOD, BPM
+- Play 모드 검증: 장르 8개 + 분위기 8개 버튼 정상 생성, 모든 참조 연결 확인
+
+### 3개 씬 Play 모드 테스트 결과
+| 씬 | 에러 | 경고 | 상태 |
+|----|------|------|------|
+| MainMenu | 0 | 0 | ✅ 버튼/패널 정상 |
+| SongSelect | 0 | 0 | ✅ 탭/버튼/슬라이더 정상 |
+| Gameplay | 0 | 1 (중복노트 필터링) | ✅ AutoPlay Perfect 연속 |
 
 ## Commands & Results
 - recompile_scripts → **0 에러, 0 경고**
 - run_tests (EditMode) → **49/49 통과**, 0 실패
-- Play Mode AutoPlay → **S+ 랭크, Miss 0, 풀콤보**
-- get_console_logs(error) → **0개** (게임 에러 없음)
+- MainMenu Play Mode → **에러 0, 모든 참조 연결**
+- SongSelect Play Mode → **에러 0, 16개 버튼 생성 확인**
+- Gameplay Play Mode → **에러 0, AutoPlay Perfect 진행**
+- get_console_logs(error) → **0개** (모든 씬)
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)

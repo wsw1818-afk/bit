@@ -74,7 +74,451 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            AutoSetupReferences();
             Initialize();
+        }
+
+        /// <summary>
+        /// Inspector 미연결 시 동적으로 UI 요소 생성/탐색
+        /// </summary>
+        private void AutoSetupReferences()
+        {
+            // backButton: 씬에 "BackButton" 존재
+            if (backButton == null)
+            {
+                var backObj = transform.Find("BackButton");
+                if (backObj != null)
+                    backButton = backObj.GetComponent<Button>();
+            }
+
+            // generateButton 동적 생성
+            if (generateButton == null)
+            {
+                var existing = transform.Find("GenerateButton");
+                if (existing != null)
+                {
+                    generateButton = existing.GetComponent<Button>();
+                }
+                else
+                {
+                    generateButton = CreateUIButton("GenerateButton", "GENERATE", new Vector2(0, -340));
+                }
+            }
+
+            // genreButtonContainer 동적 생성
+            if (genreButtonContainer == null)
+            {
+                var existing = transform.Find("GenreContainer");
+                if (existing != null)
+                {
+                    genreButtonContainer = existing;
+                }
+                else
+                {
+                    genreButtonContainer = CreateScrollableContainer("GenreContainer", new Vector2(0, -80), new Vector2(0, 110));
+                }
+            }
+
+            // moodButtonContainer 동적 생성
+            if (moodButtonContainer == null)
+            {
+                var existing = transform.Find("MoodContainer");
+                if (existing != null)
+                {
+                    moodButtonContainer = existing;
+                }
+                else
+                {
+                    moodButtonContainer = CreateScrollableContainer("MoodContainer", new Vector2(0, -170), new Vector2(0, 110));
+                }
+            }
+
+            // bpmSlider 동적 생성
+            if (bpmSlider == null)
+            {
+                var existing = transform.Find("BpmSlider");
+                if (existing != null)
+                {
+                    bpmSlider = existing.GetComponent<Slider>();
+                }
+                else
+                {
+                    bpmSlider = CreateBpmSlider();
+                }
+            }
+
+            // bpmValueText 동적 생성
+            if (bpmValueText == null)
+            {
+                var existing = transform.Find("BpmValueText");
+                if (existing != null)
+                    bpmValueText = existing.GetComponent<TextMeshProUGUI>();
+                else
+                    bpmValueText = CreateUIText("BpmValueText", "140 BPM", new Vector2(140, -255), 20);
+            }
+
+            // energyText 동적 생성
+            if (energyText == null)
+            {
+                var existing = transform.Find("EnergyText");
+                if (existing != null)
+                    energyText = existing.GetComponent<TextMeshProUGUI>();
+                else
+                    energyText = CreateUIText("EnergyText", "Energy: 3/3", new Vector2(0, -390), 18);
+            }
+
+            // previewGenreText, previewMoodText, previewBpmText
+            if (previewGenreText == null)
+                previewGenreText = CreateUIText("PreviewGenreText", "EDM", new Vector2(-120, -300), 16);
+            if (previewMoodText == null)
+                previewMoodText = CreateUIText("PreviewMoodText", "Aggressive", new Vector2(0, -300), 16);
+            if (previewBpmText == null)
+                previewBpmText = CreateUIText("PreviewBpmText", "140 BPM", new Vector2(120, -300), 16);
+
+            // loadingPanel 동적 생성
+            if (loadingPanel == null)
+            {
+                var existing = transform.Find("LoadingPanel");
+                if (existing != null)
+                {
+                    loadingPanel = existing.gameObject;
+                }
+                else
+                {
+                    loadingPanel = new GameObject("LoadingPanel");
+                    loadingPanel.transform.SetParent(transform, false);
+                    var rect = loadingPanel.AddComponent<RectTransform>();
+                    rect.anchorMin = Vector2.zero;
+                    rect.anchorMax = Vector2.one;
+                    rect.offsetMin = Vector2.zero;
+                    rect.offsetMax = Vector2.zero;
+
+                    var bg = loadingPanel.AddComponent<Image>();
+                    bg.color = new Color(0, 0, 0, 0.85f);
+                }
+            }
+
+            // loadingText (LoadingPanel 내부)
+            if (loadingText == null)
+            {
+                var lt = loadingPanel.transform.Find("LoadingText");
+                if (lt != null)
+                {
+                    loadingText = lt.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    loadingText = CreateUIText("LoadingText", "Loading...", Vector2.zero, 24);
+                    loadingText.transform.SetParent(loadingPanel.transform, false);
+                    loadingText.alignment = TextAlignmentOptions.Center;
+                    var lRect = loadingText.GetComponent<RectTransform>();
+                    lRect.anchorMin = new Vector2(0.1f, 0.4f);
+                    lRect.anchorMax = new Vector2(0.9f, 0.6f);
+                    lRect.offsetMin = Vector2.zero;
+                    lRect.offsetMax = Vector2.zero;
+                }
+            }
+
+            // progressSlider (LoadingPanel 내부)
+            if (progressSlider == null)
+            {
+                var ps = loadingPanel.transform.Find("ProgressSlider");
+                if (ps != null)
+                {
+                    progressSlider = ps.GetComponent<Slider>();
+                }
+                else
+                {
+                    var sliderGo = new GameObject("ProgressSlider");
+                    sliderGo.transform.SetParent(loadingPanel.transform, false);
+                    var sRect = sliderGo.AddComponent<RectTransform>();
+                    sRect.anchorMin = new Vector2(0.15f, 0.3f);
+                    sRect.anchorMax = new Vector2(0.85f, 0.35f);
+                    sRect.offsetMin = Vector2.zero;
+                    sRect.offsetMax = Vector2.zero;
+
+                    // Slider 배경
+                    var bgImg = sliderGo.AddComponent<Image>();
+                    bgImg.color = new Color(0.2f, 0.2f, 0.3f);
+
+                    // Fill Area
+                    var fillArea = new GameObject("Fill Area");
+                    fillArea.transform.SetParent(sliderGo.transform, false);
+                    var faRect = fillArea.AddComponent<RectTransform>();
+                    faRect.anchorMin = Vector2.zero;
+                    faRect.anchorMax = Vector2.one;
+                    faRect.offsetMin = Vector2.zero;
+                    faRect.offsetMax = Vector2.zero;
+
+                    var fill = new GameObject("Fill");
+                    fill.transform.SetParent(fillArea.transform, false);
+                    var fillRect = fill.AddComponent<RectTransform>();
+                    fillRect.anchorMin = Vector2.zero;
+                    fillRect.anchorMax = Vector2.one;
+                    fillRect.offsetMin = Vector2.zero;
+                    fillRect.offsetMax = Vector2.zero;
+                    var fillImg = fill.AddComponent<Image>();
+                    fillImg.color = new Color(0f, 0.8f, 1f);
+
+                    progressSlider = sliderGo.AddComponent<Slider>();
+                    progressSlider.fillRect = fillRect;
+                    progressSlider.interactable = false;
+                    progressSlider.value = 0;
+                }
+            }
+
+            // optionButtonPrefab: 프리팹 없으면 동적 생성 패턴
+            if (optionButtonPrefab == null)
+            {
+                optionButtonPrefab = CreateOptionButtonTemplate();
+            }
+
+            // 라벨 텍스트 (Section titles)
+            CreateSectionLabel("GenreLabel", "GENRE", new Vector2(0, -50));
+            CreateSectionLabel("MoodLabel", "MOOD", new Vector2(0, -140));
+            CreateSectionLabel("BpmLabel", "BPM", new Vector2(0, -225));
+        }
+
+        /// <summary>
+        /// UI 버튼 동적 생성 헬퍼
+        /// </summary>
+        private Button CreateUIButton(string name, string text, Vector2 anchoredPos)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.15f, 1);
+            rect.anchorMax = new Vector2(0.85f, 1);
+            rect.pivot = new Vector2(0.5f, 1);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = new Vector2(0, 56);
+
+            var bg = go.AddComponent<Image>();
+            bg.color = new Color(0f, 0.5f, 0.7f, 0.9f);
+
+            var btn = go.AddComponent<Button>();
+            var colors = btn.colors;
+            colors.highlightedColor = new Color(0f, 0.7f, 1f);
+            colors.pressedColor = new Color(0f, 0.3f, 0.5f);
+            btn.colors = colors;
+
+            // 텍스트
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(go.transform, false);
+            var tRect = textGo.AddComponent<RectTransform>();
+            tRect.anchorMin = Vector2.zero;
+            tRect.anchorMax = Vector2.one;
+            tRect.offsetMin = Vector2.zero;
+            tRect.offsetMax = Vector2.zero;
+
+            var tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = 24;
+            tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontStyle = FontStyles.Bold;
+
+            return btn;
+        }
+
+        /// <summary>
+        /// 스크롤 가능한 버튼 컨테이너 (가로 스크롤)
+        /// </summary>
+        private Transform CreateScrollableContainer(string name, Vector2 anchoredPos, Vector2 sizeDelta)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.05f, 1);
+            rect.anchorMax = new Vector2(0.95f, 1);
+            rect.pivot = new Vector2(0.5f, 1);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+
+            // ScrollRect for horizontal scrolling
+            var scrollRect = go.AddComponent<ScrollRect>();
+            scrollRect.horizontal = true;
+            scrollRect.vertical = false;
+
+            // Viewport (Mask)
+            var viewport = new GameObject("Viewport");
+            viewport.transform.SetParent(go.transform, false);
+            var vpRect = viewport.AddComponent<RectTransform>();
+            vpRect.anchorMin = Vector2.zero;
+            vpRect.anchorMax = Vector2.one;
+            vpRect.offsetMin = Vector2.zero;
+            vpRect.offsetMax = Vector2.zero;
+            viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f); // Mask needs Image
+            viewport.AddComponent<Mask>().showMaskGraphic = false;
+
+            // Content (HorizontalLayoutGroup)
+            var content = new GameObject("Content");
+            content.transform.SetParent(viewport.transform, false);
+            var cRect = content.AddComponent<RectTransform>();
+            cRect.anchorMin = new Vector2(0, 0);
+            cRect.anchorMax = new Vector2(0, 1);
+            cRect.pivot = new Vector2(0, 0.5f);
+            cRect.offsetMin = Vector2.zero;
+            cRect.offsetMax = Vector2.zero;
+
+            var hLayout = content.AddComponent<HorizontalLayoutGroup>();
+            hLayout.spacing = 8;
+            hLayout.padding = new RectOffset(8, 8, 8, 8);
+            hLayout.childControlWidth = false;
+            hLayout.childControlHeight = true;
+            hLayout.childForceExpandWidth = false;
+            hLayout.childForceExpandHeight = true;
+
+            var csf = content.AddComponent<ContentSizeFitter>();
+            csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.content = cRect;
+            scrollRect.viewport = vpRect;
+
+            return content.transform; // 버튼이 추가될 Content를 반환
+        }
+
+        /// <summary>
+        /// BPM 슬라이더 동적 생성
+        /// </summary>
+        private Slider CreateBpmSlider()
+        {
+            var go = new GameObject("BpmSlider");
+            go.transform.SetParent(transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.1f, 1);
+            rect.anchorMax = new Vector2(0.65f, 1);
+            rect.pivot = new Vector2(0.5f, 1);
+            rect.anchoredPosition = new Vector2(0, -255);
+            rect.sizeDelta = new Vector2(0, 30);
+
+            // 배경 이미지
+            var bgImg = go.AddComponent<Image>();
+            bgImg.color = new Color(0.15f, 0.15f, 0.25f);
+
+            // Fill Area
+            var fillArea = new GameObject("Fill Area");
+            fillArea.transform.SetParent(go.transform, false);
+            var faRect = fillArea.AddComponent<RectTransform>();
+            faRect.anchorMin = new Vector2(0, 0.25f);
+            faRect.anchorMax = new Vector2(1, 0.75f);
+            faRect.offsetMin = new Vector2(5, 0);
+            faRect.offsetMax = new Vector2(-5, 0);
+
+            var fill = new GameObject("Fill");
+            fill.transform.SetParent(fillArea.transform, false);
+            var fillRect = fill.AddComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = new Vector2(0.5f, 1);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            var fillImg = fill.AddComponent<Image>();
+            fillImg.color = new Color(0f, 0.7f, 1f);
+
+            // Handle
+            var handleArea = new GameObject("Handle Slide Area");
+            handleArea.transform.SetParent(go.transform, false);
+            var haRect = handleArea.AddComponent<RectTransform>();
+            haRect.anchorMin = Vector2.zero;
+            haRect.anchorMax = Vector2.one;
+            haRect.offsetMin = new Vector2(10, 0);
+            haRect.offsetMax = new Vector2(-10, 0);
+
+            var handle = new GameObject("Handle");
+            handle.transform.SetParent(handleArea.transform, false);
+            var hRect = handle.AddComponent<RectTransform>();
+            hRect.sizeDelta = new Vector2(20, 0);
+            var handleImg = handle.AddComponent<Image>();
+            handleImg.color = Color.white;
+
+            var slider = go.AddComponent<Slider>();
+            slider.fillRect = fillRect;
+            slider.handleRect = hRect;
+
+            return slider;
+        }
+
+        /// <summary>
+        /// 텍스트 UI 요소 동적 생성
+        /// </summary>
+        private TextMeshProUGUI CreateUIText(string name, string text, Vector2 anchoredPos, int fontSize)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 1);
+            rect.anchorMax = new Vector2(0.5f, 1);
+            rect.pivot = new Vector2(0.5f, 1);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = new Vector2(200, 30);
+
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.Center;
+
+            return tmp;
+        }
+
+        /// <summary>
+        /// 옵션 버튼 프리팹 템플릿 동적 생성
+        /// </summary>
+        private GameObject CreateOptionButtonTemplate()
+        {
+            var go = new GameObject("OptionButtonTemplate");
+            go.SetActive(false); // 템플릿이므로 비활성화
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(120, 44);
+
+            var bg = go.AddComponent<Image>();
+            bg.color = new Color(0.12f, 0.12f, 0.22f, 0.9f);
+
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = new Color(0.3f, 0.3f, 0.6f, 0.5f);
+            outline.effectDistance = new Vector2(1, -1);
+
+            go.AddComponent<Button>();
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(go.transform, false);
+            var tRect = textGo.AddComponent<RectTransform>();
+            tRect.anchorMin = Vector2.zero;
+            tRect.anchorMax = Vector2.one;
+            tRect.offsetMin = new Vector2(4, 2);
+            tRect.offsetMax = new Vector2(-4, -2);
+
+            var tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = "Option";
+            tmp.fontSize = 16;
+            tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.Center;
+
+            return go;
+        }
+
+        /// <summary>
+        /// 섹션 라벨 동적 생성 (중복 방지)
+        /// </summary>
+        private void CreateSectionLabel(string name, string text, Vector2 anchoredPos)
+        {
+            if (transform.Find(name) != null) return; // 이미 존재
+
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.05f, 1);
+            rect.anchorMax = new Vector2(0.5f, 1);
+            rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = new Vector2(0, 28);
+
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = 16;
+            tmp.color = new Color(0.5f, 0.8f, 1f);
+            tmp.fontStyle = FontStyles.Bold;
         }
 
         private void Initialize()

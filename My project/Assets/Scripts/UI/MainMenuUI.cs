@@ -25,7 +25,47 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            AutoSetupReferences();
             Initialize();
+        }
+
+        /// <summary>
+        /// Inspector 미연결 시 씬 오브젝트 이름으로 자동 탐색
+        /// </summary>
+        private void AutoSetupReferences()
+        {
+            if (playButton == null)
+                playButton = transform.Find("PlayButton")?.GetComponent<Button>();
+            if (libraryButton == null)
+                libraryButton = transform.Find("LibraryButton")?.GetComponent<Button>();
+            if (settingsButton == null)
+                settingsButton = transform.Find("SettingsButton")?.GetComponent<Button>();
+            if (exitButton == null)
+                exitButton = transform.Find("ExitButton")?.GetComponent<Button>();
+            if (titleText == null)
+                titleText = transform.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
+            if (versionText == null)
+                versionText = transform.Find("VersionText")?.GetComponent<TextMeshProUGUI>();
+
+            // Settings 패널이 없으면 동적 생성
+            if (settingsPanel == null)
+            {
+                var existing = transform.Find("SettingsPanel");
+                if (existing != null)
+                {
+                    settingsPanel = existing.gameObject;
+                }
+                else
+                {
+                    settingsPanel = new GameObject("SettingsPanel");
+                    settingsPanel.transform.SetParent(transform, false);
+                    var rect = settingsPanel.AddComponent<RectTransform>();
+                    rect.anchorMin = Vector2.zero;
+                    rect.anchorMax = Vector2.one;
+                    rect.offsetMin = Vector2.zero;
+                    rect.offsetMax = Vector2.zero;
+                }
+            }
         }
 
         private void Initialize()

@@ -1,1 +1,1 @@
-🎮 세션32 모바일 플레이어빌리티 조정: Climax 16분음표 50%→20%, 스크래치 후 간격 보장
+🔧 세션33 UI 참조 null 전면 수정: MainMenuUI/SongSelectUI에 AutoSetupReferences 추가, 3씬 플로우 에러 0
