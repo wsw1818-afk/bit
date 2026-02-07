@@ -1,1 +1,1 @@
-🔧 SongSelectUI BPM 버튼 폰트 미적용 수정: KoreanFontManager 강제 적용 추가
+✅ BPM 버튼 생성 로직 완료: 빈 Content 감지 → 컨테이너 재생성 (Play 모드 재시작 필요)

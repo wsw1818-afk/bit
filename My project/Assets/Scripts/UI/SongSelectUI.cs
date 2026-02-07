@@ -145,10 +145,22 @@ namespace AIBeat.UI
             if (bpmSlider == null)
             {
                 var existing = transform.Find("BpmContainer");
-                if (existing != null) 
+                if (existing != null)
                 {
-                    // 기존에 있다면 그 안의 Slider 컴포넌트나 더미를 찾아야 함 (여기선 생략하고 새로 생성 유도하거나 기존 로직 유지)
-                     bpmSlider = existing.GetComponentInChildren<Slider>();
+                    // 기존 컨테이너의 Content가 비어있는지 확인
+                    var content = existing.Find("Viewport/Content");
+                    if (content != null && content.childCount == 0)
+                    {
+                        // Content가 비어있으면 버튼 재생성
+                        Debug.Log("[SongSelectUI] BpmContainer exists but empty, regenerating buttons");
+                        GameObject.Destroy(existing.gameObject);
+                        bpmSlider = CreateBpmSlider();
+                    }
+                    else
+                    {
+                        // Content에 버튼이 있으면 기존 슬라이더 찾기
+                        bpmSlider = existing.GetComponentInChildren<Slider>();
+                    }
                 }
                 else
                 {
@@ -444,10 +456,14 @@ namespace AIBeat.UI
             int[] bpmOptions = { 80, 100, 120, 140, 160, 180 };
             List<Button> bpmButtons = new List<Button>();
 
+            Debug.Log($"[SongSelectUI] CreateBpmSlider: optionButtonPrefab={optionButtonPrefab}, container={container}");
+
             foreach (int bpm in bpmOptions)
             {
                 var btnGo = GameObject.Instantiate(optionButtonPrefab, container.transform);
                 btnGo.name = $"BPM_{bpm}";
+                btnGo.SetActive(true);  // 명시적 활성화
+                Debug.Log($"[SongSelectUI] Created BPM button: {bpm}");
 
                 // 버튼 크기 및 스타일 조정
                 var btnRect = btnGo.GetComponent<RectTransform>();
