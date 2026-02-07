@@ -16,16 +16,20 @@
 - **GameResult**: `BaseScore` + `BonusScore` 분리, 결과 화면에 "(BONUS +N)" 별도 표시
 - **AutoPlay 판정 다양화**: Perfect 55% / Great 25% / Good 15% / Bad 5% 분포
 
-### 테스트 결과
-- recompile_scripts → **0 에러, 0 경고**
-- Gameplay Play Mode → **에러 0**, Score 62,908 (보너스 포함), Miss 0
+### 전체 플로우 종합 테스트 (3개 씬 모두 통과)
+
+| 씬 | Play 모드 | 게임 에러 | 비고 |
+|----|-----------|----------|------|
+| MainMenu | 정상 | 0 | TutorialUI 자동시작 |
+| SongSelect | 정상 | 0 | SongLibrary 0곡 로드 |
+| Gameplay | 정상 | 0 | Score 65,276 (보너스 포함), P:40 G:16 Good:8 B:2 M:0 |
 
 ## Commands & Results
 - recompile_scripts → **0 에러, 0 경고**
 - run_tests (EditMode) → **49/49 통과**, 0 실패
-- MainMenu Play Mode → **에러 0**, 4개 버튼 + TutorialUI 정상
-- SongSelect Play Mode → **에러 0**, 16개 옵션버튼 + 슬라이더 정상
-- Gameplay Play Mode → **에러 0**, AutoPlay Perfect 연속
+- MainMenu Play Mode → **에러 0**, TutorialUI 정상
+- SongSelect Play Mode → **에러 0**, SongLibrary 로드 정상
+- Gameplay Play Mode → **에러 0**, AutoPlay 다양한 판정 + 보너스 점수 누적 + 결과 화면 표시
 - get_console_logs(error) → **0개** (모든 씬, MCP WebSocket 에러 제외)
 
 ## Open issues
