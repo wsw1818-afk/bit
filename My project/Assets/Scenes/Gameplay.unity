@@ -2177,9 +2177,9 @@ MonoBehaviour:
   touchZoneCount: 2
   touchAreaRatio: 0.85
   scratchEdgeRatio: 0.12
+  showTouchDebug: 1
   scratchThresholdMM: 7
   fallbackDPI: 160
-  showTouchDebug: 1
 --- !u!4 &561617752
 Transform:
   m_ObjectHideFlags: 0

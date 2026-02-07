@@ -52,35 +52,37 @@ namespace AIBeat.UI
             // StreamingAssets 내 MP3 파일 자동 스캔 → 라이브러리에 등록
             ScanAndRegisterStreamingAssets();
 
-            // 뒤로가기 버튼 스타일
+            // 뒤로가기 버튼 스타일 (타이틀 바 왼쪽에 배치)
             if (backButton != null)
             {
                 backButton.onClick.AddListener(OnBackClicked);
                 var backRect = backButton.GetComponent<RectTransform>();
                 if (backRect != null)
                 {
-                    var size = backRect.sizeDelta;
-                    size.y = 100f;
-                    size.x = Mathf.Max(size.x, 250f);
-                    backRect.sizeDelta = size;
+                    // 왼쪽 상단 고정, 타이틀 바(120px) 안에 수직 정렬
+                    backRect.anchorMin = new Vector2(0, 1);
+                    backRect.anchorMax = new Vector2(0, 1);
+                    backRect.pivot = new Vector2(0, 1);
+                    backRect.anchoredPosition = new Vector2(10, -10);
+                    backRect.sizeDelta = new Vector2(200, 100);
                 }
-                // 배경색 + 네온 테두리
+                // 투명 배경 (타이틀 바 위에 겹치므로 별도 배경 불필요)
                 var btnImg = backButton.GetComponent<Image>();
                 if (btnImg != null)
-                    btnImg.color = new Color(0.05f, 0.05f, 0.15f, 0.9f);
+                    btnImg.color = new Color(0f, 0f, 0f, 0f);
+                // 기존 outline 제거
                 var outline = backButton.GetComponent<Outline>();
-                if (outline == null)
-                    outline = backButton.gameObject.AddComponent<Outline>();
-                outline.effectColor = new Color(0f, 0.9f, 1f, 0.5f);
-                outline.effectDistance = new Vector2(1, -1);
+                if (outline != null)
+                    Destroy(outline);
                 // 텍스트 스타일
                 var btnTmp = backButton.GetComponentInChildren<TMP_Text>();
                 if (btnTmp != null)
                 {
-                    btnTmp.text = "\u2190 뒤로";
-                    btnTmp.fontSize = 44;
+                    btnTmp.text = "\u2190";
+                    btnTmp.fontSize = 60;
                     btnTmp.fontStyle = FontStyles.Bold;
                     btnTmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+                    btnTmp.alignment = TextAlignmentOptions.MidlineLeft;
                 }
             }
 
@@ -130,23 +132,23 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(1, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 140);
+            rect.sizeDelta = new Vector2(0, 120);
 
             var bg = titleBar.AddComponent<Image>();
             bg.color = new Color(0.02f, 0.02f, 0.08f, 1f);
 
-            // 타이틀 텍스트
+            // 타이틀 텍스트 (왼쪽 여백 확보하여 뒤로 버튼과 겹치지 않게)
             var textGo = new GameObject("TitleText");
             textGo.transform.SetParent(titleBar.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(20, 0);
+            textRect.offsetMin = new Vector2(200, 0); // 왼쪽 200px 여백 (뒤로 버튼 공간)
             textRect.offsetMax = new Vector2(-20, 0);
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "내 라이브러리";
-            tmp.fontSize = 60;
+            tmp.fontSize = 52;
             tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;

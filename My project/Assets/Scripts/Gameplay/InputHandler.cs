@@ -13,9 +13,9 @@ namespace AIBeat.Gameplay
     public class InputHandler : MonoBehaviour
     {
         [Header("Touch Zone Settings")]
-        [SerializeField] private int touchZoneCount = 2;       // 2개 균등 터치 존 (Key1, Key2)
+        [SerializeField] private int touchZoneCount = 4;       // 4개 균등 터치 존 (Lane0~3 직접 매핑)
         [SerializeField] private float touchAreaRatio = 0.85f;  // 하단 85% 입력 영역 (상단 UI만 제외)
-        [SerializeField] private float scratchEdgeRatio = 0.08f; // 좌우 가장자리 8%를 스크래치 전용 존으로
+        [SerializeField] private float scratchEdgeRatio = 0.08f; // 좌우 가장자리 8%를 스크래치 추가 발화 존으로
 
         [Header("Debug")]
         [SerializeField] private bool showTouchDebug = true;
@@ -41,11 +41,10 @@ namespace AIBeat.Gameplay
 
         private struct TouchData
         {
-            public int TouchZone;          // 0-1 (2개 존)
-            public int MappedLane;         // 1-2 (키 레인)
+            public int TouchZone;          // 0-3 (4개 존)
+            public int MappedLane;         // 0-3 (직접 매핑)
             public Vector2 StartPosition;
             public bool IsEdgeZone;        // 스와이프 스크래치 가능 존 여부
-            public bool IsScratchOnly;     // 스크래치 전용 존 (가장자리 터치 → Key Down 미발생)
             public bool ScratchTriggered;  // 스크래치 이미 발동 여부
         }
 
@@ -120,10 +119,10 @@ namespace AIBeat.Gameplay
             }
 
             float normalizedX = position.x / Screen.width;
-            bool isScratchOnly = normalizedX < scratchEdgeRatio || normalizedX > (1f - scratchEdgeRatio);
 
+            // 4존 직접 매핑: 존 번호 = 레인 번호
             int zone = GetTouchZone(position);
-            int lane = TouchZoneToLane(zone);
+            int lane = zone; // 4존이므로 존=레인 직접 매핑
             bool isEdge = zone == 0 || zone == touchZoneCount - 1;
 
             activeTouches[touchId] = new TouchData
@@ -132,32 +131,23 @@ namespace AIBeat.Gameplay
                 MappedLane = lane,
                 StartPosition = position,
                 IsEdgeZone = isEdge,
-                IsScratchOnly = isScratchOnly,
                 ScratchTriggered = false
             };
 
-            if (isScratchOnly)
+            // 모든 레인에서 Down 발행 (스크래치 레인도 Down으로 처리)
+            OnLaneInput?.Invoke(lane, InputType.Down);
+
+            // 가장자리 존(레인 0, 3)에서는 추가로 Scratch 이벤트도 발행
+            if (isEdge)
             {
-                // 스크래치 전용 존: 스크래치 + 키 Down 동시 발행
-                // 스크래치 노트와 일반 노트 모두 처리 가능하도록
-                int scratchLane = normalizedX < 0.5f ? 0 : 3;
-                int keyLane = normalizedX < 0.5f ? 1 : 2; // 가장 가까운 키 레인
-                OnLaneInput?.Invoke(scratchLane, InputType.Scratch);
-                OnLaneInput?.Invoke(keyLane, InputType.Down);
+                OnLaneInput?.Invoke(lane, InputType.Scratch);
                 var data = activeTouches[touchId];
                 data.ScratchTriggered = true;
-                data.MappedLane = keyLane; // Up 이벤트 시 키 레인으로 발행
                 activeTouches[touchId] = data;
-                if (showTouchDebug)
-                    Debug.Log($"[Touch] SCRATCH+KEY lane=SC{scratchLane}/K{keyLane} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
             }
-            else
-            {
-                // 키 존: 즉시 Key Down 발행 (리듬게임 반응성 우선)
-                OnLaneInput?.Invoke(lane, InputType.Down);
-                if (showTouchDebug)
-                    Debug.Log($"[Touch] KEY DOWN lane={lane} zone={zone} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
-            }
+
+            if (showTouchDebug)
+                Debug.Log($"[Touch] DOWN lane={lane} zone={zone} edge={isEdge} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
         }
 
         private void HandleTouchMoved(int touchId, Vector2 position)
@@ -224,25 +214,11 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 터치 존 → 키 레인 매핑
-        /// 존 0 → Lane 1, 존 1 → Lane 2
-        /// </summary>
-        private int TouchZoneToLane(int zone)
-        {
-            // 안전한 범위로 클램핑 (0-1 → 1-2)
-            int clampedZone = Mathf.Clamp(zone, 0, touchZoneCount - 1);
-            return clampedZone + 1;
-        }
-
-        /// <summary>
         /// 가장자리 존 → 스크래치 레인 매핑
-        /// 존 0 → Lane 0 (Scratch L), 존 1 → Lane 3 (Scratch R)
+        /// 존 0 → Lane 0 (Scratch L), 존 3 → Lane 3 (Scratch R)
         /// </summary>
         private int GetScratchLane(int zone)
         {
-            // 범위 검증
-            if (zone < 0 || zone >= touchZoneCount) return -1;
-
             if (zone == 0) return 0;                      // Scratch L
             if (zone == touchZoneCount - 1) return 3;     // Scratch R
             return -1; // 스크래치 불가

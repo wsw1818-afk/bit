@@ -1,1 +1,1 @@
-🔧 터치 밀림+폰트 깨짐 수정: scratchEdgeRatio 12%→8%, KoreanFontManager TTF→Dynamic SDF 런타임 생성 지원
+🎮 4레인 터치 직접 매핑 + SongSelect UI 겹침 수정: 2존→4존 터치, Down으로 스크래치 판정 가능, 뒤로버튼/타이틀 분리, CanvasScaler 1080x1920 교정

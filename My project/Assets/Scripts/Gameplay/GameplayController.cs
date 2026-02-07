@@ -603,6 +603,20 @@ namespace AIBeat.Gameplay
                 return;
             }
 
+            // 스크래치 노트도 일반 터치(Down)로 판정 가능
+            if (nearestNote.NoteType == NoteType.Scratch)
+            {
+                var scratchResult = judgementSystem.Judge(currentTime, nearestNote.HitTime);
+                if (scratchResult != JudgementResult.Miss)
+                {
+                    nearestNote.MarkAsJudged();
+                    AudioManager.Instance?.PlayScratchSound();
+                    noteSpawner.RemoveNote(nearestNote);
+                    LaneVisualFeedback.PlayJudgementEffect(lane, scratchResult);
+                }
+                return;
+            }
+
             var result = judgementSystem.Judge(currentTime, nearestNote.HitTime);
             if (result != JudgementResult.Miss)
             {
