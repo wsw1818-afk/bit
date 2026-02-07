@@ -309,13 +309,43 @@ namespace AIBeat.Gameplay
             // 시간순 정렬
             notes.Sort((a, b) => a.HitTime.CompareTo(b.HitTime));
 
+            // 필터링: 같은 시간+레인 중복 + 롱노트 구간 내 겹침 제거
+            int filteredCount = 0;
+            var seen = new HashSet<long>();
+            // 각 레인별 롱노트 종료 시점 추적
+            var longNoteEndTime = new float[4];
+
             foreach (var note in notes)
             {
+                // 1) 같은 시간 + 같은 레인 중복 필터
+                long key = ((long)(note.HitTime * 1000)) * 10 + note.LaneIndex;
+                if (!seen.Add(key))
+                {
+                    filteredCount++;
+                    continue;
+                }
+
+                // 2) 롱노트 구간 내 같은 레인에 다른 노트 겹침 필터
+                int lane = note.LaneIndex;
+                if (lane >= 0 && lane < 4 && note.Type != NoteType.Long && longNoteEndTime[lane] > note.HitTime + 0.05f)
+                {
+                    filteredCount++;
+                    continue;
+                }
+
+                // 롱노트면 종료 시점 기록
+                if (note.Type == NoteType.Long && lane >= 0 && lane < 4)
+                {
+                    longNoteEndTime[lane] = note.HitTime + note.Duration;
+                }
+
                 noteQueue.Enqueue(note);
             }
 
 #if UNITY_EDITOR
-            Debug.Log($"[NoteSpawner] Loaded {notes.Count} notes");
+            if (filteredCount > 0)
+                Debug.LogWarning($"[NoteSpawner] Filtered {filteredCount} overlapping notes");
+            Debug.Log($"[NoteSpawner] Loaded {noteQueue.Count} notes (from {notes.Count} total)");
 #endif
         }
 
@@ -497,7 +527,7 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
                     if (showDebugLogs)
                     {
-                        Debug.Log($"[NoteSpawner] Note expired (lane {note.LaneIndex}) - returned to pool");
+                        Debug.Log($"[NoteSpawner] Note expired (lane {note.LaneIndex}, type={note.NoteType}, hitTime={note.HitTime:F2}s, dur={note.Duration:F2}s, holding={note.IsHolding}) - returned to pool");
                     }
 #endif
 

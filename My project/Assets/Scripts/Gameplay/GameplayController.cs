@@ -285,7 +285,7 @@ namespace AIBeat.Gameplay
                     if (note.IsHolding)
                     {
                         float releaseTime = note.HitTime + note.Duration;
-                        if (currentTime >= releaseTime - 0.020f)
+                        if (currentTime >= releaseTime - 0.040f)
                         {
                             note.EndHold(currentTime);
                             var releaseResult = judgementSystem.Judge(currentTime, releaseTime);
@@ -294,13 +294,20 @@ namespace AIBeat.Gameplay
                             note.MarkAsJudged();
                             LaneVisualFeedback.SetHighlight(lane, false);
                             noteSpawner.RemoveNote(note);
+
+                            // release 후 같은 레인의 다음 노트 즉시 처리
+                            note = noteSpawner.GetNearestNote(lane);
+                            if (note == null) continue;
                         }
-                        continue;
+                        else
+                        {
+                            continue;
+                        }
                     }
 
                     float diff = Mathf.Abs(currentTime - note.HitTime);
-                    // PERFECT 타이밍에 자동 히트 (±20ms)
-                    if (diff <= 0.020f)
+                    // PERFECT 타이밍에 자동 히트 (±40ms - 프레임 지터 고려)
+                    if (diff <= 0.040f)
                     {
                         LaneVisualFeedback.Flash(lane);
 
@@ -761,7 +768,7 @@ namespace AIBeat.Gameplay
                 {
                     float duration = 0.5f + (float)(rng.NextDouble() * 0.5f); // 0.5~1.0초
                     notes.Add(new NoteData(t, lane, NoteType.Long, duration));
-                    t += eighthNote + duration * 0.3f; // Long 노트 후 약간의 여유
+                    t += duration + eighthNote; // 롱노트 끝난 후 8분음표 간격 보장
                 }
                 else if (roll < 0.28f) // 8% Scratch
                 {
@@ -787,7 +794,7 @@ namespace AIBeat.Gameplay
                 {
                     float duration = 0.5f + (float)(rng.NextDouble() * 0.5f);
                     notes.Add(new NoteData(t, lane, NoteType.Long, duration));
-                    t += sixteenthNote * 2 + duration * 0.2f;
+                    t += duration + sixteenthNote; // 롱노트 끝난 후 16분음표 간격 보장
                 }
                 else if (roll < 0.30f) // 12% Scratch
                 {
