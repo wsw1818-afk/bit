@@ -104,7 +104,7 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -340));
+                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -396));  // -340 → -396
                 }
             }
 
@@ -118,7 +118,7 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    genreButtonContainer = CreateScrollableContainer("GenreContainer", new Vector2(0, -80), new Vector2(0, 110));
+                    genreButtonContainer = CreateScrollableContainer("GenreContainer", new Vector2(0, -136), new Vector2(0, 110));  // -80 → -136
                 }
             }
 
@@ -132,7 +132,7 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    moodButtonContainer = CreateScrollableContainer("MoodContainer", new Vector2(0, -170), new Vector2(0, 110));
+                    moodButtonContainer = CreateScrollableContainer("MoodContainer", new Vector2(0, -226), new Vector2(0, 110));  // -170 → -226
                 }
             }
 
@@ -157,7 +157,7 @@ namespace AIBeat.UI
                 if (existing != null)
                     bpmValueText = existing.GetComponent<TextMeshProUGUI>();
                 else
-                    bpmValueText = CreateUIText("BpmValueText", "140 BPM", new Vector2(140, -255), 20);
+                    bpmValueText = CreateUIText("BpmValueText", "140 BPM", new Vector2(140, -311), 20);  // -255 → -311
             }
 
             // energyText 동적 생성
@@ -167,16 +167,16 @@ namespace AIBeat.UI
                 if (existing != null)
                     energyText = existing.GetComponent<TextMeshProUGUI>();
                 else
-                    energyText = CreateUIText("EnergyText", "에너지: 3/3", new Vector2(0, -390), 18);
+                    energyText = CreateUIText("EnergyText", "에너지: 3/3", new Vector2(0, -446), 18);  // -390 → -446
             }
 
             // previewGenreText, previewMoodText, previewBpmText
             if (previewGenreText == null)
-                previewGenreText = CreateUIText("PreviewGenreText", "EDM", new Vector2(-120, -300), 16);
+                previewGenreText = CreateUIText("PreviewGenreText", "EDM", new Vector2(-120, -356), 16);  // -300 → -356
             if (previewMoodText == null)
-                previewMoodText = CreateUIText("PreviewMoodText", "Aggressive", new Vector2(0, -300), 16);
+                previewMoodText = CreateUIText("PreviewMoodText", "Aggressive", new Vector2(0, -356), 16);  // -300 → -356
             if (previewBpmText == null)
-                previewBpmText = CreateUIText("PreviewBpmText", "140 BPM", new Vector2(120, -300), 16);
+                previewBpmText = CreateUIText("PreviewBpmText", "140 BPM", new Vector2(120, -356), 16);  // -300 → -356
 
             // loadingPanel 동적 생성
             if (loadingPanel == null)
@@ -276,10 +276,10 @@ namespace AIBeat.UI
                 optionButtonPrefab = CreateOptionButtonTemplate();
             }
 
-            // 라벨 텍스트 (Section titles)
-            CreateSectionLabel("GenreLabel", "장르", new Vector2(0, -50));
-            CreateSectionLabel("MoodLabel", "분위기", new Vector2(0, -140));
-            CreateSectionLabel("BpmLabel", "빠르기 (BPM)", new Vector2(0, -225));
+            // 라벨 텍스트 (Section titles) - 탭 바 높이(56px) 고려
+            CreateSectionLabel("GenreLabel", "장르", new Vector2(0, -106));  // -50 → -106
+            CreateSectionLabel("MoodLabel", "분위기", new Vector2(0, -196));  // -140 → -196
+            CreateSectionLabel("BpmLabel", "빠르기 (BPM)", new Vector2(0, -281));  // -225 → -281
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ namespace AIBeat.UI
             rect.anchorMin = new Vector2(0.1f, 1);
             rect.anchorMax = new Vector2(0.65f, 1);
             rect.pivot = new Vector2(0.5f, 1);
-            rect.anchoredPosition = new Vector2(0, -255);
+            rect.anchoredPosition = new Vector2(0, -311);  // -255 → -311 (탭 바 높이 56px 고려)
             rect.sizeDelta = new Vector2(0, 30);
 
             // 배경 이미지
@@ -619,9 +619,9 @@ namespace AIBeat.UI
             tabRect.anchoredPosition = new Vector2(0, 0);
             tabRect.sizeDelta = new Vector2(0, 56);
 
-            // 탭 바 배경
+            // 탭 바 배경 (완전 불투명)
             var tabBg = tabBar.AddComponent<Image>();
-            tabBg.color = new Color(0.02f, 0.02f, 0.08f, 0.95f);
+            tabBg.color = new Color(0.02f, 0.02f, 0.08f, 1f);
 
             var hLayout = tabBar.AddComponent<HorizontalLayoutGroup>();
             hLayout.spacing = 2;
