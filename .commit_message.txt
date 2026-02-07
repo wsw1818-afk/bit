@@ -1,1 +1,1 @@
-🐛 SongSelectUI BPM 슬라이더 오버레이 수정: Handle Slide Area anchor 설정으로 화면 전체 늘어남 방지
+✨ SongSelectUI BPM 슬라이더 네온 디자인: SettingsUI 스타일 적용, 핸들 네온 효과, 색상 전환

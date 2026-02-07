@@ -393,51 +393,74 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(0.65f, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = new Vector2(0, -311);  // -255 → -311 (탭 바 높이 56px 고려)
-            rect.sizeDelta = new Vector2(0, 30);
+            rect.sizeDelta = new Vector2(0, 40);  // 30→40 (SettingsUI와 일치)
 
-            // 배경 이미지
-            var bgImg = go.AddComponent<Image>();
-            bgImg.color = new Color(0.15f, 0.15f, 0.25f);
+            // 배경 (SettingsUI 스타일 - 어두운 네온)
+            var bgGo = new GameObject("Background");
+            bgGo.transform.SetParent(go.transform, false);
+            var bgRect = bgGo.AddComponent<RectTransform>();
+            bgRect.anchorMin = new Vector2(0, 0.2f);
+            bgRect.anchorMax = new Vector2(1, 0.8f);
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            var bgImg = bgGo.AddComponent<Image>();
+            bgImg.color = new Color(0.08f, 0.08f, 0.18f, 0.9f);  // SLIDER_BG_COLOR
 
-            // Fill Area
+            // Fill Area (SettingsUI 스타일)
             var fillArea = new GameObject("Fill Area");
             fillArea.transform.SetParent(go.transform, false);
             var faRect = fillArea.AddComponent<RectTransform>();
-            faRect.anchorMin = new Vector2(0, 0.25f);
-            faRect.anchorMax = new Vector2(1, 0.75f);
-            faRect.offsetMin = new Vector2(5, 0);
-            faRect.offsetMax = new Vector2(-5, 0);
+            faRect.anchorMin = new Vector2(0, 0.2f);
+            faRect.anchorMax = new Vector2(1, 0.8f);
+            faRect.offsetMin = new Vector2(4, 0);
+            faRect.offsetMax = new Vector2(-4, 0);
 
             var fill = new GameObject("Fill");
             fill.transform.SetParent(fillArea.transform, false);
             var fillRect = fill.AddComponent<RectTransform>();
             fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = new Vector2(0.5f, 1);
+            fillRect.anchorMax = Vector2.one;
             fillRect.offsetMin = Vector2.zero;
             fillRect.offsetMax = Vector2.zero;
             var fillImg = fill.AddComponent<Image>();
-            fillImg.color = new Color(0f, 0.7f, 1f);
+            fillImg.color = new Color(0f, 0.85f, 1f, 1f);  // SLIDER_FILL_COLOR (밝은 네온 시안)
 
-            // Handle
+            // Handle Slide Area (중앙 고정)
             var handleArea = new GameObject("Handle Slide Area");
             handleArea.transform.SetParent(go.transform, false);
             var haRect = handleArea.AddComponent<RectTransform>();
-            // 슬라이더 높이(30px)에 맞게 anchor 설정 (화면 전체로 늘어나는 것 방지)
             haRect.anchorMin = new Vector2(0, 0.5f);
             haRect.anchorMax = new Vector2(1, 0.5f);
-            haRect.sizeDelta = new Vector2(-20, 30);  // 좌우 여백 10px, 높이 30px
+            haRect.sizeDelta = new Vector2(-20, 40);  // 높이 40px (전체 슬라이더 높이와 동일)
             haRect.anchoredPosition = Vector2.zero;
 
+            // Handle (SettingsUI 스타일 - 크고 명확한 흰색 핸들)
             var handle = new GameObject("Handle");
             handle.transform.SetParent(handleArea.transform, false);
             var hRect = handle.AddComponent<RectTransform>();
-            hRect.sizeDelta = new Vector2(20, 30);  // 0 → 30 (슬라이더 높이와 동일)
+            hRect.sizeDelta = new Vector2(28, 40);  // 20→28, 30→40 (SettingsUI 48에서 조금 작게)
             var handleImg = handle.AddComponent<Image>();
-            handleImg.color = Color.white;
+            handleImg.color = Color.white;  // SLIDER_HANDLE_COLOR
 
+            // 핸들 네온 효과 (Outline)
+            var handleOutline = handle.AddComponent<Outline>();
+            handleOutline.effectColor = new Color(0f, 0.85f, 1f, 1f);  // SLIDER_FILL_COLOR
+            handleOutline.effectDistance = new Vector2(2, -2);
+
+            // Slider 컴포넌트
             var slider = go.AddComponent<Slider>();
             slider.fillRect = fillRect;
             slider.handleRect = hRect;
+            slider.targetGraphic = handleImg;
+
+            // 슬라이더 색상 전환 설정 (SettingsUI와 일치)
+            var colors = slider.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1f, 1f, 1f, 1f);
+            colors.pressedColor = new Color(0f, 0.85f, 1f, 1f);  // 네온 시안
+            colors.selectedColor = new Color(0f, 0.85f, 1f, 1f);
+            colors.colorMultiplier = 1f;
+            slider.colors = colors;
 
             return slider;
         }
