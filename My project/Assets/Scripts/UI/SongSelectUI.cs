@@ -339,8 +339,8 @@ namespace AIBeat.UI
             cRect.offsetMax = Vector2.zero;
 
             var vLayout = content.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 20; // 15→20 (모바일 터치 최적화)
-            vLayout.padding = new RectOffset(20, 20, 20, 20); // 여백 확대
+            vLayout.spacing = 6; // 가로 화면: 간격 축소 (GridLayout 내부에서 간격 처리)
+            vLayout.padding = new RectOffset(10, 10, 10, 10); // 가로 화면: 여백 축소
             vLayout.childControlWidth = true;
             vLayout.childControlHeight = false;
             vLayout.childForceExpandWidth = true;
@@ -427,7 +427,7 @@ namespace AIBeat.UI
             go.SetActive(false); // 템플릿이므로 비활성화
 
             var rect = go.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(130, 50);
+            // GridLayout이 cellSize로 크기를 제어하므로 sizeDelta는 기본값 유지
 
             var bg = go.AddComponent<Image>();
             bg.color = new Color(0.12f, 0.12f, 0.22f, 0.9f);
@@ -443,25 +443,22 @@ namespace AIBeat.UI
             var tRect = textGo.AddComponent<RectTransform>();
             tRect.anchorMin = Vector2.zero;
             tRect.anchorMax = Vector2.one;
-            tRect.offsetMin = new Vector2(6, 2);
-            tRect.offsetMax = new Vector2(-6, -2);
+            tRect.offsetMin = new Vector2(4, 2);
+            tRect.offsetMax = new Vector2(-4, -2);
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "Option";
-            tmp.fontSize = 22;  // 20→22 (모바일 가독성)
+            tmp.fontSize = 18;
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
             tmp.alignment = TextAlignmentOptions.Center;
-
-            // 모바일 최적화: 버튼 크기 확대
-            rect.sizeDelta = new Vector2(0, 60); // 높이 50→60 (터치 영역 확보)
 
             return go;
         }
 
         /// <summary>
         /// 모든 옵션을 한 화면에 표시 (장르 → 분위기 → 빠르기 순서)
-        /// OptionTabBar 제거 → 스크롤 한 화면으로 간소화
+        /// 가로 화면 최적화: 각 섹션 버튼을 GridLayout 다열 배치
         /// </summary>
         private void PopulateAllOptions()
         {
@@ -480,15 +477,85 @@ namespace AIBeat.UI
 
             // 1. 장르 섹션
             CreateInlineSectionLabel(content, "장르");
-            CreateGenreButtons(content);
+            var genreGrid = CreateButtonGrid(content, "GenreGrid", 4);
+            CreateGenreButtons(genreGrid);
 
             // 2. 분위기 섹션
             CreateInlineSectionLabel(content, "분위기");
-            CreateMoodButtons(content);
+            var moodGrid = CreateButtonGrid(content, "MoodGrid", 4);
+            CreateMoodButtons(moodGrid);
 
             // 3. 빠르기(BPM) 섹션
             CreateInlineSectionLabel(content, "빠르기 (BPM)");
-            CreateBPMButtons(content);
+            var bpmGrid = CreateButtonGrid(content, "BpmGrid", 3);
+            CreateBPMButtons(bpmGrid);
+        }
+
+        /// <summary>
+        /// 가로 화면용 GridLayoutGroup 버튼 컨테이너 생성
+        /// </summary>
+        private Transform CreateButtonGrid(Transform parent, string name, int columns)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0, 0); // ContentSizeFitter가 자동 조절
+
+            var grid = go.AddComponent<GridLayoutGroup>();
+            // 셀 크기: 가로는 부모 폭 / columns - 간격, 세로 48px
+            grid.cellSize = new Vector2(200, 48); // 초기값 (LayoutGroup이 자동 조절)
+            grid.spacing = new Vector2(8, 8);
+            grid.padding = new RectOffset(0, 0, 4, 4);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = columns;
+            grid.childAlignment = TextAnchor.UpperLeft;
+
+            // 셀 너비를 부모에 맞게 자동 계산하는 헬퍼 컴포넌트 대신
+            // 런타임에 RectTransform 이벤트로 처리
+            var csf = go.AddComponent<ContentSizeFitter>();
+            csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            // LayoutElement로 부모 VerticalLayoutGroup에서 전체 폭 사용
+            var le = go.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1;
+
+            // 셀 크기 자동 계산: 부모 Content의 폭 기준
+            // Content에 padding 40px (좌20+우20), grid padding 0
+            // 실제 사용 가능 폭에서 columns로 나눔
+            StartCoroutine(AdjustGridCellSize(rect, grid, columns));
+
+            return go.transform;
+        }
+
+        /// <summary>
+        /// GridLayout 셀 크기를 부모 폭에 맞게 자동 조절 (1프레임 대기)
+        /// </summary>
+        private System.Collections.IEnumerator AdjustGridCellSize(RectTransform gridRect, GridLayoutGroup grid, int columns)
+        {
+            yield return null; // 레이아웃 계산 대기
+
+            // Canvas의 RectTransform에서 전체 폭 계산
+            var canvasRect = GetComponent<RectTransform>();
+            float canvasWidth = canvasRect != null ? canvasRect.rect.width : 0;
+
+            // OptionContainer offsetMin.x=20, offsetMax.x=-20 → 좌우 40px 축소
+            // VerticalLayoutGroup padding 좌우 10+10 = 20px
+            float availableWidth = canvasWidth - 40 - 20;
+
+            if (availableWidth <= 0)
+            {
+                // fallback: gridRect 자체에서 시도
+                availableWidth = gridRect.rect.width;
+            }
+
+            if (availableWidth > 0)
+            {
+                float totalSpacing = grid.spacing.x * (columns - 1);
+                float cellWidth = (availableWidth - totalSpacing) / columns;
+                grid.cellSize = new Vector2(cellWidth, grid.cellSize.y);
+            }
         }
 
         /// <summary>
@@ -500,17 +567,22 @@ namespace AIBeat.UI
             go.transform.SetParent(parent, false);
 
             var rect = go.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(0, 36);
+            rect.sizeDelta = new Vector2(0, 28); // 가로 화면: 높이 축소
+
+            var le = go.AddComponent<LayoutElement>();
+            le.minHeight = 28;
+            le.preferredHeight = 28;
+            le.flexibleWidth = 1;
 
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 20;
+            tmp.fontSize = 17;
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = new Color(0.5f, 0.85f, 1f, 0.9f); // 밝은 시안 (약간 투명)
             tmp.alignment = TextAlignmentOptions.Left;
 
             // 좌측 패딩
-            var padding = new Vector4(4, 0, 0, 0);
+            var padding = new Vector4(2, 0, 0, 0);
             tmp.margin = padding;
         }
 
@@ -793,7 +865,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일 최적화: Genre 버튼 생성
+        /// Genre 버튼 생성 (GridLayout 컨테이너에 배치)
         /// </summary>
         private void CreateGenreButtons(Transform parent)
         {
@@ -810,7 +882,7 @@ namespace AIBeat.UI
                 if (btnText != null)
                 {
                     btnText.text = displayName;
-                    btnText.fontSize = 22; // 모바일 가독성
+                    btnText.fontSize = 18;
                     btnText.fontStyle = FontStyles.Bold;
                     btnText.color = new Color(0.4f, 0.95f, 1f, 1f);
                 }
@@ -830,7 +902,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일 최적화: Mood 버튼 생성
+        /// Mood 버튼 생성 (GridLayout 컨테이너에 배치)
         /// </summary>
         private void CreateMoodButtons(Transform parent)
         {
@@ -847,7 +919,7 @@ namespace AIBeat.UI
                 if (btnText != null)
                 {
                     btnText.text = displayName;
-                    btnText.fontSize = 22;
+                    btnText.fontSize = 18;
                     btnText.fontStyle = FontStyles.Bold;
                     btnText.color = new Color(0.4f, 0.95f, 1f, 1f);
                 }
@@ -867,7 +939,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일 최적화: BPM 버튼 생성
+        /// BPM 버튼 생성 (GridLayout 컨테이너에 배치)
         /// </summary>
         private void CreateBPMButtons(Transform parent)
         {
@@ -880,18 +952,11 @@ namespace AIBeat.UI
                 btnGo.name = $"BPM_{bpm}";
                 btnGo.SetActive(true);
 
-                // 버튼 크기 조정
-                var btnRect = btnGo.GetComponent<RectTransform>();
-                if (btnRect != null)
-                {
-                    btnRect.sizeDelta = new Vector2(0, 70); // 높이 60→70 (모바일 터치 최적화)
-                }
-
                 var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)
                 {
                     btnText.text = $"{bpm} BPM";
-                    btnText.fontSize = 24; // 22→24 (더 크게)
+                    btnText.fontSize = 20;
                     btnText.fontStyle = FontStyles.Bold;
                     btnText.color = new Color(0.4f, 0.95f, 1f, 1f);
                 }
