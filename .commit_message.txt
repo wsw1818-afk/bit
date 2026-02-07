@@ -1,1 +1,1 @@
-🎮 4레인 터치 직접 매핑 + SongSelect UI 겹침 수정: 2존→4존 터치, Down으로 스크래치 판정 가능, 뒤로버튼/타이틀 분리, CanvasScaler 1080x1920 교정
+🎮 Gameplay UI 상단바 리디자인 + 카메라 기반 터치 매핑: 점수/콤보/곡명/Stats 가로 한 줄, 레인 월드좌표→화면좌표 터치 존, 4레인 직접 Down+Scratch 판정

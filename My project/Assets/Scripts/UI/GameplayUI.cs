@@ -176,77 +176,109 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// HUD 요소 위치 재배치 (스코어 상단 중앙, 콤보 하단)
+        /// HUD 요소 위치 재배치 — 상단 가로 바 레이아웃
+        /// [⏸] [곡명] [점수] [콤보] 를 한 줄로 배치
         /// </summary>
         private void RepositionHUD()
         {
-            // ScorePanel → 상단 중앙 (DJ 콘솔 스타일)
+            // === 상단 바 컨테이너 (전체 너비, 높이 50px) ===
+            var topBar = new GameObject("TopBar");
+            topBar.transform.SetParent(transform, false);
+            var topBarRect = topBar.AddComponent<RectTransform>();
+            topBarRect.anchorMin = new Vector2(0, 1);
+            topBarRect.anchorMax = new Vector2(1, 1);
+            topBarRect.pivot = new Vector2(0.5f, 1);
+            topBarRect.anchoredPosition = Vector2.zero;
+            topBarRect.sizeDelta = new Vector2(0, 56);
+
+            var topBarBg = topBar.AddComponent<Image>();
+            topBarBg.color = new Color(0.02f, 0.01f, 0.06f, 0.85f);
+
+            var barOutline = topBar.AddComponent<Outline>();
+            barOutline.effectColor = new Color(0.2f, 0.3f, 0.8f, 0.4f);
+            barOutline.effectDistance = new Vector2(0, -1);
+
+            // HorizontalLayoutGroup
+            var hLayout = topBar.AddComponent<HorizontalLayoutGroup>();
+            hLayout.padding = new RectOffset(8, 8, 4, 4);
+            hLayout.spacing = 8;
+            hLayout.childAlignment = TextAnchor.MiddleCenter;
+            hLayout.childControlWidth = false;
+            hLayout.childControlHeight = true;
+            hLayout.childForceExpandWidth = false;
+            hLayout.childForceExpandHeight = true;
+
+            // --- 곡명 (왼쪽) ---
+            if (songTitleText != null)
+            {
+                songTitleText.transform.SetParent(topBar.transform, false);
+                var titleLE = songTitleText.gameObject.AddComponent<LayoutElement>();
+                titleLE.flexibleWidth = 1;
+                titleLE.minWidth = 100;
+                songTitleText.fontSize = 22;
+                songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
+                songTitleText.color = new Color(0.3f, 0.9f, 1f, 0.9f);
+                songTitleText.fontStyle = FontStyles.Bold;
+                songTitleText.textWrappingMode = TextWrappingModes.NoWrap;
+                songTitleText.overflowMode = TextOverflowModes.Ellipsis;
+            }
+
+            // --- 점수 (중앙) ---
             if (scoreText != null)
             {
+                // ScorePanel 자체 대신 ScoreText만 TopBar로 이동
                 var scorePanel = scoreText.transform.parent;
-                if (scorePanel != null)
+                if (scorePanel != null && scorePanel.name == "ScorePanel")
                 {
-                    var panelRect = scorePanel.GetComponent<RectTransform>();
-                    if (panelRect != null)
-                    {
-                        panelRect.anchorMin = new Vector2(0.5f, 1f);
-                        panelRect.anchorMax = new Vector2(0.5f, 1f);
-                        panelRect.pivot = new Vector2(0.5f, 1f);
-                        panelRect.anchoredPosition = new Vector2(0, -10);
-                        panelRect.sizeDelta = new Vector2(380, 56);
-                    }
-
-                    // Score 패널 배경 (다크 그라데이션)
-                    var panelImage = scorePanel.GetComponent<Image>();
-                    if (panelImage != null)
-                    {
-                        panelImage.color = new Color(0.03f, 0.02f, 0.1f, 0.8f);
-                    }
-
-                    // Outline (이퀄라이저 블루-퍼플 테두리)
-                    var outline = scorePanel.GetComponent<Outline>();
-                    if (outline == null)
-                        outline = scorePanel.gameObject.AddComponent<Outline>();
-                    outline.effectColor = new Color(0.3f, 0.4f, 1f, 0.5f);
-                    outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-                    // ScoreLabel 숨기기 (숫자만 표시)
+                    // ScoreLabel 숨기기
                     var labelTransform = scorePanel.Find("ScoreLabel");
                     if (labelTransform != null)
                         labelTransform.gameObject.SetActive(false);
 
-                    // ScoreText 스타일 (LED 디스플레이 느낌)
-                    scoreText.fontSize = 38;
-                    scoreText.alignment = TextAlignmentOptions.Center;
-                    scoreText.color = new Color(0.9f, 0.95f, 1f);
-                    scoreText.fontStyle = FontStyles.Bold;
-                    scoreText.outlineWidth = 0.1f;
-                    scoreText.outlineColor = new Color32(60, 80, 255, 100);
+                    // ScorePanel 배경/아웃라인 비활성
+                    var panelImage = scorePanel.GetComponent<Image>();
+                    if (panelImage != null) panelImage.color = Color.clear;
+                    var panelOutline = scorePanel.GetComponent<Outline>();
+                    if (panelOutline != null) Destroy(panelOutline);
+
+                    scorePanel.SetParent(topBar.transform, false);
+                    var scoreLE = scorePanel.gameObject.AddComponent<LayoutElement>();
+                    scoreLE.preferredWidth = 180;
                 }
+
+                scoreText.fontSize = 32;
+                scoreText.alignment = TextAlignmentOptions.Center;
+                scoreText.color = new Color(1f, 1f, 1f, 1f);
+                scoreText.fontStyle = FontStyles.Bold;
+                scoreText.outlineWidth = 0.1f;
+                scoreText.outlineColor = new Color32(60, 80, 255, 120);
             }
 
-            // ComboText → 좌상단 (노트 영역 회피)
+            // --- 콤보 (오른쪽) ---
             if (comboText != null)
             {
-                var comboRect = comboText.GetComponent<RectTransform>();
-                if (comboRect != null)
-                {
-                    comboRect.anchorMin = new Vector2(0, 1);
-                    comboRect.anchorMax = new Vector2(0, 1);
-                    comboRect.pivot = new Vector2(0, 1);
-                    comboRect.anchoredPosition = new Vector2(15, -60);
-                    comboRect.sizeDelta = new Vector2(250, 40);
-                }
-                comboText.fontSize = 34;
-                comboText.alignment = TextAlignmentOptions.Left;
-                comboText.color = new Color(1f, 1f, 1f, 0.9f);
+                comboText.transform.SetParent(topBar.transform, false);
+                var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
+                comboLE.preferredWidth = 130;
+                comboText.fontSize = 22;
+                comboText.alignment = TextAlignmentOptions.MidlineRight;
+                comboText.color = new Color(1f, 0.9f, 0.3f, 0.95f);
                 comboText.fontStyle = FontStyles.Bold;
                 comboText.outlineWidth = 0.15f;
                 comboText.outlineColor = new Color32(0, 0, 0, 180);
                 comboText.text = "";
             }
 
-            // JudgementText → 판정선 약간 위 (하단 30% 지점)
+            // --- 일시정지 버튼을 TopBar 맨 오른쪽에 배치 ---
+            if (pauseButton != null)
+            {
+                pauseButton.transform.SetParent(topBar.transform, false);
+                var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
+                pauseLE.preferredWidth = 48;
+                pauseLE.preferredHeight = 48;
+            }
+
+            // === JudgementText → 판정선 약간 위 (하단 30% 지점) ===
             if (judgementText != null)
             {
                 var judgeRect = judgementText.GetComponent<RectTransform>();
@@ -265,7 +297,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일용 일시정지 버튼 (우상단)
+        /// 모바일용 일시정지 버튼 (TopBar 맨 오른쪽에 배치)
         /// </summary>
         private void CreatePauseButton()
         {
@@ -273,20 +305,17 @@ namespace AIBeat.UI
             pauseBtnGo.transform.SetParent(transform, false);
 
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
+            // 초기 위치는 임시 — RepositionHUD에서 TopBar로 이동됨
             btnRect.anchorMin = new Vector2(1, 1);
             btnRect.anchorMax = new Vector2(1, 1);
             btnRect.pivot = new Vector2(1, 1);
             btnRect.anchoredPosition = new Vector2(-10, -10);
-            btnRect.sizeDelta = new Vector2(50, 50);
+            btnRect.sizeDelta = new Vector2(48, 48);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
-            btnImage.color = new Color(0.03f, 0.02f, 0.1f, 0.6f);
+            btnImage.color = new Color(0.05f, 0.03f, 0.15f, 0.7f);
 
-            var btnOutline = pauseBtnGo.AddComponent<Outline>();
-            btnOutline.effectColor = new Color(0.3f, 0.4f, 1f, 0.35f);
-            btnOutline.effectDistance = new Vector2(1, -1);
-
-            // 일시정지 아이콘 (음악 정지)
+            // 일시정지 아이콘
             var textGo = new GameObject("PauseIcon");
             textGo.transform.SetParent(pauseBtnGo.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
@@ -294,11 +323,10 @@ namespace AIBeat.UI
             textRect.anchorMax = Vector2.one;
             textRect.sizeDelta = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
-            iconText.text = "\u23F8";
-            iconText.fontSize = 22;
+            iconText.text = "\u2759\u2759"; // ❚❚
+            iconText.fontSize = 20;
             iconText.color = new Color(0.6f, 0.7f, 1f, 0.9f);
             iconText.alignment = TextAlignmentOptions.Center;
-            iconText.fontStyle = FontStyles.Bold;
 
             pauseButton = pauseBtnGo.AddComponent<Button>();
             pauseButton.targetGraphic = btnImage;
@@ -339,7 +367,7 @@ namespace AIBeat.UI
             rect.anchorMin = new Vector2(0, 1);
             rect.anchorMax = new Vector2(0, 1);
             rect.pivot = new Vector2(0, 1);
-            rect.anchoredPosition = new Vector2(15, -100);
+            rect.anchoredPosition = new Vector2(15, -90);
             rect.sizeDelta = new Vector2(250f, 30f);
 
             bonusScoreText = go.AddComponent<TextMeshProUGUI>();
@@ -382,96 +410,62 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 상단 판정 통계 HUD 동적 생성
-        /// SCORE + PERFECT/GREAT/GOOD/BAD/MISS 행별 표시
+        /// 상단 판정 통계 HUD — TopBar 아래 가로 한 줄
+        /// P:0 | G:0 | OK:0 | B:0 | M:0
         /// </summary>
         private void CreateStatsHUD()
         {
-            // StatsPanel 컨테이너 (우상단)
-            statsPanel = new GameObject("StatsPanel");
+            // StatsBar 컨테이너 (상단 바 아래, 가로 전체)
+            statsPanel = new GameObject("StatsBar");
             statsPanel.transform.SetParent(transform, false);
 
             var statsRect = statsPanel.AddComponent<RectTransform>();
-            statsRect.anchorMin = new Vector2(1, 1);  // 우상단
+            statsRect.anchorMin = new Vector2(0, 1);
             statsRect.anchorMax = new Vector2(1, 1);
-            statsRect.pivot = new Vector2(1, 1);
-            statsRect.anchoredPosition = new Vector2(-8, -60);
-            statsRect.sizeDelta = new Vector2(140, 115);
+            statsRect.pivot = new Vector2(0.5f, 1);
+            statsRect.anchoredPosition = new Vector2(0, -56); // TopBar(56px) 바로 아래
+            statsRect.sizeDelta = new Vector2(0, 28);
 
-            // 반투명 DJ 콘솔 배경
+            // 반투명 배경
             var bgImage = statsPanel.AddComponent<Image>();
-            bgImage.color = new Color(0.03f, 0.02f, 0.1f, 0.4f);
+            bgImage.color = new Color(0.01f, 0.01f, 0.04f, 0.6f);
 
-            // 이퀄라이저 테두리
-            var statsOutline = statsPanel.AddComponent<Outline>();
-            statsOutline.effectColor = new Color(0.3f, 0.4f, 1f, 0.3f);
-            statsOutline.effectDistance = new Vector2(1, -1);
-
-            // VerticalLayoutGroup으로 행 정렬
-            var layout = statsPanel.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(8, 8, 6, 6);
-            layout.spacing = 1;
-            layout.childAlignment = TextAnchor.UpperRight;
+            // HorizontalLayoutGroup으로 5개 판정을 가로 정렬
+            var layout = statsPanel.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(10, 10, 2, 2);
+            layout.spacing = 4;
+            layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
+            layout.childForceExpandHeight = true;
 
-            // 판정별 텍스트 생성
-            statsPerfectText = CreateStatsRow(statsPanel.transform, "PERFECT", "0", perfectColor);
-            statsGreatText = CreateStatsRow(statsPanel.transform, "GREAT", "0", greatColor);
-            statsGoodText = CreateStatsRow(statsPanel.transform, "GOOD", "0", goodColor);
-            statsBadText = CreateStatsRow(statsPanel.transform, "BAD", "0", badColor);
-            statsMissText = CreateStatsRow(statsPanel.transform, "MISS", "0", missColor);
+            // 판정별 텍스트 생성 (가로 한 줄에 약어로)
+            statsPerfectText = CreateStatsCell(statsPanel.transform, "P", "0", perfectColor);
+            statsGreatText = CreateStatsCell(statsPanel.transform, "G", "0", greatColor);
+            statsGoodText = CreateStatsCell(statsPanel.transform, "OK", "0", goodColor);
+            statsBadText = CreateStatsCell(statsPanel.transform, "B", "0", badColor);
+            statsMissText = CreateStatsCell(statsPanel.transform, "M", "0", missColor);
         }
 
         /// <summary>
-        /// 판정 통계 행 생성 (라벨 + 카운트)
+        /// 판정 통계 셀 생성 (약어:카운트 형태, 가로 레이아웃)
         /// </summary>
-        private TMP_Text CreateStatsRow(Transform parent, string label, string value, Color color)
+        private TMP_Text CreateStatsCell(Transform parent, string label, string value, Color color)
         {
-            var row = new GameObject($"Stats_{label}");
-            row.transform.SetParent(parent, false);
+            var cell = new GameObject($"Stats_{label}");
+            cell.transform.SetParent(parent, false);
 
-            var rowRect = row.AddComponent<RectTransform>();
-            rowRect.sizeDelta = new Vector2(124, 18);
+            // 통합 텍스트 (라벨+값을 하나의 TMP로)
+            var tmp = cell.AddComponent<TextMeshProUGUI>();
+            tmp.text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{label}</color> {value}";
+            tmp.fontSize = 16;
+            tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
 
-            // HorizontalLayoutGroup
-            var hLayout = row.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 5;
-            hLayout.childAlignment = TextAnchor.MiddleRight;
-            hLayout.childControlWidth = true;
-            hLayout.childControlHeight = true;
-            hLayout.childForceExpandWidth = false;
-            hLayout.childForceExpandHeight = true;
-
-            // 라벨
-            var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(row.transform, false);
-            var labelRect = labelGo.AddComponent<RectTransform>();
-            var labelLayout = labelGo.AddComponent<LayoutElement>();
-            labelLayout.flexibleWidth = 1;
-            var labelText = labelGo.AddComponent<TextMeshProUGUI>();
-            labelText.text = label;
-            labelText.fontSize = 12;
-            labelText.color = color;
-            labelText.alignment = TextAlignmentOptions.MidlineLeft;
-            labelText.fontStyle = FontStyles.Bold;
-
-            // 카운트
-            var valueGo = new GameObject("Value");
-            valueGo.transform.SetParent(row.transform, false);
-            var valueRect = valueGo.AddComponent<RectTransform>();
-            var valueLayout = valueGo.AddComponent<LayoutElement>();
-            valueLayout.preferredWidth = 45;
-            var valueText = valueGo.AddComponent<TextMeshProUGUI>();
-            valueText.text = value;
-            valueText.fontSize = 14;
-            valueText.color = Color.white;
-            valueText.alignment = TextAlignmentOptions.MidlineRight;
-            valueText.fontStyle = FontStyles.Bold;
-
-            return valueText;
+            return tmp;
         }
 
         /// <summary>
@@ -481,16 +475,17 @@ namespace AIBeat.UI
         {
             if (judgementSystem == null) return;
 
-            if (statsPerfectText != null)
-                statsPerfectText.text = judgementSystem.PerfectCount.ToString();
-            if (statsGreatText != null)
-                statsGreatText.text = judgementSystem.GreatCount.ToString();
-            if (statsGoodText != null)
-                statsGoodText.text = judgementSystem.GoodCount.ToString();
-            if (statsBadText != null)
-                statsBadText.text = judgementSystem.BadCount.ToString();
-            if (statsMissText != null)
-                statsMissText.text = judgementSystem.MissCount.ToString();
+            UpdateStatsCell(statsPerfectText, "P", judgementSystem.PerfectCount, perfectColor);
+            UpdateStatsCell(statsGreatText, "G", judgementSystem.GreatCount, greatColor);
+            UpdateStatsCell(statsGoodText, "OK", judgementSystem.GoodCount, goodColor);
+            UpdateStatsCell(statsBadText, "B", judgementSystem.BadCount, badColor);
+            UpdateStatsCell(statsMissText, "M", judgementSystem.MissCount, missColor);
+        }
+
+        private void UpdateStatsCell(TMP_Text cell, string label, int count, Color color)
+        {
+            if (cell == null) return;
+            cell.text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{label}</color> {count}";
         }
 
         public void Initialize(SongData songData)

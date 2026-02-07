@@ -15,8 +15,6 @@ namespace AIBeat.Gameplay
         [Header("Touch Zone Settings")]
         [SerializeField] private int touchZoneCount = 4;       // 4개 균등 터치 존 (Lane0~3 직접 매핑)
         [SerializeField] private float touchAreaRatio = 0.85f;  // 하단 85% 입력 영역 (상단 UI만 제외)
-        [SerializeField] private float scratchEdgeRatio = 0.08f; // 좌우 가장자리 8%를 스크래치 추가 발화 존으로
-
         [Header("Debug")]
         [SerializeField] private bool showTouchDebug = true;
 
@@ -27,6 +25,7 @@ namespace AIBeat.Gameplay
         private Dictionary<int, TouchData> activeTouches = new Dictionary<int, TouchData>();
         private bool isEnabled = true;
         private float cachedScratchThreshold; // 픽셀 단위 캐시
+        private float[] laneBoundaries; // 레인 경계 (정규화된 X 좌표, 5개: 0경계~4경계)
 
         // Lane indices: 0=ScratchL, 1=Key1, 2=Key2, 3=ScratchR
         public event Action<int, InputType> OnLaneInput;
@@ -56,7 +55,42 @@ namespace AIBeat.Gameplay
         private void Start()
         {
             CacheScratchThreshold();
+            CacheLaneBoundaries();
             StartCoroutine(InputLoop());
+        }
+
+        /// <summary>
+        /// 카메라 기반 레인 경계를 화면 정규화 좌표로 캐시
+        /// 레인 월드 X: -1.5, -0.5, 0.5, 1.5 (laneWidth=1, 4레인)
+        /// 경계는 각 레인 사이의 중간점 + 좌우 끝
+        /// </summary>
+        private void CacheLaneBoundaries()
+        {
+            var cam = Camera.main;
+            if (cam == null)
+            {
+                // 카메라 없으면 균등 분할 사용
+                laneBoundaries = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
+                return;
+            }
+
+            float laneWidth = 1f;
+            float startX = -(touchZoneCount - 1) * laneWidth / 2f; // -1.5
+
+            // 5개 경계: 레인0 왼쪽, 0-1 사이, 1-2 사이, 2-3 사이, 레인3 오른쪽
+            laneBoundaries = new float[touchZoneCount + 1];
+            for (int i = 0; i <= touchZoneCount; i++)
+            {
+                float worldX = startX + (i - 0.5f) * laneWidth;
+                Vector3 screenPos = cam.WorldToScreenPoint(new Vector3(worldX, 0, 0));
+                laneBoundaries[i] = Mathf.Clamp01(screenPos.x / Screen.width);
+            }
+
+            // 좌우 끝을 0/1로 보장
+            laneBoundaries[0] = 0f;
+            laneBoundaries[touchZoneCount] = 1f;
+
+            Debug.Log($"[InputHandler] Lane boundaries: {laneBoundaries[0]:F3}, {laneBoundaries[1]:F3}, {laneBoundaries[2]:F3}, {laneBoundaries[3]:F3}, {laneBoundaries[4]:F3}");
         }
 
         /// <summary>
@@ -203,12 +237,24 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 화면 X 좌표 → 터치 존 (0~1) 매핑
-        /// 2개 균등 분할 (각 50%)
+        /// 화면 X 좌표 → 터치 존 (0~3) 매핑
+        /// 카메라 기반 레인 경계 사용
         /// </summary>
         private int GetTouchZone(Vector2 screenPosition)
         {
             float normalizedX = screenPosition.x / Screen.width;
+
+            if (laneBoundaries != null && laneBoundaries.Length == touchZoneCount + 1)
+            {
+                for (int i = 0; i < touchZoneCount; i++)
+                {
+                    if (normalizedX < laneBoundaries[i + 1])
+                        return i;
+                }
+                return touchZoneCount - 1;
+            }
+
+            // 폴백: 균등 분할
             int zone = Mathf.FloorToInt(normalizedX * touchZoneCount);
             return Mathf.Clamp(zone, 0, touchZoneCount - 1);
         }
