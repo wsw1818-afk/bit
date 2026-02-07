@@ -1,1 +1,1 @@
-📐 SongLibrary 레이아웃 수정: 곡 목록이 화면 전체를 채우도록 VerticalLayoutGroup 설정 변경
+📐 SongSelect 씬 레이아웃 전면 수정: 레거시 오브젝트 삭제, CanvasScaler→ScaleWithScreenSize, 곡 목록 전체 화면 채움
