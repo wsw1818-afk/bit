@@ -7,23 +7,15 @@
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 41)
+## What changed (세션 42)
 
-### 음악/DJ 테마 디자인 개선
-- **LaneVisualFeedback**: 레인 색상 → 바이올렛(스크래치)+네온블루/시안(키), 판정선 블루-시안 음파 글로우, 비트 반응 색상 시프트, 판정 이펙트(골드/시안/민트/핑크), 스크래치존 "♬ DJ" 턴테이블 라벨, 키라벨 음표(♪♫)
-- **GameplayUI**: DJ 콘솔 스코어 패널(블루-퍼플 테두리), 이퀄라이저 콤보 색상(민트→시안→골드→핫핑크), 판정 텍스트 "♫ PERFECT!", 일시정지 ⏸ 아이콘, 결과 화면 DJ 부스 배경, 랭크 컬러(골드/시안/민트/라벤더)
-- **NoteSpawner**: 노트 색상 → 네온 블루(탭), 민트 그린(롱), 바이올렛(스크래치)
-
-### 곡 생성 UI 모바일 최적화 (세션 38~41)
-- ~~**3단 컬럼 레이아웃**~~(세션 38~39) → **탭 전환 단일 컬럼 방식**으로 전환 (세션 40)
-- **옵션 탭 바**: Genre/Mood/BPM 3개 탭 전환 (상단 메인 탭 아래 60px)
-- **전체 화면 세로 스크롤**: CreateFullScreenColumn() 함수로 전체 화면 단일 컬럼 생성 (좌우 20px 여백, 버튼 간격 20px)
-- **Generate 버튼**: 하단 고정 배치 (바닥에서 20px 띄움, 좌우 20px 여백, 높이 60px)
-- **에너지 표시**: 우측 상단 배치 (탭 바 아래)
-- **터치 영역 확대**: 버튼 높이 60-70px (BPM 70px, 나머지 60px), 폰트 크기 22-24px
-- **시각적 개선**: Preview 텍스트 숨김, 버튼 클릭 시 배경 색상 변경(선택: 0,0.4,0.6 / 미선택: 0.12,0.12,0.22)
-- **코드 구조**: CreateFullScreenColumn(), CreateOptionTabBar(), SwitchToOptionTab(), CreateGenreButtons/MoodButtons/BPMButtons()
-- **옵션 탭 바 가시성 수정** (세션 41): OptionTabBar가 OptionContainer에 가려지는 문제 해결 → OptionContainer.offsetMax를 -150에서 -120으로 조정
+### SongSelect UI 전면 간소화
+- **OptionTabBar 완전 제거**: 장르/분위기/빠르기 3개 서브 탭을 없앰
+- **한 화면 스크롤**: 모든 옵션(장르→분위기→빠르기)을 섹션 헤더와 함께 하나의 스크롤 뷰에 표시
+- **섹션 헤더**: `CreateInlineSectionLabel()` — "장르", "분위기", "빠르기 (BPM)" 라벨을 스크롤 내부에 배치
+- **한국어 폰트 □□ 깨짐 해결**: `KoreanFontManager.ApplyFontToAll()` 호출을 모든 UI 생성 완료 후로 이동
+- **불필요 코드 정리**: CreateOptionTabBar, SwitchToOptionTab, UpdateOptionTabHighlight, CreateColumnContainer, CreateBpmSlider, LayoutColumn, CreateSectionLabel, CreateOptionButtons, CreateOptionButton 등 미사용 메서드 제거
+- **OptionContainer offsetMax**: -120 → -62 (메인 탭 56px + 여백 6px만)
 
 ### 전체 플로우 종합 테스트 (3개 씬 모두 통과)
 
@@ -33,11 +25,11 @@
 | SongSelect | 정상 | 0 | SongLibrary 0곡 로드 |
 | Gameplay | 정상 | 0 | Score 65,276 (보너스 포함), P:40 G:16 Good:8 B:2 M:0 |
 
-## Commands & Results (세션 41)
+## Commands & Results (세션 42)
 - recompile_scripts → **0 에러, 0 경고** ✅
-- BPM 버튼 텍스트 표시 문제 해결 (세션 39) ✅
-- 모바일 UI 최적화 완료: 3단 컬럼 → 탭 전환 단일 컬럼 (세션 40) ✅
-- 옵션 탭 바 가시성 문제 해결: OptionTabBar 위치 조정 및 OptionContainer 오프셋 수정 (세션 41) ✅
+- MCP Play 모드 검증: SongSelect 씬 에러 0개, 한국어 폰트 정상 적용 ✅
+- Label_장르, Label_분위기, Label_빠르기 (BPM) 모두 MalgunGothicBold SDF 폰트 확인 ✅
+- OptionTabBar 제거 확인 (MCP get_gameobject 검색 결과 없음) ✅
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)

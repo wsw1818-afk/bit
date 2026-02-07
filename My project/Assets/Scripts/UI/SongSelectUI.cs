@@ -296,63 +296,6 @@ namespace AIBeat.UI
             return btn;
         }
 
-        /// <summary>
-        /// 세로 컬럼 컨테이너 생성 (Vertical Column) - 화면 높이의 대부분을 차지
-        /// </summary>
-        private Transform CreateColumnContainer(string name)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(transform, false);
-            var rect = go.AddComponent<RectTransform>();
-            // Anchor는 LayoutColumn에서 설정
-
-            // ScrollRect (Vertical)
-            var scrollRect = go.AddComponent<ScrollRect>();
-            scrollRect.horizontal = false;
-            scrollRect.vertical = true;
-            scrollRect.scrollSensitivity = 20f;
-            scrollRect.movementType = ScrollRect.MovementType.Elastic;
-
-            // Viewport (Mask)
-            var viewport = new GameObject("Viewport");
-            viewport.transform.SetParent(go.transform, false);
-            var vpRect = viewport.AddComponent<RectTransform>();
-            vpRect.anchorMin = Vector2.zero;
-            vpRect.anchorMax = Vector2.one;
-            vpRect.offsetMin = Vector2.zero;
-            vpRect.offsetMax = Vector2.zero;
-            
-            var mask = viewport.AddComponent<RectMask2D>(); // 성능상 RectMask2D 선호
-            // viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0); // RectMask2D는 Image 필요 없음
-
-            // Content (VerticalLayoutGroup)
-            var content = new GameObject("Content");
-            content.transform.SetParent(viewport.transform, false);
-            var cRect = content.AddComponent<RectTransform>();
-            cRect.anchorMin = new Vector2(0, 1);
-            cRect.anchorMax = new Vector2(1, 1);
-            cRect.pivot = new Vector2(0.5f, 1);
-            cRect.offsetMin = Vector2.zero;
-            cRect.offsetMax = Vector2.zero;
-            // 높이는 ContentSizeFitter가 제어
-
-            var vLayout = content.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 15;
-            vLayout.padding = new RectOffset(10, 10, 10, 10);
-            vLayout.childControlWidth = true;
-            vLayout.childControlHeight = false; // 버튼 높이는 자체 설정
-            vLayout.childForceExpandWidth = true;
-            vLayout.childForceExpandHeight = false;
-            vLayout.childAlignment = TextAnchor.UpperCenter;
-
-            var csf = content.AddComponent<ContentSizeFitter>();
-            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            scrollRect.content = cRect;
-            scrollRect.viewport = vpRect;
-
-            return content.transform; // 버튼들이 추가될 부모
-        }
 
         /// <summary>
         /// 모바일 최적화: 전체 화면 단일 컬럼 생성 (탭 전환 방식)
@@ -365,7 +308,7 @@ namespace AIBeat.UI
             rect.anchorMin = new Vector2(0, 0);
             rect.anchorMax = new Vector2(1, 1);
             rect.offsetMin = new Vector2(20, 100); // 하단: Generate 버튼 영역 확보 (바닥에서 100px)
-            rect.offsetMax = new Vector2(-20, -120); // 상단: 메인 탭(56px) + 옵션 탭(60px) + 여백(4px) = 120px
+            rect.offsetMax = new Vector2(-20, -62); // 상단: 메인 탭(56px) + 여백(6px) = 62px
 
             // ScrollRect (Vertical)
             var scrollRect = go.AddComponent<ScrollRect>();
@@ -413,115 +356,7 @@ namespace AIBeat.UI
             return content.transform; // 버튼들이 추가될 부모
         }
 
-        /// <summary>
-        /// 컬럼 컨테이너 레이아웃 및 라벨 설정 헬퍼
-        /// </summary>
-        private void LayoutColumn(Transform containerContent, float xMin, float xMax, string labelText)
-        {
-            if (containerContent == null) return;
-            
-            // containerContent는 ScrollRect의 Content임.
-            // ScrollRect가 있는 GameObject(컨테이너 본체)를 찾아야 함
-            // CreateColumnContainer 구조: Container -> Viewport -> Content
-            
-            var scrollRect = containerContent.GetComponentInParent<ScrollRect>();
-            if (scrollRect == null) return;
-            
-            var containerTr = scrollRect.transform;
-            var rect = containerTr.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                rect.anchorMin = new Vector2(xMin, 0.2f); // 하단 여백 (버튼 영역)
-                rect.anchorMax = new Vector2(xMax, 0.9f); // 상단 여백 (탭바 아래)
-                rect.offsetMin = new Vector2(5, 0);
-                rect.offsetMax = new Vector2(-5, -40); // 라벨 공간 확보
-            }
-            
-            // 섹션 라벨 생성/위치 잡기
-            // 라벨은 컨테이너 위에 배치 (컨테이너의 형제/부모 좌표계 기준)
-            string labelName = $"{containerTr.name}_Label";
-            var labelTr = transform.Find(labelName);
-            if (labelTr == null)
-            {
-                CreateSectionLabel(labelName, labelText, xMin, xMax);
-            }
-        }
 
-        /// <summary>
-        /// BPM 슬라이더 동적 생성
-        /// </summary>
-        /// <summary>
-        /// BPM 선택 컨테이너 생성 (슬라이더 대신 버튼 리스트 방식)
-        /// </summary>
-        private Slider CreateBpmSlider()
-        {
-            // 더미 슬라이더 (기존 코드 호환성을 위해 유지, 실제로는 사용 안함)
-            var dummySlider = new GameObject("BpmSlider_Dummy");
-            dummySlider.transform.SetParent(transform, false);
-            var dummyRect = dummySlider.AddComponent<RectTransform>();
-            dummyRect.sizeDelta = new Vector2(0, 0);
-            var slider = dummySlider.AddComponent<Slider>();
-            slider.minValue = 80;
-            slider.maxValue = 180;
-            slider.value = 140;
-            dummySlider.SetActive(false);  // 숨김
-
-            // BPM 버튼 컨테이너 (세로 컬럼)
-            var container = CreateColumnContainer("BpmContainer");
-            // 위치 설정은 AutoSetupReferences의 LayoutColumn에서 처리됨 (여기서는 생성만)
-
-            // BPM 옵션 버튼들 생성 (80, 100, 120, 140, 160, 180)
-            int[] bpmOptions = { 80, 100, 120, 140, 160, 180 };
-            List<Button> bpmButtons = new List<Button>();
-
-            Debug.Log($"[SongSelectUI] CreateBpmSlider: optionButtonPrefab={optionButtonPrefab}, container={container}");
-
-            foreach (int bpm in bpmOptions)
-            {
-                var btnGo = GameObject.Instantiate(optionButtonPrefab, container.transform);
-                btnGo.name = $"BPM_{bpm}";
-                btnGo.SetActive(true);  // 명시적 활성화
-                Debug.Log($"[SongSelectUI] Created BPM button: {bpm}");
-
-                // 버튼 크기 및 스타일 조정
-                var btnRect = btnGo.GetComponent<RectTransform>();
-                if (btnRect != null)
-                {
-                    // 세로 리스트에서는 가로가 꽉 차므로(VerticalLayoutGroup childForceExpandWidth=true)
-                    // 높이만 설정하면 됨
-                    btnRect.sizeDelta = new Vector2(0, 50); 
-                }
-
-                // 텍스트 설정 (폰트 크기+색상 강제 적용)
-                var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
-                if (btnText != null)
-                {
-                    btnText.text = $"{bpm} BPM";
-                    btnText.fontSize = 22;  // 20→22 (더 크게)
-                    btnText.fontStyle = FontStyles.Bold;
-                    btnText.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (명확히 보이도록)
-                }
-
-                // 버튼 이벤트
-                var btn = btnGo.GetComponent<Button>();
-                if (btn != null)
-                {
-                    int capturedBpm = bpm;
-                    btn.onClick.AddListener(() => OnBpmButtonClicked(capturedBpm, btn, bpmButtons));
-                }
-
-                bpmButtons.Add(btn);
-            }
-
-            // 기본값 140 BPM 선택 (4번째 버튼)
-            if (bpmButtons.Count >= 4)
-                OnBpmButtonClicked(140, bpmButtons[3], bpmButtons);
-
-            // BPM 버튼에 한국어 폰트 강제 적용 (텍스트 가시성 보장)
-            KoreanFontManager.ApplyFontToAll(container.gameObject);
-
-            return slider;
-        }
 
         /// <summary>
         /// BPM 버튼 클릭 이벤트
@@ -625,71 +460,11 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일 최적화: 옵션 탭 바 생성 (Genre/Mood/BPM 전환)
+        /// 모든 옵션을 한 화면에 표시 (장르 → 분위기 → 빠르기 순서)
+        /// OptionTabBar 제거 → 스크롤 한 화면으로 간소화
         /// </summary>
-        private void CreateOptionTabBar()
+        private void PopulateAllOptions()
         {
-            // 중복 생성 방지
-            if (transform.Find("OptionTabBar") != null)
-            {
-                Debug.Log("[SongSelectUI] OptionTabBar already exists, skipping creation");
-                return;
-            }
-
-            // 옵션 탭 바 컨테이너 (메인 TabBar 바로 아래 배치)
-            var optTabBar = new GameObject("OptionTabBar");
-            optTabBar.transform.SetParent(transform, false);
-
-            // TabBar를 찾아서 그 바로 다음에 배치
-            var mainTabBar = transform.Find("TabBar");
-            if (mainTabBar != null)
-            {
-                // TabBar의 sibling index + 1 위치에 배치
-                optTabBar.transform.SetSiblingIndex(mainTabBar.GetSiblingIndex() + 1);
-            }
-            else
-            {
-                optTabBar.transform.SetAsFirstSibling(); // TabBar가 없으면 최상단
-            }
-
-            var optTabRect = optTabBar.AddComponent<RectTransform>();
-            optTabRect.anchorMin = new Vector2(0, 1);
-            optTabRect.anchorMax = new Vector2(1, 1);
-            optTabRect.pivot = new Vector2(0.5f, 1);
-            optTabRect.anchoredPosition = new Vector2(0, -56); // 메인 탭 바 아래 (56px 높이)
-            optTabRect.sizeDelta = new Vector2(0, 60); // 높이 60px
-
-            // 배경
-            var optTabBg = optTabBar.AddComponent<Image>();
-            optTabBg.color = new Color(0.04f, 0.04f, 0.12f, 0.95f);
-
-            var hLayout = optTabBar.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 4;
-            hLayout.padding = new RectOffset(10, 10, 6, 6);
-            hLayout.childControlWidth = true;
-            hLayout.childControlHeight = true;
-            hLayout.childForceExpandWidth = true;
-            hLayout.childForceExpandHeight = true;
-
-            // 장르/분위기/빠르기 탭 버튼 생성
-            var genreOptTab = CreateTabButton(optTabBar.transform, "장르", () => SwitchToOptionTab(OptionTabType.Genre));
-            var moodOptTab = CreateTabButton(optTabBar.transform, "분위기", () => SwitchToOptionTab(OptionTabType.Mood));
-            var bpmOptTab = CreateTabButton(optTabBar.transform, "빠르기", () => SwitchToOptionTab(OptionTabType.BPM));
-
-            // 기본값: 장르 탭 활성화
-            SwitchToOptionTab(OptionTabType.Genre);
-        }
-
-        private enum OptionTabType { Genre, Mood, BPM }
-        private OptionTabType currentOptionTab = OptionTabType.Genre;
-
-        /// <summary>
-        /// 옵션 탭 전환 (Genre/Mood/BPM)
-        /// </summary>
-        private void SwitchToOptionTab(OptionTabType tabType)
-        {
-            currentOptionTab = tabType;
-
             // 컨테이너의 Content 찾기
             var container = transform.Find("OptionContainer");
             if (container == null) return;
@@ -703,78 +478,42 @@ namespace AIBeat.UI
                 GameObject.Destroy(child.gameObject);
             }
 
-            // 선택된 탭에 따라 버튼 생성
-            switch (tabType)
-            {
-                case OptionTabType.Genre:
-                    CreateGenreButtons(content);
-                    break;
-                case OptionTabType.Mood:
-                    CreateMoodButtons(content);
-                    break;
-                case OptionTabType.BPM:
-                    CreateBPMButtons(content);
-                    break;
-            }
+            // 1. 장르 섹션
+            CreateInlineSectionLabel(content, "장르");
+            CreateGenreButtons(content);
 
-            // 탭 버튼 하이라이트 업데이트
-            UpdateOptionTabHighlight();
+            // 2. 분위기 섹션
+            CreateInlineSectionLabel(content, "분위기");
+            CreateMoodButtons(content);
 
-            // 한국어 폰트 적용
-            KoreanFontManager.ApplyFontToAll(content.gameObject);
+            // 3. 빠르기(BPM) 섹션
+            CreateInlineSectionLabel(content, "빠르기 (BPM)");
+            CreateBPMButtons(content);
         }
 
         /// <summary>
-        /// 옵션 탭 버튼 하이라이트 업데이트
+        /// 스크롤 컨텐츠 내부에 섹션 헤더 라벨 생성
         /// </summary>
-        private void UpdateOptionTabHighlight()
+        private void CreateInlineSectionLabel(Transform parent, string text)
         {
-            var optTabBar = transform.Find("OptionTabBar");
-            if (optTabBar == null) return;
+            var go = new GameObject($"Label_{text}");
+            go.transform.SetParent(parent, false);
 
-            var tabs = optTabBar.GetComponentsInChildren<Button>();
-            for (int i = 0; i < tabs.Length; i++)
-            {
-                var img = tabs[i].GetComponent<Image>();
-                if (img != null)
-                {
-                    if (i == (int)currentOptionTab)
-                    {
-                        // 선택됨
-                        img.color = TAB_ACTIVE;
-                    }
-                    else
-                    {
-                        // 선택 안됨
-                        img.color = TAB_INACTIVE;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 섹션 라벨 동적 생성 (컬럼 상단 중앙)
-        /// </summary>
-        private void CreateSectionLabel(string name, string text, float xMin, float xMax)
-        {
-            if (transform.Find(name) != null) return; // 이미 존재
-
-            var go = new GameObject(name);
-            go.transform.SetParent(transform, false);
             var rect = go.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(xMin, 0.9f); // 컨테이너 상단
-            rect.anchorMax = new Vector2(xMax, 0.9f);
-            rect.pivot = new Vector2(0.5f, 0); // 바닥 기준
-            rect.anchoredPosition = new Vector2(0, 10); // 조금 띄움
-            rect.sizeDelta = new Vector2(0, 30); 
+            rect.sizeDelta = new Vector2(0, 36);
 
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 22; 
-            tmp.color = new Color(0.6f, 0.9f, 1f);
+            tmp.fontSize = 20;
             tmp.fontStyle = FontStyles.Bold;
-            tmp.alignment = TextAlignmentOptions.Bottom; // 텍스트 하단 정렬(버튼쪽으로)
+            tmp.color = new Color(0.5f, 0.85f, 1f, 0.9f); // 밝은 시안 (약간 투명)
+            tmp.alignment = TextAlignmentOptions.Left;
+
+            // 좌측 패딩
+            var padding = new Vector4(4, 0, 0, 0);
+            tmp.margin = padding;
         }
+
 
         private void Initialize()
         {
@@ -819,7 +558,6 @@ namespace AIBeat.UI
 
             // UI 초기화
             CreateTabSystem();
-            CreateOptionButtons();
             SetupBpmSlider();
 
             if (generateButton != null)
@@ -842,11 +580,11 @@ namespace AIBeat.UI
 
             UpdatePreview();
 
-            // 한국어 폰트 적용 (□□□ 방지)
-            KoreanFontManager.ApplyFontToAll(gameObject);
+            // 모든 옵션을 한 화면에 표시 (장르 → 분위기 → 빠르기 순서)
+            PopulateAllOptions();
 
-            // 옵션 탭 바 생성 (Genre/Mood/BPM 전환)
-            CreateOptionTabBar();
+            // 한국어 폰트 적용 (□□□ 방지) — 모든 UI 생성 완료 후 마지막에 적용
+            KoreanFontManager.ApplyFontToAll(gameObject);
 
             // Library 탭 열기 플래그 확인
             if (GameManager.Instance != null && GameManager.Instance.OpenLibraryOnSongSelect)
@@ -1048,11 +786,7 @@ namespace AIBeat.UI
             if (generateTabContent != null)
                 generateTabContent.gameObject.SetActive(visible);
 
-            // 옵션 탭 바와 컨테이너 표시/숨김
-            var optTabBar = transform.Find("OptionTabBar");
-            if (optTabBar != null)
-                optTabBar.gameObject.SetActive(visible);
-
+            // 옵션 컨테이너 표시/숨김
             var optContainer = transform.Find("OptionContainer");
             if (optContainer != null)
                 optContainer.gameObject.SetActive(visible);
@@ -1176,29 +910,6 @@ namespace AIBeat.UI
                 OnBpmButtonClicked(140, bpmButtons[3], bpmButtons);
         }
 
-        private void CreateOptionButtons()
-        {
-            // 모바일 최적화: 탭 전환 방식으로 변경되어 초기 생성 불필요
-            // Genre 탭이 기본값으로 생성됨 (CreateOptionTabBar 에서 SwitchToOptionTab 호출)
-        }
-
-        private void CreateOptionButton(string key, string displayText, Transform container, List<Button> buttonList,
-            System.Action<string, Button> onClick)
-        {
-            if (optionButtonPrefab == null || container == null) return;
-
-            GameObject obj = Instantiate(optionButtonPrefab, container);
-            Button btn = obj.GetComponent<Button>();
-            TextMeshProUGUI tmpText = obj.GetComponentInChildren<TextMeshProUGUI>();
-
-            if (tmpText != null) tmpText.text = displayText;
-
-            if (btn != null)
-            {
-                buttonList.Add(btn);
-                btn.onClick.AddListener(() => onClick(key, btn));
-            }
-        }
 
         private void OnGenreSelected(string genre, Button btn)
         {
