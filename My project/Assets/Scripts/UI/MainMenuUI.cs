@@ -26,9 +26,10 @@ namespace AIBeat.UI
 
         private void Start()
         {
-            EnsureSafeArea();
+            EnsureCanvasScaler();
             AutoSetupReferences();
             Initialize();
+            EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
         }
 
         /// <summary>
@@ -142,12 +143,14 @@ namespace AIBeat.UI
                 var koreanText = kvp.Value;
                 if (btn == null) continue;
 
-                // 크기 보장 (최소 60px 높이)
+                // 크기 보장 (모바일 터치 최적화)
                 var rect = btn.GetComponent<RectTransform>();
                 if (rect != null)
                 {
                     var size = rect.sizeDelta;
-                    if (size.y < 70f) { size.y = 70f; rect.sizeDelta = size; }
+                    size.y = 120f;
+                    size.x = Mathf.Max(size.x, 500f);
+                    rect.sizeDelta = size;
                 }
 
                 // 배경 이미지 색상
@@ -177,7 +180,7 @@ namespace AIBeat.UI
                 if (tmp != null)
                 {
                     tmp.text = koreanText;  // 한국어 텍스트 설정
-                    tmp.fontSize = 36;  // 모바일 터치 가독성
+                    tmp.fontSize = 48;  // 모바일 큰 텍스트
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
                 }
@@ -189,7 +192,7 @@ namespace AIBeat.UI
             if (titleText == null) return;
 
             // 타이틀 스타일 강화 - 강제 적용
-            titleText.fontSize = 64;  // 타이틀은 크고 임팩트 있게
+            titleText.fontSize = 96;  // 타이틀은 크고 임팩트 있게
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = new Color(0f, 0.85f, 1f, 1f);
 
@@ -246,6 +249,18 @@ namespace AIBeat.UI
             {
                 UIAnimator.ScaleTo(this, settingsPanel, Vector3.zero, 0.2f, () => settingsPanel.SetActive(false));
             }
+        }
+
+        private void EnsureCanvasScaler()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return;
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler == null) return;
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
         }
 
         private void EnsureSafeArea()

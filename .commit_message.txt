@@ -1,1 +1,1 @@
-📱 Safe Area 적용: 노치/카메라 영역과 UI 겹침 방지 (3씬 모두 적용), APK 빌드+설치 완료
+📱 모바일 UI 최적화: Canvas Scaler 1080x1920 통일, SafeArea 순서 수정(Find 후 적용), 버튼/텍스트 크기 확대

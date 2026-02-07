@@ -20,10 +20,11 @@ namespace AIBeat.UI
 
         private void Start()
         {
-            EnsureSafeArea();
+            EnsureCanvasScaler();
             AutoSetupReferences();
             Initialize();
             EnsureSiblingOrder();
+            EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
         }
 
         private void AutoSetupReferences()
@@ -59,7 +60,9 @@ namespace AIBeat.UI
                 if (backRect != null)
                 {
                     var size = backRect.sizeDelta;
-                    if (size.y < 60f) { size.y = 60f; backRect.sizeDelta = size; }
+                    size.y = 100f;
+                    size.x = Mathf.Max(size.x, 250f);
+                    backRect.sizeDelta = size;
                 }
                 // 배경색 + 네온 테두리
                 var btnImg = backButton.GetComponent<Image>();
@@ -75,7 +78,7 @@ namespace AIBeat.UI
                 if (btnTmp != null)
                 {
                     btnTmp.text = "\u2190 뒤로";
-                    btnTmp.fontSize = 36;
+                    btnTmp.fontSize = 44;
                     btnTmp.fontStyle = FontStyles.Bold;
                     btnTmp.color = new Color(0.4f, 0.95f, 1f, 1f);
                 }
@@ -127,7 +130,7 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(1, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 100);
+            rect.sizeDelta = new Vector2(0, 140);
 
             var bg = titleBar.AddComponent<Image>();
             bg.color = new Color(0.02f, 0.02f, 0.08f, 1f);
@@ -143,7 +146,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "내 라이브러리";
-            tmp.fontSize = 48;
+            tmp.fontSize = 60;
             tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
@@ -233,6 +236,18 @@ namespace AIBeat.UI
             img.sprite = sprite;
             img.type = Image.Type.Simple;
             img.preserveAspect = false;
+        }
+
+        private void EnsureCanvasScaler()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return;
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler == null) return;
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
         }
 
         private void EnsureSafeArea()

@@ -79,7 +79,7 @@ namespace AIBeat.UI
 
         private void Awake()
         {
-            EnsureSafeArea();
+            EnsureCanvasScaler();
             AutoSetupReferences();
             CreateStatsHUD();
             CreateEarlyLateText();
@@ -98,6 +98,8 @@ namespace AIBeat.UI
 
             // 한국어 폰트 적용 (□□□ 방지)
             KoreanFontManager.ApplyFontToAll(gameObject);
+
+            EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
         }
 
         /// <summary>
@@ -969,6 +971,18 @@ namespace AIBeat.UI
         {
             Time.timeScale = 1f;
             GameManager.Instance?.ReturnToMenu();
+        }
+
+        private void EnsureCanvasScaler()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return;
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler == null) return;
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
         }
 
         private void EnsureSafeArea()
