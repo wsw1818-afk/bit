@@ -138,14 +138,18 @@ namespace AIBeat.Gameplay
 
             if (isScratchOnly)
             {
-                // 스크래치 전용 존: 터치만으로 즉시 스크래치 발동 (스와이프 불필요)
+                // 스크래치 전용 존: 스크래치 + 키 Down 동시 발행
+                // 스크래치 노트와 일반 노트 모두 처리 가능하도록
                 int scratchLane = normalizedX < 0.5f ? 0 : 3;
+                int keyLane = normalizedX < 0.5f ? 1 : 2; // 가장 가까운 키 레인
                 OnLaneInput?.Invoke(scratchLane, InputType.Scratch);
+                OnLaneInput?.Invoke(keyLane, InputType.Down);
                 var data = activeTouches[touchId];
                 data.ScratchTriggered = true;
+                data.MappedLane = keyLane; // Up 이벤트 시 키 레인으로 발행
                 activeTouches[touchId] = data;
                 if (showTouchDebug)
-                    Debug.Log($"[Touch] SCRATCH lane={scratchLane} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
+                    Debug.Log($"[Touch] SCRATCH+KEY lane=SC{scratchLane}/K{keyLane} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
             }
             else
             {
@@ -202,11 +206,8 @@ namespace AIBeat.Gameplay
         {
             if (activeTouches.TryGetValue(touchId, out TouchData data))
             {
-                // 스크래치 전용 존은 Key Up 발행하지 않음
-                if (!data.IsScratchOnly)
-                {
-                    OnLaneInput?.Invoke(data.MappedLane, InputType.Up);
-                }
+                // 모든 존에서 Key Up 발행 (롱노트 릴리즈 처리)
+                OnLaneInput?.Invoke(data.MappedLane, InputType.Up);
                 activeTouches.Remove(touchId);
             }
         }

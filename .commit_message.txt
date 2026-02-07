@@ -1,1 +1,1 @@
-📱 Android APK 수정 빌드: autoPlay 끄기, Portrait 고정, 자동회전 비활성화
+🎮 스크래치 존 터치 수정: 가장자리 터치 시 Scratch+Key Down 동시 발행, 모든 레인 터치 가능
