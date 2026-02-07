@@ -1,1 +1,1 @@
-🎨 SongSelect UI 텍스트 크기 대폭 증가: 타이틀 24→40, 곡명 24→36, BPM 16→24, 카운트 18→28, 백버튼 24→36 등 전체 가독성 개선
+🎨 SongSelect UI 텍스트/레이아웃 대폭 확대: 타이틀 56pt, 곡명 44pt, BPM 32pt, 카운트 36pt, 백버튼 44pt, LibraryPanel 완전불투명
