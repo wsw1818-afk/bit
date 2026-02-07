@@ -251,7 +251,7 @@ namespace AIBeat.Gameplay
 
         /// <summary>
         /// 오토 플레이: 노트 타이밍에 자동으로 판정
-        /// isPlaying이 false가 되면 종료 (일시정지는 isPaused로 처리)
+        /// 다양한 판정이 나오도록 의도적 타이밍 오차 추가
         /// </summary>
         private System.Collections.IEnumerator AutoPlayLoop()
         {
@@ -305,18 +305,45 @@ namespace AIBeat.Gameplay
                         }
                     }
 
+                    // AutoPlay 판정 다양화: 의도적 타이밍 오차 추가
+                    float autoPlayWindow = 0.200f; // Good 범위까지 처리
                     float diff = Mathf.Abs(currentTime - note.HitTime);
-                    // PERFECT 타이밍에 자동 히트 (±40ms - 프레임 지터 고려)
-                    if (diff <= 0.040f)
+                    if (diff <= autoPlayWindow)
                     {
+                        // 판정 분포: Perfect 55%, Great 25%, Good 15%, Bad 5%
+                        float inputTime = currentTime;
+                        float roll = UnityEngine.Random.value;
+                        if (roll < 0.55f)
+                        {
+                            // Perfect: ±30ms 범위
+                            inputTime = note.HitTime + UnityEngine.Random.Range(-0.030f, 0.030f);
+                        }
+                        else if (roll < 0.80f)
+                        {
+                            // Great: ±60~90ms 범위
+                            float offset = UnityEngine.Random.Range(0.060f, 0.090f);
+                            inputTime = note.HitTime + offset * (UnityEngine.Random.value < 0.5f ? 1f : -1f);
+                        }
+                        else if (roll < 0.95f)
+                        {
+                            // Good: ±110~180ms 범위
+                            float offset = UnityEngine.Random.Range(0.110f, 0.180f);
+                            inputTime = note.HitTime + offset * (UnityEngine.Random.value < 0.5f ? 1f : -1f);
+                        }
+                        else
+                        {
+                            // Bad: ±210~300ms 범위
+                            float offset = UnityEngine.Random.Range(0.210f, 0.300f);
+                            inputTime = note.HitTime + offset * (UnityEngine.Random.value < 0.5f ? 1f : -1f);
+                        }
+
                         LaneVisualFeedback.Flash(lane);
 
-                        var result = judgementSystem.Judge(currentTime, note.HitTime);
+                        var result = judgementSystem.Judge(inputTime, note.HitTime);
                         if (result != JudgementResult.Miss)
                         {
                             if (note.NoteType == NoteType.Long)
                             {
-                                // 롱노트: press만 처리, release는 다음 프레임에서 처리
                                 note.StartHold(currentTime);
                                 LaneVisualFeedback.SetHighlight(lane, true);
                                 LaneVisualFeedback.PlayJudgementEffect(lane, result);
