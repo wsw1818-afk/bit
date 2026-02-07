@@ -264,6 +264,7 @@ namespace AIBeat.Core
         public int PlayCount;
         public string CreatedDate;
         public int Seed;             // SmartBeatMapper 재생성을 위한 시드
+        public string AudioFileName; // StreamingAssets 내 MP3 파일명 (예: "jpop_energetic.mp3")
     }
 
     /// <summary>

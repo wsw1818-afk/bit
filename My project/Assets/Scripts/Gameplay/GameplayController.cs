@@ -546,6 +546,12 @@ namespace AIBeat.Gameplay
 
             GameManager.Instance?.ChangeState(GameManager.GameState.Gameplay);
             noteSpawner.StartSpawning();
+
+            // AudioClip이 있으면 AudioManager에 설정 후 재생
+            if (currentSong.AudioClip != null && AudioManager.Instance != null)
+            {
+                AudioManager.Instance.SetBGM(currentSong.AudioClip);
+            }
             AudioManager.Instance.PlayBGM();
 
 #if UNITY_EDITOR

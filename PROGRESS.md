@@ -7,24 +7,20 @@
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 44)
+## What changed (현재 세션)
 
-### SongSelect 대폭 단순화 — 라이브러리 전용으로 전환
-- **제거됨**: 탭 시스템 ("새 곡 만들기" | "내 라이브러리")
-- **제거됨**: 곡 생성 UI (장르/분위기/BPM 버튼, Generate 버튼, GridLayout)
-- **제거됨**: 에너지 시스템 (표시/충전/소모 로직 전체)
-- **제거됨**: 로딩 패널 (프로그레스 바, 로딩 메시지)
-- **제거됨**: ISongGenerator/FakeSongGenerator 참조 (SongSelectUI에서)
-- **제거됨**: OptionContainer, BPM Slider, Preview Texts
-- **SongSelectUI.cs**: 1333줄 → 155줄 (88% 코드 감소)
-- **추가**: "내 라이브러리" 타이틀 바 (탭 대체)
-- **SongLibraryUI.cs**: 빈 목록 메시지에서 "새 곡 만들기 탭" 참조 제거
-- 이유: AI API 취소됨 → Suno AI 수동 다운로드 → 곡 생성 UI 불필요
+### 로컬 MP3 재생 전체 연결 완료
+- **SongRecord.AudioFileName** 필드 추가 — StreamingAssets 내 MP3 파일명 참조
+- **SongSelectUI**: StreamingAssets 폴더 자동 스캔 → MP3/WAV/OGG 파일을 라이브러리에 자동 등록
+- **SongLibraryUI.OnSongCardClicked**: FakeSongGenerator 제거 → 직접 StreamingAssets에서 UnityWebRequest로 MP3 로드 → SongData 생성(AudioClip 포함) → GameManager.StartGame 호출
+- **GameplayController.StartGame**: AudioClip이 있으면 AudioManager에 SetBGM 후 PlayBGM
+- **전체 플로우**: StreamingAssets에 MP3 넣기 → SongSelect 진입 시 자동 등록 → 곡 카드 클릭 → MP3 로드 → OfflineAudioAnalyzer 분석 → SmartBeatMapper 노트 생성 → 카운트다운 → 실제 오디오 재생 + 노트 스폰
+- **StreamingAssets/jpop_energetic.mp3** 추가 (J-POP 테스트곡)
 
 ### 검증
 - recompile_scripts → 0 에러, 0 경고 ✅
 
-## Commands & Results (세션 44)
+## Commands & Results (현재 세션)
 - recompile_scripts → **0 에러, 0 경고** ✅
 
 ## Open issues
@@ -34,11 +30,11 @@
 
 ## 미구현 기능 목록
 1. ~~**AI API 연동**~~ → **취소됨** (비용 문제로 Suno AI에서 수동 다운로드 방식으로 결정)
-2. **로컬 MP3 로드/재생** — AudioManager 로드 코드 존재, 실제 MP3 파일 연결 미완료. OfflineAudioAnalyzer + SmartBeatMapper로 자동 노트 생성 가능
+2. ~~**로컬 MP3 로드/재생**~~ → **완료** (StreamingAssets 자동 스캔 → 라이브러리 등록 → 곡 선택 → MP3 로드 → 분석 → 노트 생성 → 재생)
 3. **캘리브레이션** — CalibrationManager 코드 존재하나 실제 탭 테스트 미수행
 4. ~~**Android 빌드**~~ → **완료** (APK 57.2MB, `Builds/Android/AIBeat.apk`)
 5. **터치 입력** — InputHandler에 터치 코드 존재, 실기기 테스트 미수행
-6. **곡 라이브러리** — SongLibrary에 0곡 (다운로드한 곡 관리 UI 미구현)
+6. ~~**곡 라이브러리**~~ → **완료** (StreamingAssets MP3 자동 스캔/등록, 곡 카드 클릭→게임 시작 연결)
 7. ~~**에너지 시스템**~~ → **제거됨** (곡 생성 기능 제거로 불필요)
 
 ## 아키텍처 결정 (세션 35)
@@ -49,7 +45,7 @@
 
 ## Next
 1) 2키+스크래치 레인 구조 변경 (계획 파일 존재)
-2) 로컬 MP3 파일 로드 → 자동 분석 → 노트 생성 → 실제 재생 연결
+2) ~~로컬 MP3 파일 로드 → 자동 분석 → 노트 생성 → 실제 재생 연결~~ ✅ 완료
 3) ~~Android 빌드 파이프라인 설정~~ ✅ 완료
 4) 실기기 테스트 (APK 설치 후)
 

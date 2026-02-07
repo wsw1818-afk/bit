@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.IO;
 using AIBeat.Core;
 using AIBeat.Data;
 
@@ -45,6 +46,9 @@ namespace AIBeat.UI
                 var libGo = new GameObject("SongLibraryManager");
                 libGo.AddComponent<SongLibraryManager>();
             }
+
+            // StreamingAssets 내 MP3 파일 자동 스캔 → 라이브러리에 등록
+            ScanAndRegisterStreamingAssets();
 
             // 뒤로가기 버튼
             if (backButton != null)
@@ -124,6 +128,43 @@ namespace AIBeat.UI
             tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
+        }
+
+        /// <summary>
+        /// StreamingAssets 폴더의 MP3/WAV/OGG 파일을 스캔하여 라이브러리에 자동 등록
+        /// </summary>
+        private void ScanAndRegisterStreamingAssets()
+        {
+            if (SongLibraryManager.Instance == null) return;
+
+            string streamingPath = Application.streamingAssetsPath;
+            if (!Directory.Exists(streamingPath)) return;
+
+            string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
+            foreach (var ext in extensions)
+            {
+                string[] files = Directory.GetFiles(streamingPath, ext);
+                foreach (var filePath in files)
+                {
+                    string fileName = Path.GetFileName(filePath);
+                    string titleFromFile = Path.GetFileNameWithoutExtension(filePath)
+                        .Replace("_", " ");
+
+                    var record = new SongRecord
+                    {
+                        Title = titleFromFile,
+                        Artist = "Unknown",
+                        Genre = "EDM",
+                        Mood = "Energetic",
+                        BPM = 0, // 0 = 자동 분석 예정
+                        DifficultyLevel = 5,
+                        Duration = 0, // 0 = 로드 시 자동 설정
+                        AudioFileName = fileName
+                    };
+
+                    SongLibraryManager.Instance.AddSong(record);
+                }
+            }
         }
 
         private void OnBackClicked()

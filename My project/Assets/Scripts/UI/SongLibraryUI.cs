@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 using AIBeat.Core;
 using AIBeat.Data;
-using AIBeat.Network;
 
 namespace AIBeat.UI
 {
@@ -351,6 +352,7 @@ namespace AIBeat.UI
 
         /// <summary>
         /// 곡 카드 클릭 시 해당 곡으로 게임 시작
+        /// StreamingAssets에서 MP3 로드 → SongData 생성 → GameManager.StartGame
         /// </summary>
         private void OnSongCardClicked(int index)
         {
@@ -358,30 +360,79 @@ namespace AIBeat.UI
 
             var song = displayedSongs[index];
 #if UNITY_EDITOR
-            Debug.Log($"[SongLibrary] Song selected: {song.Title}");
+            Debug.Log($"[SongLibrary] Song selected: {song.Title} (audio: {song.AudioFileName})");
 #endif
 
-            // SongData 생성 (FakeSongGenerator 활용)
-            var generator = FindFirstObjectByType<FakeSongGenerator>();
-            if (generator == null)
+            // AudioFileName이 있으면 StreamingAssets에서 MP3 로드 후 게임 시작
+            if (!string.IsNullOrEmpty(song.AudioFileName))
             {
-                var go = new GameObject("FakeSongGenerator");
-                generator = go.AddComponent<FakeSongGenerator>();
+                StartCoroutine(LoadAudioAndStartGame(song));
             }
-
-            var options = new PromptOptions
+            else
             {
-                Genre = song.Genre,
-                BPM = song.BPM,
-                Mood = song.Mood,
-                Duration = (int)song.Duration,
-                Structure = "intro-build-drop-outro"
-            };
+                // AudioFileName 없으면 디버그 모드로 시작 (BPM 기반 노트 생성)
+                var songData = CreateSongDataFromRecord(song, null);
+                GameManager.Instance?.StartGame(songData);
+            }
+        }
 
-            if (song.Seed > 0)
-                UnityEngine.Random.InitState(song.Seed);
+        /// <summary>
+        /// StreamingAssets에서 MP3 로드 후 게임 시작
+        /// </summary>
+        private IEnumerator LoadAudioAndStartGame(SongRecord song)
+        {
+            // 로딩 표시
+            if (songCountText != null)
+                songCountText.text = "로딩 중...";
 
-            generator.GenerateSong(options);
+            string path = System.IO.Path.Combine(Application.streamingAssetsPath, song.AudioFileName);
+            AudioType audioType = AudioType.MPEG;
+            if (song.AudioFileName.EndsWith(".wav")) audioType = AudioType.WAV;
+            else if (song.AudioFileName.EndsWith(".ogg")) audioType = AudioType.OGGVORBIS;
+
+            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + path, audioType))
+            {
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.Success)
+                {
+                    AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+                    var songData = CreateSongDataFromRecord(song, clip);
+
+#if UNITY_EDITOR
+                    Debug.Log($"[SongLibrary] Audio loaded: {song.AudioFileName} ({clip.length:F1}s)");
+#endif
+
+                    GameManager.Instance?.StartGame(songData);
+                }
+                else
+                {
+                    Debug.LogError($"[SongLibrary] Audio load failed: {www.error}");
+                    if (songCountText != null)
+                        songCountText.text = "로드 실패!";
+                    yield return new WaitForSeconds(2f);
+                    RefreshSongList();
+                }
+            }
+        }
+
+        /// <summary>
+        /// SongRecord → SongData 변환 (AudioClip 포함)
+        /// </summary>
+        private SongData CreateSongDataFromRecord(SongRecord record, AudioClip clip)
+        {
+            var songData = ScriptableObject.CreateInstance<SongData>();
+            songData.Id = $"local_{record.Title.GetHashCode():X8}";
+            songData.Title = record.Title;
+            songData.Artist = record.Artist ?? "Unknown";
+            songData.BPM = record.BPM;
+            songData.Duration = clip != null ? clip.length : record.Duration;
+            songData.Genre = record.Genre ?? "";
+            songData.Mood = record.Mood ?? "";
+            songData.Difficulty = record.DifficultyLevel;
+            songData.AudioClip = clip;
+            // Notes는 null → GameplayController가 SmartBeatMapper로 자동 생성
+            return songData;
         }
 
         /// <summary>
