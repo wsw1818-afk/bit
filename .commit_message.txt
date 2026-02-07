@@ -1,1 +1,1 @@
-🐛 터치 완전 불능 수정: touchZoneCount=2→4 씬값 불일치 + IndexOutOfRange 크래시 → InputLoop 미시작 원인 해결, UI 3배 확대
+🎮 게임 시작 카운트다운(3-2-1-GO!) 추가 + 상단 UI 레이아웃 개선 + 카운트다운 화면 정중앙 표시

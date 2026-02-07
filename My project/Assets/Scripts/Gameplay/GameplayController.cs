@@ -242,7 +242,7 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 디버그 모드: Start()에서 직접 호출하여 즉시 게임 시작
+        /// 디버그 모드: Start()에서 직접 호출하여 카운트다운 후 게임 시작
         /// </summary>
         private void StartDebugGame()
         {
@@ -276,7 +276,27 @@ namespace AIBeat.Gameplay
             judgementSystem?.Initialize(notes.Count);
             gameplayUI?.Initialize(currentSong);
 
-            // AudioManager 디버그 모드 설정 및 즉시 시작
+            // 카운트다운 후 시작
+            StartCoroutine(DebugCountdownAndStart());
+        }
+
+        /// <summary>
+        /// 디버그 모드: 카운트다운 표시 후 게임 시작
+        /// </summary>
+        private System.Collections.IEnumerator DebugCountdownAndStart()
+        {
+            // 카운트다운 표시
+            gameplayUI?.ShowCountdown(true);
+            for (int i = 3; i > 0; i--)
+            {
+                gameplayUI?.UpdateCountdown(i.ToString());
+                yield return new WaitForSeconds(1f);
+            }
+            gameplayUI?.UpdateCountdown("GO!");
+            yield return new WaitForSeconds(0.5f);
+            gameplayUI?.ShowCountdown(false);
+
+            // AudioManager 디버그 모드 설정 및 시작
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.OnBGMEnded -= OnSongEnd;
