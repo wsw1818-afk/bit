@@ -120,13 +120,14 @@ namespace AIBeat.UI
             hLayout.padding = new RectOffset(5, 5, 2, 2);
 
             // 필터 라벨
-            CreateLabel(filterBar.transform, "FILTER:", 14, NEON_CYAN_BRIGHT, false, 70);
+            CreateLabel(filterBar.transform, "필터:", 14, NEON_CYAN_BRIGHT, false, 60);
 
-            // 필터 버튼들
+            // 필터 버튼들 (내부 키 + 표시명)
             string[] filters = { "All", "EDM", "House", "Cyberpunk", "Synthwave", "Dubstep" };
             foreach (string filter in filters)
             {
-                var btn = CreateFilterButton(filterBar.transform, filter);
+                string displayName = filter == "All" ? "전체" : PromptOptions.GetGenreDisplay(filter);
+                var btn = CreateFilterButton(filterBar.transform, filter, displayName);
                 filterButtons.Add(btn);
             }
 
@@ -156,12 +157,12 @@ namespace AIBeat.UI
             hLayout.padding = new RectOffset(5, 5, 2, 2);
 
             // 정렬 라벨
-            CreateLabel(sortBar.transform, "SORT:", 14, NEON_CYAN_BRIGHT, false, 60);
+            CreateLabel(sortBar.transform, "정렬:", 14, NEON_CYAN_BRIGHT, false, 55);
 
             // 정렬 버튼
-            var dateBtn = CreateSortButton(sortBar.transform, "Latest", SortMode.Date);
-            var scoreBtn = CreateSortButton(sortBar.transform, "Score", SortMode.Score);
-            var playBtn = CreateSortButton(sortBar.transform, "Plays", SortMode.PlayCount);
+            var dateBtn = CreateSortButton(sortBar.transform, "최신순", SortMode.Date);
+            var scoreBtn = CreateSortButton(sortBar.transform, "점수순", SortMode.Score);
+            var playBtn = CreateSortButton(sortBar.transform, "플레이순", SortMode.PlayCount);
             sortButtons.Add(dateBtn);
             sortButtons.Add(scoreBtn);
             sortButtons.Add(playBtn);
@@ -190,7 +191,7 @@ namespace AIBeat.UI
             var countLayout = countBar.AddComponent<LayoutElement>();
             countLayout.preferredHeight = 25;
 
-            songCountText = CreateTMPText(countBar, "SongCount", "0 songs", 14,
+            songCountText = CreateTMPText(countBar, "SongCount", "0곡", 14,
                 new Color(0.6f, 0.6f, 0.7f), TextAlignmentOptions.MidlineRight);
         }
 
@@ -261,7 +262,7 @@ namespace AIBeat.UI
             emptyLayout.preferredHeight = 200;
 
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyText.text = "No songs yet!\nGenerate your first beat!";
+            emptyText.text = "아직 곡이 없습니다!\n'새 곡 만들기' 탭에서\n첫 비트를 생성해보세요!";
             emptyText.fontSize = 22;
             emptyText.color = new Color(0.4f, 0.4f, 0.5f);
             emptyText.alignment = TextAlignmentOptions.Center;
@@ -314,7 +315,7 @@ namespace AIBeat.UI
 
             // 곡 수 표시
             if (songCountText != null)
-                songCountText.text = $"{songs.Count} / {manager.SongCount} songs";
+                songCountText.text = $"{songs.Count} / {manager.SongCount}곡";
 
             // 빈 목록 처리
             UpdateEmptyState(songs.Count == 0);
@@ -396,7 +397,7 @@ namespace AIBeat.UI
 
             // 플레이 횟수
             CreateTMPText(infoPanel, "Plays",
-                song.PlayCount > 0 ? $"Played {song.PlayCount}x" : "Not played yet", 12,
+                song.PlayCount > 0 ? $"{song.PlayCount}회 플레이" : "아직 플레이 안 함", 12,
                 new Color(0.5f, 0.5f, 0.6f), TextAlignmentOptions.MidlineLeft);
 
             // 우측: 랭크 + 점수 + 삭제
@@ -459,7 +460,7 @@ namespace AIBeat.UI
             delColors.pressedColor = new Color(0.7f, 0.7f, 0.7f);
             delBtn.colors = delColors;
 
-            var delText = CreateTMPText(delGo, "DelText", "DEL", 11,
+            var delText = CreateTMPText(delGo, "DelText", "삭제", 11,
                 DELETE_COLOR, TextAlignmentOptions.Center, FontStyles.Bold);
 
             int capturedIndex = index;
@@ -532,7 +533,7 @@ namespace AIBeat.UI
                         ?.GetComponent<TextMeshProUGUI>();
                     if (delText != null)
                     {
-                        delText.text = "CONFIRM?";
+                        delText.text = "확인?";
                         delText.color = Color.red;
                     }
                 }
@@ -542,9 +543,9 @@ namespace AIBeat.UI
         /// <summary>
         /// 필터 버튼 생성
         /// </summary>
-        private Button CreateFilterButton(Transform parent, string text)
+        private Button CreateFilterButton(Transform parent, string filterKey, string displayName)
         {
-            var go = new GameObject($"Filter_{text}");
+            var go = new GameObject($"Filter_{filterKey}");
             go.transform.SetParent(parent, false);
             go.AddComponent<RectTransform>();
 
@@ -557,12 +558,12 @@ namespace AIBeat.UI
             colors.highlightedColor = new Color(1.2f, 1.2f, 1.2f);
             btn.colors = colors;
 
-            var tmpText = CreateTMPText(go, "Text", text, 12, Color.white, TextAlignmentOptions.Center);
+            var tmpText = CreateTMPText(go, "Text", displayName, 12, Color.white, TextAlignmentOptions.Center);
 
-            string capturedText = text;
+            string capturedKey = filterKey;
             btn.onClick.AddListener(() =>
             {
-                currentFilter = capturedText;
+                currentFilter = capturedKey;
                 HighlightButton(btn, filterButtons);
                 RefreshSongList();
             });

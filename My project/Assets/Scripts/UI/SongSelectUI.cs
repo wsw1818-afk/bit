@@ -83,6 +83,9 @@ namespace AIBeat.UI
         /// </summary>
         private void AutoSetupReferences()
         {
+            // 배경 이미지 설정
+            SetupBackground();
+
             // backButton: 씬에 "BackButton" 존재
             if (backButton == null)
             {
@@ -101,7 +104,7 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    generateButton = CreateUIButton("GenerateButton", "GENERATE", new Vector2(0, -340));
+                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -340));
                 }
             }
 
@@ -164,7 +167,7 @@ namespace AIBeat.UI
                 if (existing != null)
                     energyText = existing.GetComponent<TextMeshProUGUI>();
                 else
-                    energyText = CreateUIText("EnergyText", "Energy: 3/3", new Vector2(0, -390), 18);
+                    energyText = CreateUIText("EnergyText", "에너지: 3/3", new Vector2(0, -390), 18);
             }
 
             // previewGenreText, previewMoodText, previewBpmText
@@ -274,9 +277,9 @@ namespace AIBeat.UI
             }
 
             // 라벨 텍스트 (Section titles)
-            CreateSectionLabel("GenreLabel", "GENRE", new Vector2(0, -50));
-            CreateSectionLabel("MoodLabel", "MOOD", new Vector2(0, -140));
-            CreateSectionLabel("BpmLabel", "BPM", new Vector2(0, -225));
+            CreateSectionLabel("GenreLabel", "장르", new Vector2(0, -50));
+            CreateSectionLabel("MoodLabel", "분위기", new Vector2(0, -140));
+            CreateSectionLabel("BpmLabel", "빠르기 (BPM)", new Vector2(0, -225));
         }
 
         /// <summary>
@@ -362,8 +365,8 @@ namespace AIBeat.UI
             cRect.offsetMax = Vector2.zero;
 
             var hLayout = content.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 8;
-            hLayout.padding = new RectOffset(8, 8, 8, 8);
+            hLayout.spacing = 10;
+            hLayout.padding = new RectOffset(8, 8, 6, 6);
             hLayout.childControlWidth = false;
             hLayout.childControlHeight = true;
             hLayout.childForceExpandWidth = false;
@@ -470,7 +473,7 @@ namespace AIBeat.UI
             go.SetActive(false); // 템플릿이므로 비활성화
 
             var rect = go.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(120, 44);
+            rect.sizeDelta = new Vector2(130, 50);
 
             var bg = go.AddComponent<Image>();
             bg.color = new Color(0.12f, 0.12f, 0.22f, 0.9f);
@@ -486,12 +489,12 @@ namespace AIBeat.UI
             var tRect = textGo.AddComponent<RectTransform>();
             tRect.anchorMin = Vector2.zero;
             tRect.anchorMax = Vector2.one;
-            tRect.offsetMin = new Vector2(4, 2);
-            tRect.offsetMax = new Vector2(-4, -2);
+            tRect.offsetMin = new Vector2(6, 2);
+            tRect.offsetMax = new Vector2(-6, -2);
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "Option";
-            tmp.fontSize = 16;
+            tmp.fontSize = 18;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
 
@@ -624,12 +627,12 @@ namespace AIBeat.UI
             hLayout.childForceExpandWidth = true;
             hLayout.childForceExpandHeight = true;
 
-            // "새 곡 생성" 탭 버튼
-            generateTabButton = CreateTabButton(tabBar.transform, "NEW BEAT");
+            // "새 곡 만들기" 탭 버튼
+            generateTabButton = CreateTabButton(tabBar.transform, "새 곡 만들기");
             generateTabButton.onClick.AddListener(SwitchToGenerateTab);
 
             // "내 라이브러리" 탭 버튼
-            libraryTabButton = CreateTabButton(tabBar.transform, "MY LIBRARY");
+            libraryTabButton = CreateTabButton(tabBar.transform, "내 라이브러리");
             libraryTabButton.onClick.AddListener(SwitchToLibraryTab);
 
             // 라이브러리 UI 컴포넌트 추가
@@ -769,16 +772,18 @@ namespace AIBeat.UI
 
         private void CreateOptionButtons()
         {
-            // 장르 버튼 생성
+            // 장르 버튼 생성 (한국어 표시명 사용)
             foreach (string genre in PromptOptions.Genres)
             {
-                CreateOptionButton(genre, genreButtonContainer, genreButtons, OnGenreSelected);
+                string displayName = PromptOptions.GetGenreDisplay(genre);
+                CreateOptionButton(genre, displayName, genreButtonContainer, genreButtons, OnGenreSelected);
             }
 
-            // 분위기 버튼 생성
+            // 분위기 버튼 생성 (한국어 표시명 사용)
             foreach (string mood in PromptOptions.Moods)
             {
-                CreateOptionButton(mood, moodButtonContainer, moodButtons, OnMoodSelected);
+                string displayName = PromptOptions.GetMoodDisplay(mood);
+                CreateOptionButton(mood, displayName, moodButtonContainer, moodButtons, OnMoodSelected);
             }
 
             // 첫 번째 옵션 선택
@@ -786,7 +791,7 @@ namespace AIBeat.UI
             if (moodButtons.Count > 0) SelectButton(moodButtons[0], moodButtons);
         }
 
-        private void CreateOptionButton(string text, Transform container, List<Button> buttonList,
+        private void CreateOptionButton(string key, string displayText, Transform container, List<Button> buttonList,
             System.Action<string, Button> onClick)
         {
             if (optionButtonPrefab == null || container == null) return;
@@ -795,12 +800,12 @@ namespace AIBeat.UI
             Button btn = obj.GetComponent<Button>();
             TextMeshProUGUI tmpText = obj.GetComponentInChildren<TextMeshProUGUI>();
 
-            if (tmpText != null) tmpText.text = text;
+            if (tmpText != null) tmpText.text = displayText;
 
             if (btn != null)
             {
                 buttonList.Add(btn);
-                btn.onClick.AddListener(() => onClick(text, btn));
+                btn.onClick.AddListener(() => onClick(key, btn));
             }
         }
 
@@ -822,9 +827,20 @@ namespace AIBeat.UI
         {
             foreach (var btn in allButtons)
             {
-                var colors = btn.colors;
-                colors.normalColor = (btn == selected) ? selectedColor : normalColor;
-                btn.colors = colors;
+                bool isSelected = (btn == selected);
+                // 배경색 변경
+                var bg = btn.GetComponent<Image>();
+                if (bg != null)
+                    bg.color = isSelected
+                        ? new Color(0f, 0.4f, 0.6f, 0.9f)
+                        : new Color(0.12f, 0.12f, 0.22f, 0.9f);
+                // 텍스트 Bold/Normal
+                var tmp = btn.GetComponentInChildren<TextMeshProUGUI>();
+                if (tmp != null)
+                {
+                    tmp.fontStyle = isSelected ? FontStyles.Bold : FontStyles.Normal;
+                    tmp.color = isSelected ? selectedColor : normalColor;
+                }
             }
         }
 
@@ -851,8 +867,8 @@ namespace AIBeat.UI
 
         private void UpdatePreview()
         {
-            if (previewGenreText != null) previewGenreText.text = selectedGenre;
-            if (previewMoodText != null) previewMoodText.text = selectedMood;
+            if (previewGenreText != null) previewGenreText.text = PromptOptions.GetGenreDisplay(selectedGenre);
+            if (previewMoodText != null) previewMoodText.text = PromptOptions.GetMoodDisplay(selectedMood);
             if (previewBpmText != null) previewBpmText.text = $"{selectedBpm} BPM";
         }
 
@@ -981,7 +997,7 @@ namespace AIBeat.UI
 
             if (currentEnergy >= maxEnergy)
             {
-                energyText.text = $"Energy: {currentEnergy}/{maxEnergy}";
+                energyText.text = $"에너지: {currentEnergy}/{maxEnergy}";
             }
             else
             {
@@ -993,9 +1009,9 @@ namespace AIBeat.UI
                     double minutesElapsed = (System.DateTime.Now - lastUse).TotalMinutes;
                     double minutesUntilNext = energyRechargeMinutes - (minutesElapsed % energyRechargeMinutes);
                     int mins = Mathf.Max(1, Mathf.CeilToInt((float)minutesUntilNext));
-                    timerStr = $" ({mins}m)";
+                    timerStr = $" ({mins}분)";
                 }
-                energyText.text = $"Energy: {currentEnergy}/{maxEnergy}{timerStr}";
+                energyText.text = $"에너지: {currentEnergy}/{maxEnergy}{timerStr}";
             }
         }
 
@@ -1045,7 +1061,7 @@ namespace AIBeat.UI
         private void ShowNoEnergyDialog()
         {
             // 에너지 부족 다이얼로그: 남은 충전 시간 표시
-            string message = "Energy depleted!\n";
+            string message = "에너지가 부족합니다!\n";
 
             string lastUseStr = PlayerPrefs.GetString("EnergyLastUseTime", "");
             if (!string.IsNullOrEmpty(lastUseStr) && System.DateTime.TryParse(lastUseStr, out System.DateTime lastUse))
@@ -1053,11 +1069,11 @@ namespace AIBeat.UI
                 double minutesElapsed = (System.DateTime.Now - lastUse).TotalMinutes;
                 double minutesUntilNext = energyRechargeMinutes - (minutesElapsed % energyRechargeMinutes);
                 int mins = Mathf.CeilToInt((float)minutesUntilNext);
-                message += $"Next energy in {mins} min";
+                message += $"{mins}분 후 충전됩니다";
             }
             else
             {
-                message += "Please wait for recharge.";
+                message += "잠시 후 다시 시도해주세요.";
             }
 
             // 로딩 패널을 임시 다이얼로그로 재활용
@@ -1085,6 +1101,44 @@ namespace AIBeat.UI
         private void OnBackClicked()
         {
             GameManager.Instance?.ReturnToMenu();
+        }
+
+        /// <summary>
+        /// 배경 이미지 설정 (SongSelectBG.jpg)
+        /// </summary>
+        private void SetupBackground()
+        {
+            var existing = transform.Find("BackgroundImage");
+            if (existing != null) return; // 이미 존재
+
+            var bgGo = new GameObject("BackgroundImage");
+            bgGo.transform.SetParent(transform, false);
+            bgGo.transform.SetAsFirstSibling(); // 가장 뒤에 배치
+
+            var rect = bgGo.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var img = bgGo.AddComponent<Image>();
+            img.color = new Color(1f, 1f, 1f, 0.3f); // 반투명 (UI 가독성)
+
+            // Resources에서 로드 시도, 없으면 Sprite로 직접 로드
+            var tex = Resources.Load<Texture2D>("UI/SongSelectBG");
+            if (tex == null)
+            {
+                // AssetDatabase 사용 불가(런타임) → Sprite 직접 생성 불가
+                // 대신 어두운 그라데이션 배경 사용
+                img.color = new Color(0.02f, 0.02f, 0.08f, 0.95f);
+                Debug.Log("[SongSelectUI] Background image not found in Resources, using dark fallback");
+                return;
+            }
+
+            var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+            img.sprite = sprite;
+            img.type = Image.Type.Simple;
+            img.preserveAspect = false;
         }
 
         private void OnDestroy()
