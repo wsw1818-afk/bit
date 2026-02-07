@@ -14,12 +14,15 @@
 - **GameplayUI**: DJ 콘솔 스코어 패널(블루-퍼플 테두리), 이퀄라이저 콤보 색상(민트→시안→골드→핫핑크), 판정 텍스트 "♫ PERFECT!", 일시정지 ⏸ 아이콘, 결과 화면 DJ 부스 배경, 랭크 컬러(골드/시안/민트/라벤더)
 - **NoteSpawner**: 노트 색상 → 네온 블루(탭), 민트 그린(롱), 바이올렛(스크래치)
 
-### 곡 생성 UI 개편 (세션 38~39)
-- **BPM 슬라이더 → 버튼 리스트**: 6개 버튼(80/100/120/140/160/180 BPM), 네온 시안 선택 효과
-- **3단 컬럼 레이아웃**: Genre(0.05~0.35), Mood(0.35~0.65), BPM(0.65~0.95) — 각각 VerticalLayoutGroup + ScrollRect
-- **시각적 개선**: 중앙 오버레이 제거, 섹션 라벨 추가, Generate 버튼 하단 중앙(y=50) 배치
-- **UX 개선**: Preview 텍스트 숨김, 버튼 클릭 시 배경 색상 변경(선택: 0,0.4,0.6 / 미선택: 0.12,0.12,0.22)
-- **코드 구조**: CreateColumnContainer() + LayoutColumn() 헬퍼 메서드, OnBpmButtonClicked() 선택 로직
+### 곡 생성 UI 모바일 최적화 (세션 38~40)
+- ~~**3단 컬럼 레이아웃**~~(세션 38~39) → **탭 전환 단일 컬럼 방식**으로 전환 (세션 40)
+- **옵션 탭 바**: Genre/Mood/BPM 3개 탭 전환 (상단 메인 탭 아래 60px)
+- **전체 화면 세로 스크롤**: CreateFullScreenColumn() 함수로 전체 화면 단일 컬럼 생성 (좌우 20px 여백, 버튼 간격 20px)
+- **Generate 버튼**: 하단 고정 배치 (바닥에서 20px 띄움, 좌우 20px 여백, 높이 60px)
+- **에너지 표시**: 우측 상단 배치 (탭 바 아래)
+- **터치 영역 확대**: 버튼 높이 60-70px (BPM 70px, 나머지 60px), 폰트 크기 22-24px
+- **시각적 개선**: Preview 텍스트 숨김, 버튼 클릭 시 배경 색상 변경(선택: 0,0.4,0.6 / 미선택: 0.12,0.12,0.22)
+- **코드 구조**: CreateFullScreenColumn(), CreateOptionTabBar(), SwitchToOptionTab(), CreateGenreButtons/MoodButtons/BPMButtons()
 
 ### 전체 플로우 종합 테스트 (3개 씬 모두 통과)
 
@@ -29,10 +32,10 @@
 | SongSelect | 정상 | 0 | SongLibrary 0곡 로드 |
 | Gameplay | 정상 | 0 | Score 65,276 (보너스 포함), P:40 G:16 Good:8 B:2 M:0 |
 
-## Commands & Results
-- recompile_scripts → **0 에러, 0 경고**
-- Gameplay Play Mode → **에러 0**, Score 61,969, P:41 G:13 Good:8 B:4 M:0
-- 음악 테마 UI/비주얼 정상 렌더링 확인
+## Commands & Results (세션 40)
+- recompile_scripts → **0 에러, 0 경고** ✅
+- BPM 버튼 텍스트 표시 문제 해결 (세션 39) ✅
+- 모바일 UI 최적화 완료: 3단 컬럼 → 탭 전환 단일 컬럼 (세션 40) ✅
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)

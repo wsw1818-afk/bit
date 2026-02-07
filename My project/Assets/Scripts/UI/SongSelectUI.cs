@@ -101,7 +101,24 @@ namespace AIBeat.UI
                     backButton = backObj.GetComponent<Button>();
             }
 
-            // generateButton 동적 생성 (하단 중앙 배치)
+            // 옵션 버튼 프리팹 먼저 생성 (모든 탭에서 사용)
+            if (optionButtonPrefab == null)
+            {
+                optionButtonPrefab = CreateOptionButtonTemplate();
+            }
+
+            // 모바일 최적화: 단일 컬럼 컨테이너 (전체 화면 사용)
+            // Genre/Mood/BPM을 같은 공간에서 탭 전환 방식으로 표시
+            if (genreButtonContainer == null)
+            {
+                var existing = transform.Find("OptionContainer");
+                if (existing != null) genreButtonContainer = existing;
+                else genreButtonContainer = CreateFullScreenColumn("OptionContainer");
+            }
+            // Mood/BPM은 같은 컨테이너 공유 (탭 전환으로 내용만 바뀜)
+            moodButtonContainer = genreButtonContainer;
+
+            // generateButton 동적 생성 (하단 고정)
             if (generateButton == null)
             {
                 var existing = transform.Find("GenerateButton");
@@ -111,74 +128,16 @@ namespace AIBeat.UI
                 }
                 else
                 {
-                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -500)); 
+                    generateButton = CreateUIButton("GenerateButton", "곡 생성하기", new Vector2(0, -500));
                 }
             }
-            // 버튼 위치 강제 조정
+            // 버튼 위치: 하단 고정, 터치하기 쉬운 크기
             var genRect = generateButton.GetComponent<RectTransform>();
-            genRect.anchorMin = new Vector2(0.5f, 0);
-            genRect.anchorMax = new Vector2(0.5f, 0);
+            genRect.anchorMin = new Vector2(0, 0);
+            genRect.anchorMax = new Vector2(1, 0);
             genRect.pivot = new Vector2(0.5f, 0);
-            genRect.anchoredPosition = new Vector2(0, 50); // 바닥에서 50 띄움
-            genRect.sizeDelta = new Vector2(400, 70);
-
-
-            // 1. Genre Container (Left Column: 0.05 ~ 0.35)
-            if (genreButtonContainer == null)
-            {
-                var existing = transform.Find("GenreContainer");
-                if (existing != null) genreButtonContainer = existing;
-                else genreButtonContainer = CreateColumnContainer("GenreContainer");
-            }
-            LayoutColumn(genreButtonContainer, 0.05f, 0.35f, "장르");
-
-            // 2. Mood Container (Center Column: 0.35 ~ 0.65)
-            if (moodButtonContainer == null)
-            {
-                var existing = transform.Find("MoodContainer");
-                if (existing != null) moodButtonContainer = existing;
-                else moodButtonContainer = CreateColumnContainer("MoodContainer");
-            }
-            LayoutColumn(moodButtonContainer, 0.35f, 0.65f, "분위기");
-
-            // optionButtonPrefab 먼저 생성 (BPM 버튼이 사용함)
-            if (optionButtonPrefab == null)
-            {
-                optionButtonPrefab = CreateOptionButtonTemplate();
-            }
-
-            // 3. BPM Container (Right Column: 0.65 ~ 0.95)
-            if (bpmSlider == null)
-            {
-                var existing = transform.Find("BpmContainer");
-                if (existing != null)
-                {
-                    // 기존 컨테이너의 Content가 비어있는지 확인
-                    var content = existing.Find("Viewport/Content");
-                    if (content != null && content.childCount == 0)
-                    {
-                        // Content가 비어있으면 버튼 재생성
-                        Debug.Log("[SongSelectUI] BpmContainer exists but empty, regenerating buttons");
-                        GameObject.Destroy(existing.gameObject);
-                        bpmSlider = CreateBpmSlider();
-                    }
-                    else
-                    {
-                        // Content에 버튼이 있으면 기존 슬라이더 찾기
-                        bpmSlider = existing.GetComponentInChildren<Slider>();
-                    }
-                }
-                else
-                {
-                    bpmSlider = CreateBpmSlider();
-                }
-            }
-             // BPM 컨테이너 위치 잡기 (CreateBpmSlider에서 생성된 컨테이너)
-            var bpmContainer = transform.Find("BpmContainer");
-            if (bpmContainer != null)
-            {
-                LayoutColumn(bpmContainer, 0.65f, 0.95f, "빠르기");
-            }
+            genRect.anchoredPosition = new Vector2(0, 20); // 바닥에서 20px 띄움
+            genRect.sizeDelta = new Vector2(-40, 60); // 좌우 20px 여백, 높이 60px
 
 
             // Preview Texts - 숨김 (UI 단순화)
@@ -187,19 +146,19 @@ namespace AIBeat.UI
             if (previewBpmText != null) previewBpmText.gameObject.SetActive(false);
             if (bpmValueText != null) bpmValueText.gameObject.SetActive(false);
 
-            // Energy Text - 상단이나 하단으로 이동
+            // Energy Text - 상단 우측으로 이동 (모바일 최적화)
             if (energyText == null)
             {
                 var existing = transform.Find("EnergyText");
                 if (existing != null) energyText = existing.GetComponent<TextMeshProUGUI>();
                 else energyText = CreateUIText("EnergyText", "에너지: 3/3", Vector2.zero, 18);
             }
-            // Energy Text 위치: Generate 버튼 아래
+            // Energy Text 위치: 상단 우측 (탭 바 옆)
             var energyRect = energyText.GetComponent<RectTransform>();
-            energyRect.anchorMin = new Vector2(0.5f, 0);
-            energyRect.anchorMax = new Vector2(0.5f, 0);
-            energyRect.pivot = new Vector2(0.5f, 1);
-            energyRect.anchoredPosition = new Vector2(0, 40); // Generate 버튼 바로 아래
+            energyRect.anchorMin = new Vector2(1, 1);
+            energyRect.anchorMax = new Vector2(1, 1);
+            energyRect.pivot = new Vector2(1, 1);
+            energyRect.anchoredPosition = new Vector2(-10, -70); // 탭 바 아래
 
 
             // loadingPanel 동적 생성
@@ -382,6 +341,65 @@ namespace AIBeat.UI
             vLayout.padding = new RectOffset(10, 10, 10, 10);
             vLayout.childControlWidth = true;
             vLayout.childControlHeight = false; // 버튼 높이는 자체 설정
+            vLayout.childForceExpandWidth = true;
+            vLayout.childForceExpandHeight = false;
+            vLayout.childAlignment = TextAnchor.UpperCenter;
+
+            var csf = content.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.content = cRect;
+            scrollRect.viewport = vpRect;
+
+            return content.transform; // 버튼들이 추가될 부모
+        }
+
+        /// <summary>
+        /// 모바일 최적화: 전체 화면 단일 컬럼 생성 (탭 전환 방식)
+        /// </summary>
+        private Transform CreateFullScreenColumn(string name)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0, 0);
+            rect.anchorMax = new Vector2(1, 1);
+            rect.offsetMin = new Vector2(20, 100); // 하단: Generate 버튼 영역 확보
+            rect.offsetMax = new Vector2(-20, -150); // 상단: 옵션 탭 바 영역 확보
+
+            // ScrollRect (Vertical)
+            var scrollRect = go.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.scrollSensitivity = 30f; // 모바일 최적화
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
+
+            // Viewport (Mask)
+            var viewport = new GameObject("Viewport");
+            viewport.transform.SetParent(go.transform, false);
+            var vpRect = viewport.AddComponent<RectTransform>();
+            vpRect.anchorMin = Vector2.zero;
+            vpRect.anchorMax = Vector2.one;
+            vpRect.offsetMin = Vector2.zero;
+            vpRect.offsetMax = Vector2.zero;
+
+            var mask = viewport.AddComponent<RectMask2D>();
+
+            // Content (VerticalLayoutGroup)
+            var content = new GameObject("Content");
+            content.transform.SetParent(viewport.transform, false);
+            var cRect = content.AddComponent<RectTransform>();
+            cRect.anchorMin = new Vector2(0, 1);
+            cRect.anchorMax = new Vector2(1, 1);
+            cRect.pivot = new Vector2(0.5f, 1);
+            cRect.offsetMin = Vector2.zero;
+            cRect.offsetMax = Vector2.zero;
+
+            var vLayout = content.AddComponent<VerticalLayoutGroup>();
+            vLayout.spacing = 20; // 15→20 (모바일 터치 최적화)
+            vLayout.padding = new RectOffset(20, 20, 20, 20); // 여백 확대
+            vLayout.childControlWidth = true;
+            vLayout.childControlHeight = false;
             vLayout.childForceExpandWidth = true;
             vLayout.childForceExpandHeight = false;
             vLayout.childAlignment = TextAnchor.UpperCenter;
@@ -595,12 +613,132 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "Option";
-            tmp.fontSize = 20;  // 18→20 (MainMenuUI와 일관성)
-            tmp.fontStyle = FontStyles.Bold;  // Bold 추가
-            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안 (MainMenuUI와 일치)
+            tmp.fontSize = 22;  // 20→22 (모바일 가독성)
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
             tmp.alignment = TextAlignmentOptions.Center;
 
+            // 모바일 최적화: 버튼 크기 확대
+            rect.sizeDelta = new Vector2(0, 60); // 높이 50→60 (터치 영역 확보)
+
             return go;
+        }
+
+        /// <summary>
+        /// 모바일 최적화: 옵션 탭 바 생성 (Genre/Mood/BPM 전환)
+        /// </summary>
+        private void CreateOptionTabBar()
+        {
+            // 중복 생성 방지
+            if (transform.Find("OptionTabBar") != null)
+            {
+                Debug.Log("[SongSelectUI] OptionTabBar already exists, skipping creation");
+                return;
+            }
+
+            // 옵션 탭 바 컨테이너 (메인 TabBar 아래 배치)
+            var optTabBar = new GameObject("OptionTabBar");
+            optTabBar.transform.SetParent(transform, false);
+            optTabBar.transform.SetAsFirstSibling(); // 상단 배치
+
+            var optTabRect = optTabBar.AddComponent<RectTransform>();
+            optTabRect.anchorMin = new Vector2(0, 1);
+            optTabRect.anchorMax = new Vector2(1, 1);
+            optTabRect.pivot = new Vector2(0.5f, 1);
+            optTabRect.anchoredPosition = new Vector2(0, -56); // 메인 탭 바 아래 (56px 높이)
+            optTabRect.sizeDelta = new Vector2(0, 60); // 높이 60px
+
+            // 배경
+            var optTabBg = optTabBar.AddComponent<Image>();
+            optTabBg.color = new Color(0.04f, 0.04f, 0.12f, 0.95f);
+
+            var hLayout = optTabBar.AddComponent<HorizontalLayoutGroup>();
+            hLayout.spacing = 4;
+            hLayout.padding = new RectOffset(10, 10, 6, 6);
+            hLayout.childControlWidth = true;
+            hLayout.childControlHeight = true;
+            hLayout.childForceExpandWidth = true;
+            hLayout.childForceExpandHeight = true;
+
+            // 장르/분위기/빠르기 탭 버튼 생성
+            var genreOptTab = CreateTabButton(optTabBar.transform, "장르", () => SwitchToOptionTab(OptionTabType.Genre));
+            var moodOptTab = CreateTabButton(optTabBar.transform, "분위기", () => SwitchToOptionTab(OptionTabType.Mood));
+            var bpmOptTab = CreateTabButton(optTabBar.transform, "빠르기", () => SwitchToOptionTab(OptionTabType.BPM));
+
+            // 기본값: 장르 탭 활성화
+            SwitchToOptionTab(OptionTabType.Genre);
+        }
+
+        private enum OptionTabType { Genre, Mood, BPM }
+        private OptionTabType currentOptionTab = OptionTabType.Genre;
+
+        /// <summary>
+        /// 옵션 탭 전환 (Genre/Mood/BPM)
+        /// </summary>
+        private void SwitchToOptionTab(OptionTabType tabType)
+        {
+            currentOptionTab = tabType;
+
+            // 컨테이너의 Content 찾기
+            var container = transform.Find("OptionContainer");
+            if (container == null) return;
+
+            var content = container.Find("Viewport/Content");
+            if (content == null) return;
+
+            // 기존 버튼들 모두 제거
+            foreach (Transform child in content)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
+
+            // 선택된 탭에 따라 버튼 생성
+            switch (tabType)
+            {
+                case OptionTabType.Genre:
+                    CreateGenreButtons(content);
+                    break;
+                case OptionTabType.Mood:
+                    CreateMoodButtons(content);
+                    break;
+                case OptionTabType.BPM:
+                    CreateBPMButtons(content);
+                    break;
+            }
+
+            // 탭 버튼 하이라이트 업데이트
+            UpdateOptionTabHighlight();
+
+            // 한국어 폰트 적용
+            KoreanFontManager.ApplyFontToAll(content.gameObject);
+        }
+
+        /// <summary>
+        /// 옵션 탭 버튼 하이라이트 업데이트
+        /// </summary>
+        private void UpdateOptionTabHighlight()
+        {
+            var optTabBar = transform.Find("OptionTabBar");
+            if (optTabBar == null) return;
+
+            var tabs = optTabBar.GetComponentsInChildren<Button>();
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                var img = tabs[i].GetComponent<Image>();
+                if (img != null)
+                {
+                    if (i == (int)currentOptionTab)
+                    {
+                        // 선택됨
+                        img.color = TAB_ACTIVE;
+                    }
+                    else
+                    {
+                        // 선택 안됨
+                        img.color = TAB_INACTIVE;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -696,6 +834,9 @@ namespace AIBeat.UI
             // 한국어 폰트 적용 (□□□ 방지)
             KoreanFontManager.ApplyFontToAll(gameObject);
 
+            // 옵션 탭 바 생성 (Genre/Mood/BPM 전환)
+            CreateOptionTabBar();
+
             // Library 탭 열기 플래그 확인
             if (GameManager.Instance != null && GameManager.Instance.OpenLibraryOnSongSelect)
             {
@@ -756,9 +897,17 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 탭 버튼 생성 헬퍼
+        /// 탭 버튼 생성 헬퍼 (콜백 없음)
         /// </summary>
         private Button CreateTabButton(Transform parent, string text)
+        {
+            return CreateTabButton(parent, text, null);
+        }
+
+        /// <summary>
+        /// 탭 버튼 생성 헬퍼 (콜백 있음)
+        /// </summary>
+        private Button CreateTabButton(Transform parent, string text, UnityEngine.Events.UnityAction onClick)
         {
             var go = new GameObject($"Tab_{text}");
             go.transform.SetParent(parent, false);
@@ -777,6 +926,12 @@ namespace AIBeat.UI
             colors.normalColor = Color.white;
             colors.highlightedColor = new Color(1.2f, 1.2f, 1.2f);
             btn.colors = colors;
+
+            // 콜백 등록
+            if (onClick != null)
+            {
+                btn.onClick.AddListener(onClick);
+            }
 
             // 텍스트
             var textGo = new GameObject("Text");
@@ -882,39 +1037,138 @@ namespace AIBeat.UI
             if (generateTabContent != null)
                 generateTabContent.gameObject.SetActive(visible);
 
-            // 동적으로 생성된 섹션 라벨 숨기기
-            var genreLabel = transform.Find("GenreLabel");
-            if (genreLabel != null)
-                genreLabel.gameObject.SetActive(visible);
+            // 옵션 탭 바와 컨테이너 표시/숨김
+            var optTabBar = transform.Find("OptionTabBar");
+            if (optTabBar != null)
+                optTabBar.gameObject.SetActive(visible);
 
-            var moodLabel = transform.Find("MoodLabel");
-            if (moodLabel != null)
-                moodLabel.gameObject.SetActive(visible);
+            var optContainer = transform.Find("OptionContainer");
+            if (optContainer != null)
+                optContainer.gameObject.SetActive(visible);
+        }
 
-            var bpmLabel = transform.Find("BpmLabel");
-            if (bpmLabel != null)
-                bpmLabel.gameObject.SetActive(visible);
+        /// <summary>
+        /// 모바일 최적화: Genre 버튼 생성
+        /// </summary>
+        private void CreateGenreButtons(Transform parent)
+        {
+            genreButtons.Clear();
+
+            foreach (string genre in PromptOptions.Genres)
+            {
+                string displayName = PromptOptions.GetGenreDisplay(genre);
+                var btnGo = GameObject.Instantiate(optionButtonPrefab, parent);
+                btnGo.name = $"Genre_{genre}";
+                btnGo.SetActive(true);
+
+                var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
+                if (btnText != null)
+                {
+                    btnText.text = displayName;
+                    btnText.fontSize = 22; // 모바일 가독성
+                    btnText.fontStyle = FontStyles.Bold;
+                    btnText.color = new Color(0.4f, 0.95f, 1f, 1f);
+                }
+
+                var btn = btnGo.GetComponent<Button>();
+                if (btn != null)
+                {
+                    string capturedGenre = genre;
+                    btn.onClick.AddListener(() => OnGenreSelected(capturedGenre, btn));
+                    genreButtons.Add(btn);
+                }
+            }
+
+            // 첫 번째 선택
+            if (genreButtons.Count > 0)
+                OnGenreSelected(PromptOptions.Genres[0], genreButtons[0]);
+        }
+
+        /// <summary>
+        /// 모바일 최적화: Mood 버튼 생성
+        /// </summary>
+        private void CreateMoodButtons(Transform parent)
+        {
+            moodButtons.Clear();
+
+            foreach (string mood in PromptOptions.Moods)
+            {
+                string displayName = PromptOptions.GetMoodDisplay(mood);
+                var btnGo = GameObject.Instantiate(optionButtonPrefab, parent);
+                btnGo.name = $"Mood_{mood}";
+                btnGo.SetActive(true);
+
+                var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
+                if (btnText != null)
+                {
+                    btnText.text = displayName;
+                    btnText.fontSize = 22;
+                    btnText.fontStyle = FontStyles.Bold;
+                    btnText.color = new Color(0.4f, 0.95f, 1f, 1f);
+                }
+
+                var btn = btnGo.GetComponent<Button>();
+                if (btn != null)
+                {
+                    string capturedMood = mood;
+                    btn.onClick.AddListener(() => OnMoodSelected(capturedMood, btn));
+                    moodButtons.Add(btn);
+                }
+            }
+
+            // 첫 번째 선택
+            if (moodButtons.Count > 0)
+                OnMoodSelected(PromptOptions.Moods[0], moodButtons[0]);
+        }
+
+        /// <summary>
+        /// 모바일 최적화: BPM 버튼 생성
+        /// </summary>
+        private void CreateBPMButtons(Transform parent)
+        {
+            List<Button> bpmButtons = new List<Button>();
+            int[] bpmOptions = { 80, 100, 120, 140, 160, 180 };
+
+            foreach (int bpm in bpmOptions)
+            {
+                var btnGo = GameObject.Instantiate(optionButtonPrefab, parent);
+                btnGo.name = $"BPM_{bpm}";
+                btnGo.SetActive(true);
+
+                // 버튼 크기 조정
+                var btnRect = btnGo.GetComponent<RectTransform>();
+                if (btnRect != null)
+                {
+                    btnRect.sizeDelta = new Vector2(0, 70); // 높이 60→70 (모바일 터치 최적화)
+                }
+
+                var btnText = btnGo.GetComponentInChildren<TextMeshProUGUI>();
+                if (btnText != null)
+                {
+                    btnText.text = $"{bpm} BPM";
+                    btnText.fontSize = 24; // 22→24 (더 크게)
+                    btnText.fontStyle = FontStyles.Bold;
+                    btnText.color = new Color(0.4f, 0.95f, 1f, 1f);
+                }
+
+                var btn = btnGo.GetComponent<Button>();
+                if (btn != null)
+                {
+                    int capturedBpm = bpm;
+                    btn.onClick.AddListener(() => OnBpmButtonClicked(capturedBpm, btn, bpmButtons));
+                    bpmButtons.Add(btn);
+                }
+            }
+
+            // 기본값 140 BPM 선택 (4번째 버튼)
+            if (bpmButtons.Count >= 4)
+                OnBpmButtonClicked(140, bpmButtons[3], bpmButtons);
         }
 
         private void CreateOptionButtons()
         {
-            // 장르 버튼 생성 (한국어 표시명 사용)
-            foreach (string genre in PromptOptions.Genres)
-            {
-                string displayName = PromptOptions.GetGenreDisplay(genre);
-                CreateOptionButton(genre, displayName, genreButtonContainer, genreButtons, OnGenreSelected);
-            }
-
-            // 분위기 버튼 생성 (한국어 표시명 사용)
-            foreach (string mood in PromptOptions.Moods)
-            {
-                string displayName = PromptOptions.GetMoodDisplay(mood);
-                CreateOptionButton(mood, displayName, moodButtonContainer, moodButtons, OnMoodSelected);
-            }
-
-            // 첫 번째 옵션 선택
-            if (genreButtons.Count > 0) SelectButton(genreButtons[0], genreButtons);
-            if (moodButtons.Count > 0) SelectButton(moodButtons[0], moodButtons);
+            // 모바일 최적화: 탭 전환 방식으로 변경되어 초기 생성 불필요
+            // Genre 탭이 기본값으로 생성됨 (CreateOptionTabBar 에서 SwitchToOptionTab 호출)
         }
 
         private void CreateOptionButton(string key, string displayText, Transform container, List<Button> buttonList,
