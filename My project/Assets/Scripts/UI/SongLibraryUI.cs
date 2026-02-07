@@ -80,7 +80,7 @@ namespace AIBeat.UI
             rootLayout.childControlWidth = true;
             rootLayout.childControlHeight = true;
             rootLayout.childForceExpandWidth = true;
-            rootLayout.childForceExpandHeight = true;
+            rootLayout.childForceExpandHeight = false;
 
             // 1. 곡 수 표시
             CreateSongCountBar(rootPanel.transform);

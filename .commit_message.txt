@@ -1,1 +1,1 @@
-🎨 SongSelect UI 가독성 개선: 배경 불투명도↑, 곡카드 높이 120px, 폰트 크기 확대, 렌더링 순서 수정
+🐛 SongSelect 곡카드 안 보이던 버그 수정: childForceExpandHeight→false로 CountBar가 공간 절반 차지하던 문제 해결
