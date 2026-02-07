@@ -14,8 +14,11 @@ namespace AIBeat.Gameplay
     {
         [Header("Touch Zone Settings")]
         [SerializeField] private int touchZoneCount = 2;       // 2개 균등 터치 존 (Key1, Key2)
-        [SerializeField] private float touchAreaRatio = 0.55f;  // 하단 55% 입력 영역 (엄지 조작 최적화)
+        [SerializeField] private float touchAreaRatio = 0.85f;  // 하단 85% 입력 영역 (상단 UI만 제외)
         [SerializeField] private float scratchEdgeRatio = 0.12f; // 좌우 가장자리 12%를 스크래치 전용 존으로
+
+        [Header("Debug")]
+        [SerializeField] private bool showTouchDebug = true;
 
         [Header("Scratch Swipe Settings")]
         [SerializeField] private float scratchThresholdMM = 7f;  // 스크래치 인식 최소 거리(mm)
@@ -109,7 +112,12 @@ namespace AIBeat.Gameplay
         private void HandleTouchBegan(int touchId, Vector2 position)
         {
             // 하단 터치 영역만 입력 허용 (상단 UI 영역 무시)
-            if (position.y > Screen.height * touchAreaRatio) return;
+            if (position.y > Screen.height * touchAreaRatio)
+            {
+                if (showTouchDebug)
+                    Debug.Log($"[Touch] REJECTED y={position.y:F0}/{Screen.height} (>{touchAreaRatio*100}% cutoff)");
+                return;
+            }
 
             float normalizedX = position.x / Screen.width;
             bool isScratchOnly = normalizedX < scratchEdgeRatio || normalizedX > (1f - scratchEdgeRatio);
@@ -136,11 +144,15 @@ namespace AIBeat.Gameplay
                 var data = activeTouches[touchId];
                 data.ScratchTriggered = true;
                 activeTouches[touchId] = data;
+                if (showTouchDebug)
+                    Debug.Log($"[Touch] SCRATCH lane={scratchLane} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
             }
             else
             {
                 // 키 존: 즉시 Key Down 발행 (리듬게임 반응성 우선)
                 OnLaneInput?.Invoke(lane, InputType.Down);
+                if (showTouchDebug)
+                    Debug.Log($"[Touch] KEY DOWN lane={lane} zone={zone} x={normalizedX:F2} pos=({position.x:F0},{position.y:F0})");
             }
         }
 
