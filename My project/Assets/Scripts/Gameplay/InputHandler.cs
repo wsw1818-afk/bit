@@ -15,6 +15,7 @@ namespace AIBeat.Gameplay
         [Header("Touch Zone Settings")]
         [SerializeField] private int touchZoneCount = 2;       // 2개 균등 터치 존 (Key1, Key2)
         [SerializeField] private float touchAreaRatio = 0.55f;  // 하단 55% 입력 영역 (엄지 조작 최적화)
+        [SerializeField] private float scratchEdgeRatio = 0.12f; // 좌우 가장자리 12%를 스크래치 전용 존으로
 
         [Header("Scratch Swipe Settings")]
         [SerializeField] private float scratchThresholdMM = 7f;  // 스크래치 인식 최소 거리(mm)
@@ -40,7 +41,8 @@ namespace AIBeat.Gameplay
             public int TouchZone;          // 0-1 (2개 존)
             public int MappedLane;         // 1-2 (키 레인)
             public Vector2 StartPosition;
-            public bool IsEdgeZone;        // 가장자리 존 여부 (존0 또는 존1)
+            public bool IsEdgeZone;        // 스와이프 스크래치 가능 존 여부
+            public bool IsScratchOnly;     // 스크래치 전용 존 (가장자리 터치 → Key Down 미발생)
             public bool ScratchTriggered;  // 스크래치 이미 발동 여부
         }
 
@@ -109,6 +111,9 @@ namespace AIBeat.Gameplay
             // 하단 터치 영역만 입력 허용 (상단 UI 영역 무시)
             if (position.y > Screen.height * touchAreaRatio) return;
 
+            float normalizedX = position.x / Screen.width;
+            bool isScratchOnly = normalizedX < scratchEdgeRatio || normalizedX > (1f - scratchEdgeRatio);
+
             int zone = GetTouchZone(position);
             int lane = TouchZoneToLane(zone);
             bool isEdge = zone == 0 || zone == touchZoneCount - 1;
@@ -119,11 +124,24 @@ namespace AIBeat.Gameplay
                 MappedLane = lane,
                 StartPosition = position,
                 IsEdgeZone = isEdge,
+                IsScratchOnly = isScratchOnly,
                 ScratchTriggered = false
             };
 
-            // 즉시 Key Down 발행 (리듬게임 반응성 우선)
-            OnLaneInput?.Invoke(lane, InputType.Down);
+            if (isScratchOnly)
+            {
+                // 스크래치 전용 존: 터치만으로 즉시 스크래치 발동 (스와이프 불필요)
+                int scratchLane = normalizedX < 0.5f ? 0 : 3;
+                OnLaneInput?.Invoke(scratchLane, InputType.Scratch);
+                var data = activeTouches[touchId];
+                data.ScratchTriggered = true;
+                activeTouches[touchId] = data;
+            }
+            else
+            {
+                // 키 존: 즉시 Key Down 발행 (리듬게임 반응성 우선)
+                OnLaneInput?.Invoke(lane, InputType.Down);
+            }
         }
 
         private void HandleTouchMoved(int touchId, Vector2 position)
@@ -172,8 +190,11 @@ namespace AIBeat.Gameplay
         {
             if (activeTouches.TryGetValue(touchId, out TouchData data))
             {
-                // Key Up 발행 (롱노트 릴리즈 등)
-                OnLaneInput?.Invoke(data.MappedLane, InputType.Up);
+                // 스크래치 전용 존은 Key Up 발행하지 않음
+                if (!data.IsScratchOnly)
+                {
+                    OnLaneInput?.Invoke(data.MappedLane, InputType.Up);
+                }
                 activeTouches.Remove(touchId);
             }
         }

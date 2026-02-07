@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace AIBeat.Audio
@@ -7,9 +8,12 @@ namespace AIBeat.Audio
     /// <summary>
     /// 오프라인 오디오 분석 시스템
     /// AudioClip의 PCM 데이터를 분석하여 BPM, 온셋, 에너지 프로필 추출
+    /// AnalyzeAsync()로 메인 스레드 블로킹 없이 청크 단위 처리 가능
     /// </summary>
     public class OfflineAudioAnalyzer
     {
+        // 청크 처리 설정
+        private const int FRAMES_PER_CHUNK = 64; // 한 프레임에 처리할 FFT 프레임 수
         // FFT 설정
         private const int FFT_SIZE = 2048;
         private const int HOP_SIZE = 512;
@@ -188,6 +192,130 @@ namespace AIBeat.Audio
                 EnergyProfile = totalEnergy,
                 BandEnergies = bandEnergies
             };
+        }
+
+        /// <summary>
+        /// 비동기 분석 (코루틴). 메인 스레드 블로킹 없이 청크 단위로 FFT 처리.
+        /// 결과는 onComplete 콜백으로 전달됨.
+        /// </summary>
+        /// <param name="clip">분석할 AudioClip</param>
+        /// <param name="onProgress">진행률 0~1 콜백</param>
+        /// <param name="onComplete">완료 콜백 (null이면 실패)</param>
+        public IEnumerator AnalyzeAsync(AudioClip clip, Action<float> onProgress, Action<AnalysisResult> onComplete)
+        {
+            if (clip == null)
+            {
+                Debug.LogError("[OfflineAudioAnalyzer] AudioClip is null!");
+                onComplete?.Invoke(null);
+                yield break;
+            }
+
+            // PCM 데이터 추출 (메인 스레드 필수, 1회성)
+            float[] samples = new float[clip.samples * clip.channels];
+            clip.GetData(samples, 0);
+
+            float[] mono = ToMono(samples, clip.channels);
+            float sampleRate = clip.frequency;
+            float duration = clip.length;
+
+            int totalFrames = (mono.Length - FFT_SIZE) / HOP_SIZE + 1;
+            if (totalFrames <= 0)
+            {
+                Debug.LogError("[OfflineAudioAnalyzer] Audio too short for analysis");
+                onComplete?.Invoke(null);
+                yield break;
+            }
+
+#if UNITY_EDITOR
+            Debug.Log($"[OfflineAudioAnalyzer] AnalyzeAsync: {clip.name}, duration={duration:F1}s, frames={totalFrames}");
+#endif
+
+            // 1단계: FFT + 스펙트럼 분석 (청크 단위)
+            float[] spectralFlux = new float[totalFrames];
+            float[] totalEnergy = new float[totalFrames];
+            float[][] bandEnergies = new float[totalFrames][];
+            int[] dominantBands = new int[totalFrames];
+
+            Array.Clear(prevSpectrum, 0, prevSpectrum.Length);
+
+            for (int frame = 0; frame < totalFrames; frame++)
+            {
+                int offset = frame * HOP_SIZE;
+
+                for (int i = 0; i < FFT_SIZE; i++)
+                {
+                    fftReal[i] = (offset + i < mono.Length) ? mono[offset + i] * hannWindow[i] : 0f;
+                    fftImag[i] = 0f;
+                }
+
+                FFT(fftReal, fftImag, false);
+
+                float[] spectrum = new float[FFT_SIZE / 2];
+                for (int i = 0; i < FFT_SIZE / 2; i++)
+                    spectrum[i] = Mathf.Sqrt(fftReal[i] * fftReal[i] + fftImag[i] * fftImag[i]);
+
+                float flux = 0f;
+                for (int i = 0; i < FFT_SIZE / 2; i++)
+                {
+                    float diff = spectrum[i] - prevSpectrum[i];
+                    if (diff > 0) flux += diff;
+                }
+                spectralFlux[frame] = flux;
+
+                bandEnergies[frame] = ComputeBandEnergies(spectrum, sampleRate);
+                totalEnergy[frame] = 0f;
+                float maxBandEnergy = 0f;
+                int maxBand = 0;
+                for (int b = 0; b < 8; b++)
+                {
+                    totalEnergy[frame] += bandEnergies[frame][b];
+                    if (bandEnergies[frame][b] > maxBandEnergy)
+                    {
+                        maxBandEnergy = bandEnergies[frame][b];
+                        maxBand = b;
+                    }
+                }
+                dominantBands[frame] = maxBand;
+
+                Array.Copy(spectrum, prevSpectrum, FFT_SIZE / 2);
+
+                // 청크 단위로 yield (메인 스레드에 제어권 반환)
+                if ((frame + 1) % FRAMES_PER_CHUNK == 0)
+                {
+                    onProgress?.Invoke((float)frame / totalFrames * 0.8f); // FFT가 전체의 80%
+                    yield return null;
+                }
+            }
+
+            onProgress?.Invoke(0.8f);
+
+            // 2단계: 온셋 감지 (가벼움, yield 불필요)
+            List<OnsetData> onsets = DetectOnsets(spectralFlux, dominantBands, sampleRate, totalFrames);
+            onProgress?.Invoke(0.85f);
+            yield return null;
+
+            // 3단계: BPM 추출
+            float bpm = EstimateBPM(onsets, duration);
+            onProgress?.Invoke(0.9f);
+            yield return null;
+
+            // 4단계: 구간 감지
+            List<SectionData> sections = DetectSections(totalEnergy, sampleRate, totalFrames, duration);
+            onProgress?.Invoke(1f);
+
+#if UNITY_EDITOR
+            Debug.Log($"[OfflineAudioAnalyzer] AnalyzeAsync complete: BPM={bpm:F1}, onsets={onsets.Count}, sections={sections.Count}");
+#endif
+
+            onComplete?.Invoke(new AnalysisResult
+            {
+                BPM = bpm,
+                Duration = duration,
+                Onsets = onsets,
+                Sections = sections,
+                EnergyProfile = totalEnergy,
+                BandEnergies = bandEnergies
+            });
         }
 
         /// <summary>

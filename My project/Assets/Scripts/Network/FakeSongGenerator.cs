@@ -11,7 +11,7 @@ namespace AIBeat.Network
     /// MVP 테스트용 가짜 곡 생성기
     /// 실제 AI API 없이 사전 준비된 곡 사용
     /// </summary>
-    public class FakeSongGenerator : MonoBehaviour
+    public class FakeSongGenerator : MonoBehaviour, ISongGenerator
     {
         [Header("Settings")]
         [SerializeField] private float fakeGenerationTime = 3f;  // 가짜 생성 대기 시간
@@ -89,6 +89,11 @@ namespace AIBeat.Network
                 });
             }
         }
+
+        /// <summary>
+        /// ISongGenerator 인터페이스 구현
+        /// </summary>
+        public void Generate(PromptOptions options) => GenerateSong(options);
 
         /// <summary>
         /// 프롬프트 옵션에 맞는 곡 "생성" (실제로는 매칭)

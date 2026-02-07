@@ -199,17 +199,18 @@ namespace AIBeat.Audio
         /// </summary>
         public int MapBandToLane(int band)
         {
-            // 7개 레인: 0=스크래치L, 1-5=키, 6=스크래치R
+            // 4개 레인: 0=ScratchL, 1=Key1, 2=Key2, 3=ScratchR
             return band switch
             {
-                0 => UnityEngine.Random.Range(0, 2) == 0 ? 0 : 6, // Sub Bass → 스크래치
-                7 => UnityEngine.Random.Range(0, 2) == 0 ? 0 : 6, // Air → 스크래치
-                1 => UnityEngine.Random.Range(0, 2) == 0 ? 1 : 5, // Bass → 외곽 키
-                5 => UnityEngine.Random.Range(0, 2) == 0 ? 1 : 5, // Presence → 외곽 키
-                2 => UnityEngine.Random.Range(0, 2) == 0 ? 2 : 4, // Low Mid → 중간 키
-                4 => UnityEngine.Random.Range(0, 2) == 0 ? 2 : 4, // High Mid → 중간 키
-                3 => 3, // Mid → 중앙 키
-                _ => 3
+                0 => UnityEngine.Random.Range(0, 2) == 0 ? 0 : 3, // Sub Bass → 스크래치
+                7 => UnityEngine.Random.Range(0, 2) == 0 ? 0 : 3, // Air → 스크래치
+                1 => 1, // Bass → Key1
+                5 => 1, // Presence → Key1
+                2 => UnityEngine.Random.Range(1, 3), // Low Mid → Key1 or Key2
+                4 => UnityEngine.Random.Range(1, 3), // High Mid → Key1 or Key2
+                3 => 2, // Mid → Key2
+                6 => UnityEngine.Random.Range(1, 3), // Brilliance → Key1 or Key2
+                _ => UnityEngine.Random.Range(1, 3)
             };
         }
     }

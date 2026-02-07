@@ -32,6 +32,7 @@ namespace AIBeat.UI
         [Header("Energy System")]
         [SerializeField] private TextMeshProUGUI energyText;
         [SerializeField] private int maxEnergy = 3;
+        [SerializeField] private float energyRechargeMinutes = 10f; // 에너지 1개 충전 시간 (분)
 
         [Header("Navigation")]
         [SerializeField] private Button backButton;
@@ -45,6 +46,9 @@ namespace AIBeat.UI
         [SerializeField] private RectTransform generateTabContent;  // 기존 생성 UI 컨테이너
         [SerializeField] private RectTransform libraryTabContent;   // 라이브러리 UI 컨테이너
 
+        [Header("Generator Mode")]
+        [SerializeField] private bool useApiClient = false;  // true: AIApiClient, false: FakeSongGenerator
+
         // 선택된 옵션
         private string selectedGenre = "EDM";
         private string selectedMood = "Aggressive";
@@ -52,6 +56,7 @@ namespace AIBeat.UI
 
         private int currentEnergy;
         private FakeSongGenerator songGenerator;
+        private ISongGenerator activeGenerator;
         private List<Button> genreButtons = new List<Button>();
         private List<Button> moodButtons = new List<Button>();
 
@@ -74,16 +79,31 @@ namespace AIBeat.UI
 
         private void Initialize()
         {
-            // 에너지 로드
-            currentEnergy = PlayerPrefs.GetInt("Energy", maxEnergy);
+            // 에너지 로드 + 시간 경과에 따른 충전
+            RechargeEnergyFromTime();
             UpdateEnergyDisplay();
+            StartCoroutine(EnergyRechargeLoop());
 
-            // 곡 생성기 찾기
-            songGenerator = FindFirstObjectByType<FakeSongGenerator>();
-            if (songGenerator == null)
+            // 곡 생성기 찾기 (API/Fake 토글)
+            if (useApiClient)
             {
-                var go = new GameObject("FakeSongGenerator");
-                songGenerator = go.AddComponent<FakeSongGenerator>();
+                var apiClient = FindFirstObjectByType<AIApiClient>();
+                if (apiClient == null)
+                {
+                    var go = new GameObject("AIApiClient");
+                    apiClient = go.AddComponent<AIApiClient>();
+                }
+                activeGenerator = apiClient;
+            }
+            else
+            {
+                songGenerator = FindFirstObjectByType<FakeSongGenerator>();
+                if (songGenerator == null)
+                {
+                    var go = new GameObject("FakeSongGenerator");
+                    songGenerator = go.AddComponent<FakeSongGenerator>();
+                }
+                activeGenerator = songGenerator;
             }
 
             // SongLibraryManager 싱글톤 보장
@@ -93,10 +113,10 @@ namespace AIBeat.UI
                 libGo.AddComponent<SongLibraryManager>();
             }
 
-            // 이벤트 연결
-            songGenerator.OnGenerationProgress += OnProgress;
-            songGenerator.OnGenerationComplete += OnComplete;
-            songGenerator.OnGenerationError += OnError;
+            // 이벤트 연결 (ISongGenerator 인터페이스)
+            activeGenerator.OnGenerationProgress += OnProgress;
+            activeGenerator.OnGenerationComplete += OnComplete;
+            activeGenerator.OnGenerationError += OnError;
 
             // UI 초기화
             CreateTabSystem();
@@ -400,9 +420,11 @@ namespace AIBeat.UI
                 return;
             }
 
-            // 에너지 소모
+            // 에너지 소모 + 타임스탬프 기록
             currentEnergy--;
             PlayerPrefs.SetInt("Energy", currentEnergy);
+            if (currentEnergy < maxEnergy)
+                PlayerPrefs.SetString("EnergyLastUseTime", System.DateTime.Now.ToString("o"));
             UpdateEnergyDisplay();
 
             // 로딩 시작
@@ -422,7 +444,7 @@ namespace AIBeat.UI
                 Structure = "intro-build-drop-outro"
             };
 
-            songGenerator.GenerateSong(options);
+            activeGenerator.Generate(options);
         }
 
         private void OnProgress(float progress)
@@ -511,17 +533,109 @@ namespace AIBeat.UI
 
         private void UpdateEnergyDisplay()
         {
-            if (energyText != null)
+            if (energyText == null) return;
+
+            if (currentEnergy >= maxEnergy)
+            {
                 energyText.text = $"Energy: {currentEnergy}/{maxEnergy}";
+            }
+            else
+            {
+                // 남은 충전 시간 표시
+                string timerStr = "";
+                string lastUseStr = PlayerPrefs.GetString("EnergyLastUseTime", "");
+                if (!string.IsNullOrEmpty(lastUseStr) && System.DateTime.TryParse(lastUseStr, out System.DateTime lastUse))
+                {
+                    double minutesElapsed = (System.DateTime.Now - lastUse).TotalMinutes;
+                    double minutesUntilNext = energyRechargeMinutes - (minutesElapsed % energyRechargeMinutes);
+                    int mins = Mathf.Max(1, Mathf.CeilToInt((float)minutesUntilNext));
+                    timerStr = $" ({mins}m)";
+                }
+                energyText.text = $"Energy: {currentEnergy}/{maxEnergy}{timerStr}";
+            }
+        }
+
+        /// <summary>
+        /// 오프라인 시간 경과에 따른 에너지 자동 충전
+        /// </summary>
+        private void RechargeEnergyFromTime()
+        {
+            currentEnergy = PlayerPrefs.GetInt("Energy", maxEnergy);
+            if (currentEnergy >= maxEnergy) return;
+
+            string lastUseStr = PlayerPrefs.GetString("EnergyLastUseTime", "");
+            if (string.IsNullOrEmpty(lastUseStr)) return;
+
+            if (System.DateTime.TryParse(lastUseStr, out System.DateTime lastUse))
+            {
+                double minutesElapsed = (System.DateTime.Now - lastUse).TotalMinutes;
+                int recharged = Mathf.FloorToInt((float)(minutesElapsed / energyRechargeMinutes));
+                if (recharged > 0)
+                {
+                    currentEnergy = Mathf.Min(currentEnergy + recharged, maxEnergy);
+                    PlayerPrefs.SetInt("Energy", currentEnergy);
+                    // 남은 시간 보존을 위해 lastUseTime 갱신
+                    double usedMinutes = recharged * energyRechargeMinutes;
+                    var newLastUse = lastUse.AddMinutes(usedMinutes);
+                    PlayerPrefs.SetString("EnergyLastUseTime", newLastUse.ToString("o"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 실시간 에너지 충전 타이머 (1분마다 체크)
+        /// </summary>
+        private System.Collections.IEnumerator EnergyRechargeLoop()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(60f);
+                if (currentEnergy < maxEnergy)
+                {
+                    RechargeEnergyFromTime();
+                    UpdateEnergyDisplay();
+                }
+            }
         }
 
         private void ShowNoEnergyDialog()
         {
-            // TODO: 에너지 부족 다이얼로그 표시
-            // 광고 시청 또는 유료 결제 옵션 제공
+            // 에너지 부족 다이얼로그: 남은 충전 시간 표시
+            string message = "Energy depleted!\n";
+
+            string lastUseStr = PlayerPrefs.GetString("EnergyLastUseTime", "");
+            if (!string.IsNullOrEmpty(lastUseStr) && System.DateTime.TryParse(lastUseStr, out System.DateTime lastUse))
+            {
+                double minutesElapsed = (System.DateTime.Now - lastUse).TotalMinutes;
+                double minutesUntilNext = energyRechargeMinutes - (minutesElapsed % energyRechargeMinutes);
+                int mins = Mathf.CeilToInt((float)minutesUntilNext);
+                message += $"Next energy in {mins} min";
+            }
+            else
+            {
+                message += "Please wait for recharge.";
+            }
+
+            // 로딩 패널을 임시 다이얼로그로 재활용
+            if (loadingPanel != null && loadingText != null)
+            {
+                loadingText.text = message;
+                loadingPanel.SetActive(true);
+                if (progressSlider != null) progressSlider.gameObject.SetActive(false);
+                Invoke(nameof(HideNoEnergyDialog), 3f);
+            }
+
 #if UNITY_EDITOR
-            Debug.Log("No energy! Watch ad or wait for recharge.");
+            Debug.Log($"[SongSelect] {message}");
 #endif
+        }
+
+        private void HideNoEnergyDialog()
+        {
+            if (loadingPanel != null)
+                loadingPanel.SetActive(false);
+            if (progressSlider != null)
+                progressSlider.gameObject.SetActive(true);
         }
 
         private void OnBackClicked()
@@ -531,11 +645,11 @@ namespace AIBeat.UI
 
         private void OnDestroy()
         {
-            if (songGenerator != null)
+            if (activeGenerator != null)
             {
-                songGenerator.OnGenerationProgress -= OnProgress;
-                songGenerator.OnGenerationComplete -= OnComplete;
-                songGenerator.OnGenerationError -= OnError;
+                activeGenerator.OnGenerationProgress -= OnProgress;
+                activeGenerator.OnGenerationComplete -= OnComplete;
+                activeGenerator.OnGenerationError -= OnError;
             }
 
             if (generateButton != null) generateButton.onClick.RemoveAllListeners();

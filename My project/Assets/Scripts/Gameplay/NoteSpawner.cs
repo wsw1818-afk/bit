@@ -533,6 +533,10 @@ namespace AIBeat.Gameplay
             {
                 if (note.LaneIndex == laneIndex)
                 {
+                    // 홀드 중인 롱노트는 항상 우선 반환
+                    if (note.IsHolding)
+                        return note;
+
                     float timeDiff = Mathf.Abs(currentTime - note.HitTime);
                     if (timeDiff <= maxJudgeWindow && timeDiff < minTimeDiff)
                     {

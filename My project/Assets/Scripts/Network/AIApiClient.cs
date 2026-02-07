@@ -10,7 +10,7 @@ namespace AIBeat.Network
     /// <summary>
     /// AI 음악 생성 API 통신 클라이언트
     /// </summary>
-    public class AIApiClient : MonoBehaviour
+    public class AIApiClient : MonoBehaviour, ISongGenerator
     {
         [Header("API Settings")]
         [SerializeField] private string apiBaseUrl = "https://api.example.com";
@@ -36,6 +36,11 @@ namespace AIBeat.Network
             // 예: Unity Secure PlayerPrefs, Keychain, etc.
             return PlayerPrefs.GetString("AI_API_KEY", "");
         }
+
+        /// <summary>
+        /// ISongGenerator 인터페이스 구현
+        /// </summary>
+        public void Generate(PromptOptions options) => RequestGeneration(options);
 
         /// <summary>
         /// AI 음악 생성 요청

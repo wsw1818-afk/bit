@@ -40,7 +40,7 @@ namespace AIBeat.Tests.Editor
             Assert.IsNotNull(songData);
 
             Assert.IsNotNull(songData.Notes, "Notes 배열이 null이 아니어야 합니다.");
-            Assert.AreEqual(20, songData.Notes.Length, "SimpleTest에는 20개의 노트가 있어야 합니다.");
+            Assert.AreEqual(71, songData.Notes.Length, "SimpleTest에는 71개의 노트가 있어야 합니다.");
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace AIBeat.Tests.Editor
             foreach (var note in songData.Notes)
             {
                 Assert.GreaterOrEqual(note.LaneIndex, 0, "레인 인덱스는 0 이상이어야 합니다.");
-                Assert.LessOrEqual(note.LaneIndex, 6, "레인 인덱스는 6 이하여야 합니다.");
+                Assert.LessOrEqual(note.LaneIndex, 3, "레인 인덱스는 3 이하여야 합니다.");
             }
         }
 
@@ -78,10 +78,10 @@ namespace AIBeat.Tests.Editor
         [Test]
         public void NoteData_Constructor_SetsValuesCorrectly()
         {
-            var noteData = new NoteData(5.5f, 3, NoteType.Tap, 0f);
+            var noteData = new NoteData(5.5f, 2, NoteType.Tap, 0f);
 
             Assert.AreEqual(5.5f, noteData.HitTime);
-            Assert.AreEqual(3, noteData.LaneIndex);
+            Assert.AreEqual(2, noteData.LaneIndex);
             Assert.AreEqual(NoteType.Tap, noteData.Type);
             Assert.AreEqual(0f, noteData.Duration);
         }

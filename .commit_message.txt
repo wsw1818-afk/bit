@@ -1,1 +1,1 @@
-🎮 4레인 전환 완성: 씬 정리(Separator/LaneDivider/LaneBackground) + GameSetupEditor 수정 + TutorialUI 4레인 반영 (9개 파일)
+🔧 8개 TODO 전체 구현: 4레인 잔여정리, 롱노트 수정, 스크래치 이중트리거 해결, 시드 결정론, ISongGenerator, 에너지UX, 비동기 분석, 캘리브레이션+Early/Late

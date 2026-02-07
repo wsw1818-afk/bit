@@ -29,8 +29,14 @@ namespace AIBeat.Gameplay
             get
             {
                 if (hasBeenJudged) return true;
+                // 롱노트가 홀드 중이면 만료되지 않음
+                if (isHolding) return false;
                 float currentTime = AudioManager.Instance != null ? AudioManager.Instance.CurrentTime : 0f;
-                return (currentTime - noteData.HitTime) > 0.5f;
+                // 롱노트는 HitTime + Duration + 여유시간 이후에 만료
+                float expireAfter = noteData.Type == NoteType.Long
+                    ? noteData.HitTime + noteData.Duration + 0.5f
+                    : noteData.HitTime + 0.5f;
+                return currentTime > expireAfter;
             }
         }
         public bool HasBeenJudged => hasBeenJudged;

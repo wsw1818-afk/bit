@@ -19,27 +19,28 @@ namespace AIBeat.Audio
         [SerializeField] private AnimationCurve densityCurve;  // 구간별 밀도 곡선
 
         private AudioAnalyzer audioAnalyzer;
+        private System.Random rng; // 시드 기반 결정론적 랜덤
 
         /// <summary>
         /// 곡 데이터에서 노트 패턴 생성 (오프라인 분석)
+        /// seed가 0이면 비결정적 (호환성 유지)
         /// </summary>
-        public List<NoteData> GenerateNotes(SongData songData)
+        public List<NoteData> GenerateNotes(SongData songData, int seed = 0)
         {
+            rng = seed != 0 ? new System.Random(seed) : new System.Random();
+
             var notes = new List<NoteData>();
             float bpm = songData.BPM;
             float beatInterval = 60f / bpm;
 
-            // 각 비트마다 노트 생성 여부 결정
             float currentTime = 0f;
             float lastNoteTime = -1f;
 
             while (currentTime < songData.Duration)
             {
-                // 현재 구간 찾기
                 SongSection currentSection = GetSectionAt(songData.Sections, currentTime);
                 float density = currentSection.DensityMultiplier;
 
-                // 밀도에 따라 노트 생성 확률 조절
                 if (ShouldSpawnNote(density, currentTime, songData))
                 {
                     if (currentTime - lastNoteTime >= minNoteGap)
@@ -59,13 +60,13 @@ namespace AIBeat.Audio
         /// <summary>
         /// BPM과 구간 정보만으로 노트 생성 (AI 응답 기반)
         /// </summary>
-        public List<NoteData> GenerateNotesFromBPM(float bpm, float duration, SongSection[] sections)
+        public List<NoteData> GenerateNotesFromBPM(float bpm, float duration, SongSection[] sections, int seed = 0)
         {
             var notes = new List<NoteData>();
             float beatInterval = 60f / bpm;
             float currentTime = 0f;
 
-            System.Random random = new System.Random();
+            System.Random random = seed != 0 ? new System.Random(seed) : new System.Random();
 
             while (currentTime < duration)
             {
@@ -120,9 +121,8 @@ namespace AIBeat.Audio
 
         private bool ShouldSpawnNote(float density, float time, SongData songData)
         {
-            // 기본 확률 + 난이도 보정
             float baseChance = density * (songData.Difficulty / 10f);
-            return Random.value < baseChance;
+            return (float)rng.NextDouble() < baseChance;
         }
 
         private NoteData CreateNote(float time, SongSection section)
@@ -136,40 +136,37 @@ namespace AIBeat.Audio
             {
                 case "intro":
                 case "outro":
-                    // 키 레인 위주, 스크래치 없음
-                    lane = Random.Range(1, 3);
+                    lane = rng.Next(1, 3);
                     break;
 
                 case "build":
-                    // 키 레인, 가끔 롱노트
-                    lane = Random.Range(1, 3);
-                    if (Random.value < 0.2f)
+                    lane = rng.Next(1, 3);
+                    if ((float)rng.NextDouble() < 0.2f)
                     {
                         type = NoteType.Long;
-                        duration = Random.Range(0.5f, 1.5f);
+                        duration = 0.5f + (float)rng.NextDouble() * 1f;
                     }
                     break;
 
                 case "drop":
-                    // 전체 레인 사용, 스크래치 포함
-                    if (Random.value < 0.15f)
+                    if ((float)rng.NextDouble() < 0.15f)
                     {
-                        lane = Random.value < 0.5f ? 0 : 3;
+                        lane = rng.Next(0, 2) == 0 ? 0 : 3;
                         type = NoteType.Scratch;
                     }
                     else
                     {
-                        lane = Random.Range(1, 3);
-                        if (Random.value < 0.25f)
+                        lane = rng.Next(1, 3);
+                        if ((float)rng.NextDouble() < 0.25f)
                         {
                             type = NoteType.Long;
-                            duration = Random.Range(0.3f, 1f);
+                            duration = 0.3f + (float)rng.NextDouble() * 0.7f;
                         }
                     }
                     break;
 
                 default:
-                    lane = Random.Range(1, 3);
+                    lane = rng.Next(1, 3);
                     break;
             }
 

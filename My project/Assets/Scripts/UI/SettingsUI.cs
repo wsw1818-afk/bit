@@ -31,6 +31,11 @@ namespace AIBeat.UI
         private Slider sfxVolumeSlider;
         private Slider backgroundDimSlider;
 
+        // 캘리브레이션
+        private CalibrationManager calibrationManager;
+        private TMP_Text calibrationStatusText;
+        private GameObject calibrationPanel;
+
         // 값 표시 텍스트 참조
         private TMP_Text noteSpeedValueText;
         private TMP_Text judgementOffsetValueText;
@@ -45,6 +50,15 @@ namespace AIBeat.UI
             mainMenuUI = GetComponentInParent<MainMenuUI>();
             if (mainMenuUI == null)
                 mainMenuUI = FindFirstObjectByType<MainMenuUI>();
+
+            // CalibrationManager 확보
+            calibrationManager = FindFirstObjectByType<CalibrationManager>();
+            if (calibrationManager == null)
+            {
+                var calGo = new GameObject("CalibrationManager");
+                calGo.transform.SetParent(transform.root);
+                calibrationManager = calGo.AddComponent<CalibrationManager>();
+            }
 
             BuildUI();
         }
@@ -178,6 +192,12 @@ namespace AIBeat.UI
                         SettingsManager.Instance.BackgroundDim = val;
                 },
                 "%");
+
+            // 캘리브레이션 버튼 (오프셋 슬라이더 아래)
+            CreateCalibrationButton(contentGo.transform);
+
+            // 구분선
+            CreateSeparator(contentGo.transform);
 
             // 초기 값 표시 업데이트
             noteSpeedValueText.text = currentNoteSpeed.ToString("F1");
@@ -366,6 +386,100 @@ namespace AIBeat.UI
         }
 
         /// <summary>
+        /// 캘리브레이션 시작 버튼 + 상태 텍스트
+        /// </summary>
+        private void CreateCalibrationButton(Transform parent)
+        {
+            var rowGo = new GameObject("CalibrationRow");
+            rowGo.transform.SetParent(parent, false);
+
+            var rowLayout = rowGo.AddComponent<LayoutElement>();
+            rowLayout.preferredHeight = 56;
+
+            var hLayout = rowGo.AddComponent<HorizontalLayoutGroup>();
+            hLayout.spacing = 10;
+            hLayout.childAlignment = TextAnchor.MiddleCenter;
+            hLayout.childControlWidth = true;
+            hLayout.childControlHeight = true;
+            hLayout.childForceExpandWidth = true;
+            hLayout.childForceExpandHeight = true;
+
+            // CALIBRATE 버튼
+            CreateButton(rowGo.transform, "CALIBRATE", OnCalibrateClicked);
+
+            // 상태 텍스트
+            var statusGo = new GameObject("CalibrationStatus");
+            statusGo.transform.SetParent(rowGo.transform, false);
+            statusGo.AddComponent<RectTransform>();
+            var statusLayout = statusGo.AddComponent<LayoutElement>();
+            statusLayout.flexibleWidth = 2;
+
+            calibrationStatusText = statusGo.AddComponent<TextMeshProUGUI>();
+            calibrationStatusText.fontSize = 16;
+            calibrationStatusText.color = VALUE_COLOR;
+            calibrationStatusText.alignment = TextAlignmentOptions.MidlineLeft;
+            calibrationStatusText.text = "Tap test to auto-detect offset";
+        }
+
+        private void OnCalibrateClicked()
+        {
+            if (calibrationManager == null || calibrationManager.IsRunning) return;
+
+            // 이벤트 연결
+            calibrationManager.OnStatusChanged -= UpdateCalibrationStatus;
+            calibrationManager.OnStatusChanged += UpdateCalibrationStatus;
+            calibrationManager.OnCalibrationComplete -= OnCalibrationDone;
+            calibrationManager.OnCalibrationComplete += OnCalibrationDone;
+
+            calibrationManager.StartCalibration();
+            if (calibrationStatusText != null)
+                calibrationStatusText.text = "Starting...";
+        }
+
+        private void Update()
+        {
+            // 캘리브레이션 중 탭 입력 감지
+            if (calibrationManager != null && calibrationManager.IsRunning)
+            {
+                bool tapped = Input.GetKeyDown(KeyCode.Space);
+                if (!tapped)
+                {
+                    for (int i = 0; i < Input.touchCount; i++)
+                    {
+                        if (Input.GetTouch(i).phase == TouchPhase.Began)
+                        {
+                            tapped = true;
+                            break;
+                        }
+                    }
+                }
+                if (tapped)
+                    calibrationManager.RegisterTap();
+            }
+        }
+
+        private void UpdateCalibrationStatus(string msg)
+        {
+            if (calibrationStatusText != null)
+                calibrationStatusText.text = msg;
+        }
+
+        private void OnCalibrationDone(float offset)
+        {
+            // 슬라이더에 반영
+            if (judgementOffsetSlider != null)
+            {
+                judgementOffsetSlider.value = offset * 1000f;
+                if (judgementOffsetValueText != null)
+                    judgementOffsetValueText.text = $"{offset * 1000f:F0}ms";
+            }
+
+            // 이벤트 해제
+            calibrationManager.OnStatusChanged -= UpdateCalibrationStatus;
+            calibrationManager.OnCalibrationComplete -= OnCalibrationDone;
+        }
+
+        /// <summary>
         /// 하단 버튼 영역 (기본값 복원 + 닫기)
         /// </summary>
         private void CreateButtons()
@@ -532,6 +646,13 @@ namespace AIBeat.UI
             if (bgmVolumeSlider != null) bgmVolumeSlider.onValueChanged.RemoveAllListeners();
             if (sfxVolumeSlider != null) sfxVolumeSlider.onValueChanged.RemoveAllListeners();
             if (backgroundDimSlider != null) backgroundDimSlider.onValueChanged.RemoveAllListeners();
+
+            // 캘리브레이션 이벤트 정리
+            if (calibrationManager != null)
+            {
+                calibrationManager.OnStatusChanged -= UpdateCalibrationStatus;
+                calibrationManager.OnCalibrationComplete -= OnCalibrationDone;
+            }
         }
     }
 }

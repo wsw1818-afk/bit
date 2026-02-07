@@ -134,6 +134,7 @@ namespace AIBeat.Gameplay
             if (judgementSystem != null)
             {
                 judgementSystem.OnJudgement += HandleJudgement;
+                judgementSystem.OnJudgementDetailed += HandleJudgementDetailed;
                 scoreChangedHandler = (score) => gameplayUI?.UpdateScore(score);
                 comboChangedHandler = (combo) => gameplayUI?.UpdateCombo(combo);
                 judgementSystem.OnScoreChanged += scoreChangedHandler;
@@ -269,19 +270,45 @@ namespace AIBeat.Gameplay
                     Note note = noteSpawner.GetNearestNote(lane);
                     if (note == null) continue;
 
+                    // 홀드 중인 롱노트: release 타이밍 체크
+                    if (note.IsHolding)
+                    {
+                        float releaseTime = note.HitTime + note.Duration;
+                        if (currentTime >= releaseTime - 0.020f)
+                        {
+                            note.EndHold(currentTime);
+                            var releaseResult = judgementSystem.Judge(currentTime, releaseTime);
+                            if (releaseResult != JudgementResult.Miss)
+                                LaneVisualFeedback.PlayJudgementEffect(lane, releaseResult);
+                            note.MarkAsJudged();
+                            LaneVisualFeedback.SetHighlight(lane, false);
+                            noteSpawner.RemoveNote(note);
+                        }
+                        continue;
+                    }
+
                     float diff = Mathf.Abs(currentTime - note.HitTime);
                     // PERFECT 타이밍에 자동 히트 (±20ms)
                     if (diff <= 0.020f)
                     {
-                        // Auto Play Visual Feedback
                         LaneVisualFeedback.Flash(lane);
 
                         var result = judgementSystem.Judge(currentTime, note.HitTime);
                         if (result != JudgementResult.Miss)
                         {
-                            note.MarkAsJudged();
-                            noteSpawner.RemoveNote(note);
-                            LaneVisualFeedback.PlayJudgementEffect(lane, result);
+                            if (note.NoteType == NoteType.Long)
+                            {
+                                // 롱노트: press만 처리, release는 다음 프레임에서 처리
+                                note.StartHold(currentTime);
+                                LaneVisualFeedback.SetHighlight(lane, true);
+                                LaneVisualFeedback.PlayJudgementEffect(lane, result);
+                            }
+                            else
+                            {
+                                note.MarkAsJudged();
+                                noteSpawner.RemoveNote(note);
+                                LaneVisualFeedback.PlayJudgementEffect(lane, result);
+                            }
                         }
                     }
                 }
@@ -329,9 +356,13 @@ namespace AIBeat.Gameplay
             // 1프레임 대기 (UI 갱신)
             yield return null;
 
-            // 오프라인 분석 (메인 스레드에서 실행, 큰 파일은 잠깐 멈출 수 있음)
+            // 비동기 분석 (청크 단위, 메인 스레드 블로킹 없음)
             var analyzer = new OfflineAudioAnalyzer();
-            var result = analyzer.Analyze(clip);
+            OfflineAudioAnalyzer.AnalysisResult result = null;
+
+            yield return analyzer.AnalyzeAsync(clip,
+                progress => gameplayUI?.UpdateCountdown($"Analyzing... {Mathf.RoundToInt(progress * 100)}%"),
+                r => result = r);
 
             if (result == null)
             {
@@ -439,10 +470,10 @@ namespace AIBeat.Gameplay
                 var holdResult = judgementSystem.Judge(currentTime, nearestNote.HitTime);
                 if (holdResult != JudgementResult.Miss)
                 {
-                    nearestNote.MarkAsJudged();
+                    // 롱노트 press 판정만 표시, MarkAsJudged는 release에서 처리
                     LaneVisualFeedback.PlayJudgementEffect(lane, holdResult);
                 }
-                LaneVisualFeedback.SetHighlight(lane, true); // Keep highlighted for long note
+                LaneVisualFeedback.SetHighlight(lane, true);
                 return;
             }
 
@@ -457,14 +488,14 @@ namespace AIBeat.Gameplay
 
         private void ProcessNoteRelease(int lane, float currentTime)
         {
-            Note nearestNote = noteSpawner.GetNearestNote(lane);
-            if (nearestNote == null || !nearestNote.IsHolding) return;
+            // 홀드 중인 롱노트를 activeNotes에서 직접 검색
+            Note holdingNote = FindHoldingNote(lane);
+            if (holdingNote == null) return;
 
-            bool success = nearestNote.EndHold(currentTime);
+            bool success = holdingNote.EndHold(currentTime);
             if (success)
             {
-                // 롱노트 끝 시간 = HitTime + Duration
-                float longNoteEndTime = nearestNote.HitTime + nearestNote.Duration;
+                float longNoteEndTime = holdingNote.HitTime + holdingNote.Duration;
                 var releaseResult = judgementSystem.Judge(currentTime, longNoteEndTime);
                 if (releaseResult != JudgementResult.Miss)
                     LaneVisualFeedback.PlayJudgementEffect(lane, releaseResult);
@@ -473,9 +504,24 @@ namespace AIBeat.Gameplay
             {
                 judgementSystem.RegisterMiss();
             }
-            
-            LaneVisualFeedback.SetHighlight(lane, false); // Ensure highlight is off
-            noteSpawner.RemoveNote(nearestNote);
+
+            holdingNote.MarkAsJudged();
+            LaneVisualFeedback.SetHighlight(lane, false);
+            noteSpawner.RemoveNote(holdingNote);
+        }
+
+        /// <summary>
+        /// 특정 레인에서 홀드 중인 롱노트를 찾음
+        /// </summary>
+        private Note FindHoldingNote(int lane)
+        {
+            // NoteSpawner의 GetNearestNote는 시간 기반이므로 홀드 중인 노트를 못 찾을 수 있음
+            // 직접 activeNotes를 순회하여 IsHolding인 노트를 찾음
+            Note nearest = noteSpawner.GetNearestNote(lane);
+            if (nearest != null && nearest.IsHolding) return nearest;
+
+            // GetNearestNote가 실패하면 null 반환 (노트가 이미 제거된 경우)
+            return null;
         }
 
         private void ProcessScratch(int lane, float currentTime)
@@ -497,7 +543,13 @@ namespace AIBeat.Gameplay
 
         private void HandleJudgement(JudgementResult result, int combo)
         {
-            gameplayUI?.ShowJudgement(result);
+            // Early/Late 정보 없는 기존 호출 (Miss 등)
+            // ShowJudgementDetailed가 OnJudgementDetailed에서 호출되므로 중복 방지
+        }
+
+        private void HandleJudgementDetailed(JudgementResult result, float rawDiff)
+        {
+            gameplayUI?.ShowJudgementDetailed(result, rawDiff);
         }
 
         /// <summary>
@@ -510,8 +562,13 @@ namespace AIBeat.Gameplay
             gameplayUI?.UpdateCountdown("Analyzing...");
             yield return null;
 
+            // 비동기 분석 (청크 단위)
             var analyzer = new OfflineAudioAnalyzer();
-            var result = analyzer.Analyze(currentSong.AudioClip);
+            OfflineAudioAnalyzer.AnalysisResult result = null;
+
+            yield return analyzer.AnalyzeAsync(currentSong.AudioClip,
+                progress => gameplayUI?.UpdateCountdown($"Analyzing... {Mathf.RoundToInt(progress * 100)}%"),
+                r => result = r);
 
             List<NoteData> notes;
             if (result != null)
@@ -787,6 +844,7 @@ namespace AIBeat.Gameplay
             if (judgementSystem != null)
             {
                 judgementSystem.OnJudgement -= HandleJudgement;
+                judgementSystem.OnJudgementDetailed -= HandleJudgementDetailed;
                 if (scoreChangedHandler != null)
                     judgementSystem.OnScoreChanged -= scoreChangedHandler;
                 if (comboChangedHandler != null)

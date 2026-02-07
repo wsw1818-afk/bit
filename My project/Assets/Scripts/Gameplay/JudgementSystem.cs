@@ -49,6 +49,7 @@ namespace AIBeat.Gameplay
         public int MissCount => missCount;
 
         public event Action<JudgementResult, int> OnJudgement; // (결과, 콤보)
+        public event Action<JudgementResult, float> OnJudgementDetailed; // (결과, rawDiff: 양수=late, 음수=early)
         public event Action<int> OnScoreChanged;
         public event Action<int> OnComboChanged;
 
@@ -109,7 +110,8 @@ namespace AIBeat.Gameplay
         public JudgementResult Judge(float inputTime, float noteTime)
         {
             float adjustedNoteTime = noteTime + userOffset;
-            float diff = Mathf.Abs(inputTime - adjustedNoteTime);
+            float rawDiff = inputTime - adjustedNoteTime; // 양수=late, 음수=early
+            float diff = Mathf.Abs(rawDiff);
 
             JudgementResult result;
 
@@ -156,6 +158,7 @@ namespace AIBeat.Gameplay
 #endif
 
             OnJudgement?.Invoke(result, currentCombo);
+            OnJudgementDetailed?.Invoke(result, rawDiff);
             OnScoreChanged?.Invoke(currentScore);
 
             // 히트사운드 재생
@@ -180,6 +183,7 @@ namespace AIBeat.Gameplay
 #endif
 
             OnJudgement?.Invoke(JudgementResult.Miss, 0);
+            OnJudgementDetailed?.Invoke(JudgementResult.Miss, 0f);
         }
 
         private void AddCombo()

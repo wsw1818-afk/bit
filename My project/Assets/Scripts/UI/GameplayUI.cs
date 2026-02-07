@@ -58,6 +58,7 @@ namespace AIBeat.UI
         [SerializeField] private Color missColor = Color.gray;
 
         private Coroutine judgementCoroutine;
+        private TMP_Text earlyLateText; // Early/Late 피드백 표시
 
         // 상단 판정 통계 HUD (동적 생성)
         private GameObject statsPanel;
@@ -75,6 +76,7 @@ namespace AIBeat.UI
         {
             AutoSetupReferences();
             CreateStatsHUD();
+            CreateEarlyLateText();
             CreatePauseButton();
             RepositionHUD();
 
@@ -287,6 +289,28 @@ namespace AIBeat.UI
             pauseButton = pauseBtnGo.AddComponent<Button>();
             pauseButton.targetGraphic = btnImage;
             pauseButton.onClick.AddListener(() => gameplayController?.PauseGame());
+        }
+
+        /// <summary>
+        /// Early/Late 피드백 텍스트 동적 생성 (판정 텍스트 아래)
+        /// </summary>
+        private void CreateEarlyLateText()
+        {
+            var go = new GameObject("EarlyLateText");
+            go.transform.SetParent(transform, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, -80f); // 판정 텍스트 아래
+            rect.sizeDelta = new Vector2(300f, 40f);
+
+            earlyLateText = go.AddComponent<TextMeshProUGUI>();
+            earlyLateText.fontSize = 22;
+            earlyLateText.alignment = TextAlignmentOptions.Center;
+            earlyLateText.fontStyle = FontStyles.Bold;
+            earlyLateText.text = "";
+            go.SetActive(false);
         }
 
         /// <summary>
@@ -514,6 +538,15 @@ namespace AIBeat.UI
 
         public void ShowJudgement(JudgementResult result)
         {
+            ShowJudgementDetailed(result, 0f);
+        }
+
+        /// <summary>
+        /// Early/Late 피드백 포함 판정 표시
+        /// rawDiff: 양수=LATE, 음수=EARLY
+        /// </summary>
+        public void ShowJudgementDetailed(JudgementResult result, float rawDiff)
+        {
             if (judgementText == null) return;
 
             // 기존 코루틴 중지
@@ -533,6 +566,24 @@ namespace AIBeat.UI
 
             judgementText.text = text;
             judgementText.color = color;
+
+            // Early/Late 피드백 (Perfect 이외 + Miss 이외에서 표시)
+            if (earlyLateText != null)
+            {
+                if (result != JudgementResult.Perfect && result != JudgementResult.Miss && Mathf.Abs(rawDiff) > 0.01f)
+                {
+                    earlyLateText.gameObject.SetActive(true);
+                    bool isLate = rawDiff > 0;
+                    earlyLateText.text = isLate ? "LATE" : "EARLY";
+                    earlyLateText.color = isLate
+                        ? new Color(1f, 0.5f, 0.2f, 0.8f)  // 주황 (느림)
+                        : new Color(0.3f, 0.7f, 1f, 0.8f);  // 하늘 (빠름)
+                }
+                else
+                {
+                    earlyLateText.gameObject.SetActive(false);
+                }
+            }
 
             // 판정별 스케일 차별화 팝업
             float startScale = result switch
@@ -556,6 +607,7 @@ namespace AIBeat.UI
         {
             yield return new WaitForSecondsRealtime(judgementDisplayTime);
             judgementText.gameObject.SetActive(false);
+            if (earlyLateText != null) earlyLateText.gameObject.SetActive(false);
         }
 
         public void ShowCountdown(bool show)
