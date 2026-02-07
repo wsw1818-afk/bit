@@ -124,7 +124,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 버튼 최소 높이/폰트 크기 보장 (모바일 터치 최적화)
+        /// 버튼 스타일 개선 (모바일 터치 최적화 + 네온 효과)
         /// </summary>
         private void EnsureButtonMobileSize()
         {
@@ -132,14 +132,45 @@ namespace AIBeat.UI
             foreach (var btn in buttons)
             {
                 if (btn == null) continue;
+
+                // 크기 보장 (최소 60px 높이)
                 var rect = btn.GetComponent<RectTransform>();
                 if (rect != null)
                 {
                     var size = rect.sizeDelta;
-                    if (size.y < 56f) { size.y = 56f; rect.sizeDelta = size; }
+                    if (size.y < 60f) { size.y = 60f; rect.sizeDelta = size; }
                 }
+
+                // 배경 이미지 색상
+                var img = btn.GetComponent<Image>();
+                if (img != null)
+                {
+                    img.color = new Color(0.05f, 0.05f, 0.15f, 0.95f);
+                }
+
+                // 네온 테두리 추가/강화
+                var outline = btn.GetComponent<Outline>();
+                if (outline == null)
+                    outline = btn.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0.9f, 1f, 0.6f);
+                outline.effectDistance = new Vector2(2, -2);
+
+                // 버튼 색상 전환 설정
+                var colors = btn.colors;
+                colors.normalColor = new Color(0.05f, 0.05f, 0.15f, 0.95f);
+                colors.highlightedColor = new Color(0.08f, 0.08f, 0.2f, 0.95f);
+                colors.pressedColor = new Color(0f, 0.4f, 0.6f, 1f);
+                colors.disabledColor = new Color(0.2f, 0.2f, 0.3f, 0.5f);
+                btn.colors = colors;
+
+                // 텍스트 스타일
                 var tmp = btn.GetComponentInChildren<TMP_Text>();
-                if (tmp != null && tmp.fontSize < 22) tmp.fontSize = 22;
+                if (tmp != null)
+                {
+                    if (tmp.fontSize < 24) tmp.fontSize = 24;  // 22→24
+                    tmp.fontStyle = FontStyles.Bold;
+                    tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+                }
             }
         }
 
@@ -173,6 +204,20 @@ namespace AIBeat.UI
         private void AnimateTitle()
         {
             if (titleText == null) return;
+
+            // 타이틀 스타일 강화
+            titleText.fontSize = Mathf.Max(titleText.fontSize, 48);
+            titleText.fontStyle = FontStyles.Bold;
+            titleText.color = new Color(0f, 0.85f, 1f, 1f);
+
+            // 네온 효과
+            var outline = titleText.GetComponent<Outline>();
+            if (outline == null)
+                outline = titleText.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0.6f, 1f, 0.8f);
+            outline.effectDistance = new Vector2(3, -3);
+
+            // 애니메이션
             titleText.transform.localScale = Vector3.zero;
             UIAnimator.ScaleTo(this, titleText.transform, Vector3.one, 0.5f);
         }
