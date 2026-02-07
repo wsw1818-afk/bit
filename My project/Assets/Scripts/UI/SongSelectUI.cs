@@ -193,8 +193,8 @@ namespace AIBeat.UI
                 var btnTmp = backButton.GetComponentInChildren<TMP_Text>();
                 if (btnTmp != null)
                 {
-                    btnTmp.text = "\u2190";
-                    btnTmp.fontSize = 60;
+                    btnTmp.text = "\u2190 뒤로";
+                    btnTmp.fontSize = 48;
                     btnTmp.fontStyle = FontStyles.Bold;
                     btnTmp.color = UIColorPalette.NEON_MAGENTA;
                     btnTmp.alignment = TextAlignmentOptions.MidlineLeft;
