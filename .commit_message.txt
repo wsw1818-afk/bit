@@ -1,1 +1,1 @@
-🐛 SongSelect 곡카드 안 보이던 버그 수정: childForceExpandHeight→false로 CountBar가 공간 절반 차지하던 문제 해결
+🎨 SongSelect UI 텍스트 크기 대폭 증가: 타이틀 24→40, 곡명 24→36, BPM 16→24, 카운트 18→28, 백버튼 24→36 등 전체 가독성 개선

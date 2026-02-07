@@ -104,7 +104,7 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(1, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 56);
+            rect.sizeDelta = new Vector2(0, 80);
 
             var bg = titleBar.AddComponent<Image>();
             bg.color = new Color(0.02f, 0.02f, 0.08f, 1f);
@@ -120,7 +120,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "내 라이브러리";
-            tmp.fontSize = 24;
+            tmp.fontSize = 40;
             tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
