@@ -1,1 +1,1 @@
-📐 SongSelect 씬 레이아웃 전면 수정: 레거시 오브젝트 삭제, CanvasScaler→ScaleWithScreenSize, 곡 목록 전체 화면 채움
+🔧 SongSelect UI 렌더링 순서 수정: BackgroundPanel 삭제, EnsureSiblingOrder 추가, BackButton 한국어화

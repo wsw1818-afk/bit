@@ -21,6 +21,7 @@ namespace AIBeat.UI
         {
             AutoSetupReferences();
             Initialize();
+            EnsureSiblingOrder();
         }
 
         private void AutoSetupReferences()
@@ -71,6 +72,24 @@ namespace AIBeat.UI
         }
 
         /// <summary>
+        /// 렌더링 순서 보장: Background(0) → LibraryPanel(1) → TitleBar(2) → BackButton(3)
+        /// 숫자가 클수록 위에 그려짐
+        /// </summary>
+        private void EnsureSiblingOrder()
+        {
+            var bg = transform.Find("BackgroundImage");
+            if (bg != null) bg.SetAsFirstSibling(); // index 0 (맨 뒤)
+
+            // LibraryPanel은 SongLibraryUI가 생성 → index 1
+            // TitleBar, BackButton은 그 위에 렌더링
+            var titleBar = transform.Find("TitleBar");
+            if (titleBar != null) titleBar.SetAsLastSibling();
+
+            var backBtn = transform.Find("BackButton");
+            if (backBtn != null) backBtn.SetAsLastSibling();
+        }
+
+        /// <summary>
         /// 상단 타이틀 바 생성
         /// </summary>
         private void CreateTitleBar()
@@ -79,7 +98,6 @@ namespace AIBeat.UI
 
             var titleBar = new GameObject("TitleBar");
             titleBar.transform.SetParent(transform, false);
-            titleBar.transform.SetAsFirstSibling();
 
             var rect = titleBar.AddComponent<RectTransform>();
             rect.anchorMin = new Vector2(0, 1);
