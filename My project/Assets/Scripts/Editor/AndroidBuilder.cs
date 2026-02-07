@@ -22,15 +22,7 @@ namespace AIBeat.Editor
         [MenuItem("Tools/A.I. BEAT/Build Android APK")]
         public static void BuildAndroidAPK()
         {
-            // 빌드 시작 표시 파일 작성
             File.WriteAllText(BuildLogPath, "BUILDING...\n");
-
-            // delayCall로 빌드 실행 (MCP 응답 후 실행되도록)
-            EditorApplication.delayCall += ExecuteBuild;
-        }
-
-        private static void ExecuteBuild()
-        {
             // Android 모듈 확인
             if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
             {
