@@ -1,1 +1,1 @@
-🐛 SongSelectUI BPM 슬라이더 핸들 높이 수정: 0→30px로 변경하여 화면 전체로 늘어나는 버그 해결
+🐛 SongSelectUI BPM 슬라이더 오버레이 수정: Handle Slide Area anchor 설정으로 화면 전체 늘어남 방지

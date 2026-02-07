@@ -422,10 +422,11 @@ namespace AIBeat.UI
             var handleArea = new GameObject("Handle Slide Area");
             handleArea.transform.SetParent(go.transform, false);
             var haRect = handleArea.AddComponent<RectTransform>();
-            haRect.anchorMin = Vector2.zero;
-            haRect.anchorMax = Vector2.one;
-            haRect.offsetMin = new Vector2(10, 0);
-            haRect.offsetMax = new Vector2(-10, 0);
+            // 슬라이더 높이(30px)에 맞게 anchor 설정 (화면 전체로 늘어나는 것 방지)
+            haRect.anchorMin = new Vector2(0, 0.5f);
+            haRect.anchorMax = new Vector2(1, 0.5f);
+            haRect.sizeDelta = new Vector2(-20, 30);  // 좌우 여백 10px, 높이 30px
+            haRect.anchoredPosition = Vector2.zero;
 
             var handle = new GameObject("Handle");
             handle.transform.SetParent(handleArea.transform, false);
