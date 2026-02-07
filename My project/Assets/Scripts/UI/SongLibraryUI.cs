@@ -69,6 +69,10 @@ namespace AIBeat.UI
             rootRect.offsetMin = new Vector2(0, 0);
             rootRect.offsetMax = new Vector2(0, -56); // 타이틀 바(56px) 아래부터
 
+            // 반투명 배경 (배경 이미지 위에서 텍스트 가독성 확보)
+            var rootBg = rootPanel.AddComponent<Image>();
+            rootBg.color = new Color(0.02f, 0.02f, 0.08f, 0.85f);
+
             // 세로 레이아웃 — ScrollView가 남은 공간을 전부 채우도록
             var rootLayout = rootPanel.AddComponent<VerticalLayoutGroup>();
             rootLayout.padding = new RectOffset(15, 15, 10, 10);
