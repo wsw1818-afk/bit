@@ -483,6 +483,9 @@ namespace AIBeat.UI
             if (bpmButtons.Count >= 4)
                 OnBpmButtonClicked(140, bpmButtons[3], bpmButtons);
 
+            // BPM 버튼에 한국어 폰트 강제 적용 (텍스트 가시성 보장)
+            KoreanFontManager.ApplyFontToAll(container.gameObject);
+
             return slider;
         }
 

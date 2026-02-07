@@ -1,1 +1,1 @@
-🎨 SongSelectUI BPM 버튼 텍스트 가시성 개선: 폰트 크기 22, Bold, 밝은 시안 색상
+🔧 SongSelectUI BPM 버튼 폰트 미적용 수정: KoreanFontManager 강제 적용 추가
