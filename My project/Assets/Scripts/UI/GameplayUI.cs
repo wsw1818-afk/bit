@@ -94,6 +94,9 @@ namespace AIBeat.UI
 
             // Combo 초기 텍스트 비우기 (콤보 0일때 표시 안함)
             if (comboText != null) comboText.text = "";
+
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(gameObject);
         }
 
         /// <summary>

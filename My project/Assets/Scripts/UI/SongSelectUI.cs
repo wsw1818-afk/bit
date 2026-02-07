@@ -590,6 +590,9 @@ namespace AIBeat.UI
 
             UpdatePreview();
 
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(gameObject);
+
             // Library 탭 열기 플래그 확인
             if (GameManager.Instance != null && GameManager.Instance.OpenLibraryOnSongSelect)
             {

@@ -113,6 +113,9 @@ namespace AIBeat.UI
             // 모바일 버튼 최소 크기 보장
             EnsureButtonMobileSize();
 
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(gameObject);
+
             // 버튼 텍스트 한국어화
             SetButtonTextsKorean();
 

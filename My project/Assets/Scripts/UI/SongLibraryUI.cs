@@ -56,6 +56,10 @@ namespace AIBeat.UI
             if (rootPanel != null) return; // 이미 초기화됨
 
             CreateLibraryUI(parentPanel);
+
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(rootPanel);
+
             RefreshSongList();
 
             // 라이브러리 변경 이벤트 구독
@@ -325,6 +329,9 @@ namespace AIBeat.UI
             {
                 CreateSongCard(songs[i], i);
             }
+
+            // 한국어 폰트 적용 (동적 생성된 카드에도 적용)
+            KoreanFontManager.ApplyFontToAll(rootPanel);
         }
 
         /// <summary>

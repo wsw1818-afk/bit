@@ -100,6 +100,9 @@ namespace AIBeat.UI
             // 건너뛰기 버튼은 약간 어두운 스타일
             var skipBg = skipButton.GetComponent<Image>();
             if (skipBg != null) skipBg.color = new Color(0.1f, 0.1f, 0.15f, 0.6f);
+
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(gameObject);
         }
 
         /// <summary>

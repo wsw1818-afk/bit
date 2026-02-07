@@ -208,6 +208,9 @@ namespace AIBeat.UI
 
             // 하단 버튼 영역
             CreateButtons();
+
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(gameObject);
         }
 
         /// <summary>

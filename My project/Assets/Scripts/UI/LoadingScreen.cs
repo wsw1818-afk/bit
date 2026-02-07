@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
+using AIBeat.Core;
 
 namespace AIBeat.UI
 {
@@ -161,6 +162,9 @@ namespace AIBeat.UI
             tipText.color = TEXT_DIM;
             tipText.alignment = TextAlignmentOptions.Center;
             tipText.fontStyle = FontStyles.Italic;
+
+            // 한국어 폰트 적용 (□□□ 방지)
+            KoreanFontManager.ApplyFontToAll(rootPanel);
         }
 
         /// <summary>
