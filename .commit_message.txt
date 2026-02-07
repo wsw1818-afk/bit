@@ -1,1 +1,1 @@
-🔧 한국어 폰트 깨짐 수정(빈 SDF→TTF 동적 생성 폴백) + 터치 문제 해결(raycastTarget false, ScrollRect Viewport Image 추가)
+🔧 한국어 폰트 깨짐 수정 + 터치 문제 해결 + 노트 스폰 위치 씬 인스턴스 반영(lookAhead=3, spawnDistance=15)

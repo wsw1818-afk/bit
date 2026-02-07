@@ -6359,8 +6359,8 @@ MonoBehaviour:
   - {fileID: 1431452785}
   judgementLine: {fileID: 879258073}
   noteSpeed: 5
-  spawnDistance: 10
-  lookAhead: 2
+  spawnDistance: 15
+  lookAhead: 3
   poolSize: 100
   showDebugLogs: 1
 --- !u!4 &1783435450
