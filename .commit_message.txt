@@ -1,1 +1,1 @@
-🐛 SongSelectUI 레이아웃 수정: 탭 바(56px) 높이 고려하여 모든 UI 요소 위치 조정, 배경 불투명도 증가로 겹침 방지
+🐛 SongSelectUI 탭 투명도 수정 + 중복 생성 방지: TAB_INACTIVE alpha 0.6→0.9, CreateTabSystem 중복 방지 로직 추가

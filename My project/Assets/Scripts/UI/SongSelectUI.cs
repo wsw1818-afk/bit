@@ -69,8 +69,8 @@ namespace AIBeat.UI
         private SongLibraryUI songLibraryUI;
 
         // 탭 색상
-        private static readonly Color TAB_ACTIVE = new Color(0f, 0.4f, 0.6f, 0.9f);
-        private static readonly Color TAB_INACTIVE = new Color(0.1f, 0.1f, 0.25f, 0.6f);
+        private static readonly Color TAB_ACTIVE = new Color(0f, 0.4f, 0.6f, 1f);  // 완전 불투명
+        private static readonly Color TAB_INACTIVE = new Color(0.1f, 0.1f, 0.25f, 0.9f);  // 거의 불투명
 
         private void Start()
         {
@@ -607,6 +607,13 @@ namespace AIBeat.UI
         /// </summary>
         private void CreateTabSystem()
         {
+            // 중복 생성 방지
+            if (transform.Find("TabBar") != null)
+            {
+                Debug.Log("[SongSelectUI] TabBar already exists, skipping creation");
+                return;
+            }
+
             // 탭 바 컨테이너 (Canvas의 최상위에 배치)
             var tabBar = new GameObject("TabBar");
             tabBar.transform.SetParent(transform, false);
