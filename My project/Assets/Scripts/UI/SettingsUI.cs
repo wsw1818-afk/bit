@@ -119,7 +119,7 @@ namespace AIBeat.UI
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // 타이틀
-            CreateTitle(contentGo.transform, "SETTINGS");
+            CreateTitle(contentGo.transform, "설정");
 
             // 구분선
             CreateSeparator(contentGo.transform);
@@ -133,7 +133,7 @@ namespace AIBeat.UI
             float currentDim = settings != null ? settings.BackgroundDim : 0.5f;
 
             // 노트 속도 슬라이더 (1.0 ~ 10.0, 0.5 단위)
-            noteSpeedSlider = CreateSliderRow(contentGo.transform, "NOTE SPEED",
+            noteSpeedSlider = CreateSliderRow(contentGo.transform, "노트 속도",
                 1.0f, 10.0f, currentNoteSpeed, out noteSpeedValueText,
                 (val) =>
                 {
@@ -148,7 +148,7 @@ namespace AIBeat.UI
 
             // 판정 오프셋 슬라이더 (-100ms ~ +100ms)
             // 슬라이더는 -100 ~ 100 (정수ms), 저장은 초 단위
-            judgementOffsetSlider = CreateSliderRow(contentGo.transform, "JUDGEMENT OFFSET",
+            judgementOffsetSlider = CreateSliderRow(contentGo.transform, "판정 오프셋",
                 -100f, 100f, currentOffset * 1000f, out judgementOffsetValueText,
                 (val) =>
                 {
@@ -161,7 +161,7 @@ namespace AIBeat.UI
                 "ms", true);
 
             // BGM 볼륨 슬라이더
-            bgmVolumeSlider = CreateSliderRow(contentGo.transform, "BGM VOLUME",
+            bgmVolumeSlider = CreateSliderRow(contentGo.transform, "배경음악 볼륨",
                 0f, 1f, currentBGM, out bgmVolumeValueText,
                 (val) =>
                 {
@@ -172,7 +172,7 @@ namespace AIBeat.UI
                 "%");
 
             // SFX 볼륨 슬라이더
-            sfxVolumeSlider = CreateSliderRow(contentGo.transform, "SFX VOLUME",
+            sfxVolumeSlider = CreateSliderRow(contentGo.transform, "효과음 볼륨",
                 0f, 1f, currentSFX, out sfxVolumeValueText,
                 (val) =>
                 {
@@ -183,7 +183,7 @@ namespace AIBeat.UI
                 "%");
 
             // 배경 밝기 슬라이더
-            backgroundDimSlider = CreateSliderRow(contentGo.transform, "BACKGROUND DIM",
+            backgroundDimSlider = CreateSliderRow(contentGo.transform, "배경 어둡게",
                 0f, 1f, currentDim, out backgroundDimValueText,
                 (val) =>
                 {
@@ -260,7 +260,7 @@ namespace AIBeat.UI
 
             var rowRect = rowGo.AddComponent<RectTransform>();
             var rowLayout = rowGo.AddComponent<LayoutElement>();
-            rowLayout.preferredHeight = 60;
+            rowLayout.preferredHeight = 70; // 60→70 (전체 행 높이 확대)
 
             var vertLayout = rowGo.AddComponent<VerticalLayoutGroup>();
             vertLayout.padding = new RectOffset(5, 5, 2, 2);
@@ -316,7 +316,7 @@ namespace AIBeat.UI
 
             var sliderRect = sliderGo.AddComponent<RectTransform>();
             var sliderLayout = sliderGo.AddComponent<LayoutElement>();
-            sliderLayout.preferredHeight = 36;
+            sliderLayout.preferredHeight = 48; // 36→48 (슬라이더 높이 확대)
 
             // 슬라이더 배경
             var bgGo = new GameObject("Background");
@@ -360,7 +360,7 @@ namespace AIBeat.UI
             var handleGo = new GameObject("Handle");
             handleGo.transform.SetParent(handleAreaGo.transform, false);
             var handleRect = handleGo.AddComponent<RectTransform>();
-            handleRect.sizeDelta = new Vector2(32, 32);
+            handleRect.sizeDelta = new Vector2(44, 44); // 32→44 (터치 타겟 확대)
             var handleImg = handleGo.AddComponent<Image>();
             handleImg.color = SLIDER_HANDLE_COLOR;
 
@@ -405,7 +405,7 @@ namespace AIBeat.UI
             hLayout.childForceExpandHeight = true;
 
             // CALIBRATE 버튼
-            CreateButton(rowGo.transform, "CALIBRATE", OnCalibrateClicked);
+            CreateButton(rowGo.transform, "자동 조정", OnCalibrateClicked);
 
             // 상태 텍스트
             var statusGo = new GameObject("CalibrationStatus");
@@ -418,7 +418,7 @@ namespace AIBeat.UI
             calibrationStatusText.fontSize = 16;
             calibrationStatusText.color = VALUE_COLOR;
             calibrationStatusText.alignment = TextAlignmentOptions.MidlineLeft;
-            calibrationStatusText.text = "Tap test to auto-detect offset";
+            calibrationStatusText.text = "탭 테스트로 오프셋 자동 감지";
         }
 
         private void OnCalibrateClicked()
@@ -433,7 +433,7 @@ namespace AIBeat.UI
 
             calibrationManager.StartCalibration();
             if (calibrationStatusText != null)
-                calibrationStatusText.text = "Starting...";
+                calibrationStatusText.text = "시작 중...";
         }
 
         private void Update()
@@ -503,10 +503,10 @@ namespace AIBeat.UI
             hLayout.childForceExpandHeight = true;
 
             // 기본값 복원 버튼
-            CreateButton(buttonArea.transform, "RESET", OnResetClicked);
+            CreateButton(buttonArea.transform, "초기화", OnResetClicked);
 
             // 닫기 버튼
-            CreateButton(buttonArea.transform, "CLOSE", OnCloseClicked);
+            CreateButton(buttonArea.transform, "닫기", OnCloseClicked);
         }
 
         /// <summary>

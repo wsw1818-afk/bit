@@ -113,6 +113,9 @@ namespace AIBeat.UI
             // 모바일 버튼 최소 크기 보장
             EnsureButtonMobileSize();
 
+            // 버튼 텍스트 한국어화
+            SetButtonTextsKorean();
+
             // 타이틀 애니메이션
             AnimateTitle();
         }
@@ -134,6 +137,33 @@ namespace AIBeat.UI
                 }
                 var tmp = btn.GetComponentInChildren<TMP_Text>();
                 if (tmp != null && tmp.fontSize < 22) tmp.fontSize = 22;
+            }
+        }
+
+        /// <summary>
+        /// 버튼 텍스트 한국어화
+        /// </summary>
+        private void SetButtonTextsKorean()
+        {
+            if (playButton != null)
+            {
+                var tmp = playButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (tmp != null) tmp.text = "플레이";
+            }
+            if (libraryButton != null)
+            {
+                var tmp = libraryButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (tmp != null) tmp.text = "라이브러리";
+            }
+            if (settingsButton != null)
+            {
+                var tmp = settingsButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (tmp != null) tmp.text = "설정";
+            }
+            if (exitButton != null)
+            {
+                var tmp = exitButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (tmp != null) tmp.text = "종료";
             }
         }
 
