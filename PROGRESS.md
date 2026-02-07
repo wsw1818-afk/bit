@@ -1,57 +1,60 @@
 # PROGRESS.md (현재 진행: 얇게 유지)
 
 ## Dashboard
-- Progress: 100% (세션 33 - 전체 게임 플로우 테스트 + UI 참조 수정)
+- Progress: 100% (세션 34 - 전체 플로우 종합 재검증 통과)
 - Risk: 낮음
 
 ## Today Goal
-- MainMenu → SongSelect → Gameplay 전체 플로우 테스트
+- 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 33)
+## What changed (세션 34)
 
-### 치명적 버그 발견 및 수정: UI 참조 전부 null
-- **원인**: MainMenu.unity, SongSelect.unity의 SerializeField 참조가 모두 `{fileID: 0}` (null)
-- **영향**: 게임 시작 화면 버튼 동작 불가, 곡 선택 화면 UI 전부 미표시
+### 전체 플로우 종합 재검증 (3개 씬 모두 통과)
 
-### MainMenuUI 수정
-- `AutoSetupReferences()` 추가: `transform.Find()`로 PlayButton, LibraryButton, SettingsButton, ExitButton, TitleText 자동 탐색
-- SettingsPanel 동적 생성 (SettingsUI 컴포넌트 자동 연결)
-- Play 모드 검증: 모든 버튼 참조 정상 연결 확인
+| 씬 | Play 모드 | 에러 | 경고 | UI 요소 검증 |
+|----|-----------|------|------|-------------|
+| MainMenu | 정상 | 0 | 0 | PlayButton("PLAY"), LibraryButton("LIBRARY"), SettingsButton("SETTINGS"), ExitButton("EXIT"), TutorialUI 자동시작 |
+| SongSelect | 정상 | 0 | 0 | GenerateButton("GENERATE"), BackButton("BACK"), GenreContainer(8개), MoodContainer(8개), BpmSlider(80-180, val=140), LoadingPanel(대기) |
+| Gameplay | 정상 | 0 | 1 (중복노트 필터링) | AutoPlay Perfect 연속 (combo 22+), Tap/Scratch/Long 노트 모두 스폰, 점수 23,265+ |
 
-### SongSelectUI 수정 (대규모)
-- `AutoSetupReferences()` 추가: 모든 UI 요소를 동적 생성
-  - GenreContainer/MoodContainer: 가로 스크롤 컨테이너 (ScrollRect + Mask + HorizontalLayoutGroup)
-  - BpmSlider: Fill Area + Handle 포함 완전한 슬라이더
-  - GenerateButton, BackButton, EnergyText, PreviewTexts
-  - LoadingPanel: 반투명 배경 + LoadingText + ProgressSlider
-  - OptionButtonTemplate: 프리팹 대체 동적 생성
-  - 섹션 라벨: GENRE, MOOD, BPM
-- Play 모드 검증: 장르 8개 + 분위기 8개 버튼 정상 생성, 모든 참조 연결 확인
-
-### 3개 씬 Play 모드 테스트 결과
-| 씬 | 에러 | 경고 | 상태 |
-|----|------|------|------|
-| MainMenu | 0 | 0 | ✅ 버튼/패널 정상 |
-| SongSelect | 0 | 0 | ✅ 탭/버튼/슬라이더 정상 |
-| Gameplay | 0 | 1 (중복노트 필터링) | ✅ AutoPlay Perfect 연속 |
+### 코드 레벨 검증
+- **씬 전환 플로우**: MainMenu→SongSelect→Gameplay→MainMenu 순환 확인
+  - Play → `LoadScene("SongSelect")`
+  - Generate → `StartGame(songData)` → `LoadScene("Gameplay")`
+  - Quit → `ReturnToMenu()` → `LoadScene("MainMenu")`
+  - Retry → `SceneManager.LoadScene("Gameplay")` (씬 재로드)
+- **결과 화면**: Score/Combo/Accuracy/Rank + PERFECT~MISS 5단계 카운트 + NEW RECORD
+- **일시정지**: Resume/Restart/Quit 3버튼
+- **설정**: 5개 슬라이더 + CALIBRATE + RESET/CLOSE
 
 ## Commands & Results
 - recompile_scripts → **0 에러, 0 경고**
 - run_tests (EditMode) → **49/49 통과**, 0 실패
-- MainMenu Play Mode → **에러 0, 모든 참조 연결**
-- SongSelect Play Mode → **에러 0, 16개 버튼 생성 확인**
-- Gameplay Play Mode → **에러 0, AutoPlay Perfect 진행**
-- get_console_logs(error) → **0개** (모든 씬)
+- MainMenu Play Mode → **에러 0**, 4개 버튼 + TutorialUI 정상
+- SongSelect Play Mode → **에러 0**, 16개 옵션버튼 + 슬라이더 정상
+- Gameplay Play Mode → **에러 0**, AutoPlay Perfect 연속
+- get_console_logs(error) → **0개** (모든 씬, MCP WebSocket 에러 제외)
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)
 - 롱노트 hold 비주얼 피드백 미확인 (실제 화면 확인 필요)
+- SettingsPanel은 SettingsButton 클릭 전까지 생성되지 않음 (정상 동작이나 실제 클릭 테스트는 미수행)
+
+## 미구현 기능 목록
+1. **AI API 연동** — ISongGenerator 인터페이스만 존재, 실제 API 미연결 (FakeSongGenerator 사용 중)
+2. **실제 오디오 재생** — AudioManager에 더미 타이머 사용 (MP3 스트리밍 미구현)
+3. **캘리브레이션** — CalibrationManager 코드 존재하나 실제 탭 테스트 미수행
+4. **Android 빌드** — 빌드 파이프라인 미설정
+5. **터치 입력** — InputHandler에 터치 코드 존재, 실기기 테스트 미수행
+6. **곡 라이브러리** — SongLibrary에 0곡 (AI 생성 곡 저장/관리 미구현)
+7. **에너지 시스템** — UI 존재, 실제 차감/충전 로직 미확인
 
 ## Next
-1) 캘리브레이션 탭 테스트 → 오프셋 자동 측정 확인
-2) 실기기(스마트폰) 테스트: 터치 2존 + 스크래치 가장자리존
-3) Android 빌드 파이프라인 설정
-4) AI API 연동 (ISongGenerator → 실제 API)
+1) 2키+스크래치 레인 구조 변경 (계획 파일 존재)
+2) AI API 연동 (ISongGenerator → 실제 API)
+3) 실제 오디오 재생 (MP3 스트리밍)
+4) Android 빌드 파이프라인 설정
+5) 실기기 테스트
 
 ---
 ## Archive Rule (요약)
