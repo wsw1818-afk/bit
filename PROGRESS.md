@@ -7,14 +7,12 @@
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
 
-## What changed (세션 36)
+## What changed (세션 37)
 
-### 롱노트 홀드 보너스 점수 시스템 추가
-- **JudgementSystem**: `bonusScore` 필드, `AddBonusScore()`, `OnBonusScore` 이벤트, `TotalScore` 프로퍼티
-- **GameplayController**: `HoldBonusTickLoop` 코루틴 — 홀드 중 0.1초마다 +50 BONUS 누적
-- **GameplayUI**: 게임 중 "BONUS +N" 골드색 팝업 표시 (좌상단 콤보 아래)
-- **GameResult**: `BaseScore` + `BonusScore` 분리, 결과 화면에 "(BONUS +N)" 별도 표시
-- **AutoPlay 판정 다양화**: Perfect 55% / Great 25% / Good 15% / Bad 5% 분포
+### 음악/DJ 테마 디자인 개선
+- **LaneVisualFeedback**: 레인 색상 → 바이올렛(스크래치)+네온블루/시안(키), 판정선 블루-시안 음파 글로우, 비트 반응 색상 시프트, 판정 이펙트(골드/시안/민트/핑크), 스크래치존 "♬ DJ" 턴테이블 라벨, 키라벨 음표(♪♫)
+- **GameplayUI**: DJ 콘솔 스코어 패널(블루-퍼플 테두리), 이퀄라이저 콤보 색상(민트→시안→골드→핫핑크), 판정 텍스트 "♫ PERFECT!", 일시정지 ⏸ 아이콘, 결과 화면 DJ 부스 배경, 랭크 컬러(골드/시안/민트/라벤더)
+- **NoteSpawner**: 노트 색상 → 네온 블루(탭), 민트 그린(롱), 바이올렛(스크래치)
 
 ### 전체 플로우 종합 테스트 (3개 씬 모두 통과)
 
@@ -26,11 +24,8 @@
 
 ## Commands & Results
 - recompile_scripts → **0 에러, 0 경고**
-- run_tests (EditMode) → **49/49 통과**, 0 실패
-- MainMenu Play Mode → **에러 0**, TutorialUI 정상
-- SongSelect Play Mode → **에러 0**, SongLibrary 로드 정상
-- Gameplay Play Mode → **에러 0**, AutoPlay 다양한 판정 + 보너스 점수 누적 + 결과 화면 표시
-- get_console_logs(error) → **0개** (모든 씬, MCP WebSocket 에러 제외)
+- Gameplay Play Mode → **에러 0**, Score 61,969, P:41 G:13 Good:8 B:4 M:0
+- 음악 테마 UI/비주얼 정상 렌더링 확인
 
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)

@@ -55,12 +55,12 @@ namespace AIBeat.UI
         private TMP_Text bonusScoreText;
         private Coroutine bonusScoreCoroutine;
 
-        [Header("Colors")]
-        [SerializeField] private Color perfectColor = Color.yellow;
-        [SerializeField] private Color greatColor = Color.green;
-        [SerializeField] private Color goodColor = Color.cyan;
-        [SerializeField] private Color badColor = Color.red;
-        [SerializeField] private Color missColor = Color.gray;
+        [Header("Colors (Music Theme)")]
+        [SerializeField] private Color perfectColor = new Color(1f, 0.85f, 0.1f);    // 골드 비트
+        [SerializeField] private Color greatColor = new Color(0.2f, 0.9f, 1f);       // 네온 시안
+        [SerializeField] private Color goodColor = new Color(0.4f, 1f, 0.6f);        // 민트
+        [SerializeField] private Color badColor = new Color(0.8f, 0.3f, 0.6f);       // 핑크
+        [SerializeField] private Color missColor = new Color(0.4f, 0.4f, 0.5f);      // 다크 그레이
 
         private Coroutine judgementCoroutine;
         private TMP_Text earlyLateText; // Early/Late 피드백 표시
@@ -174,7 +174,7 @@ namespace AIBeat.UI
         /// </summary>
         private void RepositionHUD()
         {
-            // ScorePanel → 상단 중앙 (간결한 네온 스타일)
+            // ScorePanel → 상단 중앙 (DJ 콘솔 스타일)
             if (scoreText != null)
             {
                 var scorePanel = scoreText.transform.parent;
@@ -186,22 +186,22 @@ namespace AIBeat.UI
                         panelRect.anchorMin = new Vector2(0.5f, 1f);
                         panelRect.anchorMax = new Vector2(0.5f, 1f);
                         panelRect.pivot = new Vector2(0.5f, 1f);
-                        panelRect.anchoredPosition = new Vector2(0, -12);
-                        panelRect.sizeDelta = new Vector2(300, 44);
+                        panelRect.anchoredPosition = new Vector2(0, -10);
+                        panelRect.sizeDelta = new Vector2(320, 48);
                     }
 
-                    // Score 패널 배경
+                    // Score 패널 배경 (다크 그라데이션)
                     var panelImage = scorePanel.GetComponent<Image>();
                     if (panelImage != null)
                     {
-                        panelImage.color = new Color(0.02f, 0.02f, 0.08f, 0.7f);
+                        panelImage.color = new Color(0.03f, 0.02f, 0.1f, 0.8f);
                     }
 
-                    // Outline (네온 테두리)
+                    // Outline (이퀄라이저 블루-퍼플 테두리)
                     var outline = scorePanel.GetComponent<Outline>();
                     if (outline == null)
                         outline = scorePanel.gameObject.AddComponent<Outline>();
-                    outline.effectColor = new Color(0f, 0.8f, 1f, 0.4f);
+                    outline.effectColor = new Color(0.3f, 0.4f, 1f, 0.5f);
                     outline.effectDistance = new Vector2(1.5f, -1.5f);
 
                     // ScoreLabel 숨기기 (숫자만 표시)
@@ -209,11 +209,13 @@ namespace AIBeat.UI
                     if (labelTransform != null)
                         labelTransform.gameObject.SetActive(false);
 
-                    // ScoreText 스타일
-                    scoreText.fontSize = 28;
+                    // ScoreText 스타일 (LED 디스플레이 느낌)
+                    scoreText.fontSize = 30;
                     scoreText.alignment = TextAlignmentOptions.Center;
-                    scoreText.color = Color.white;
+                    scoreText.color = new Color(0.9f, 0.95f, 1f);
                     scoreText.fontStyle = FontStyles.Bold;
+                    scoreText.outlineWidth = 0.1f;
+                    scoreText.outlineColor = new Color32(60, 80, 255, 100);
                 }
             }
 
@@ -272,13 +274,13 @@ namespace AIBeat.UI
             btnRect.sizeDelta = new Vector2(50, 50);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
-            btnImage.color = new Color(0.02f, 0.02f, 0.08f, 0.5f);
+            btnImage.color = new Color(0.03f, 0.02f, 0.1f, 0.6f);
 
             var btnOutline = pauseBtnGo.AddComponent<Outline>();
-            btnOutline.effectColor = new Color(0f, 0.8f, 1f, 0.3f);
+            btnOutline.effectColor = new Color(0.3f, 0.4f, 1f, 0.35f);
             btnOutline.effectDistance = new Vector2(1, -1);
 
-            // "||" 텍스트 (일시정지 아이콘)
+            // 일시정지 아이콘 (음악 정지)
             var textGo = new GameObject("PauseIcon");
             textGo.transform.SetParent(pauseBtnGo.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
@@ -286,9 +288,9 @@ namespace AIBeat.UI
             textRect.anchorMax = Vector2.one;
             textRect.sizeDelta = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
-            iconText.text = "||";
-            iconText.fontSize = 24;
-            iconText.color = new Color(0.7f, 0.9f, 1f, 0.9f);
+            iconText.text = "\u23F8";
+            iconText.fontSize = 22;
+            iconText.color = new Color(0.6f, 0.7f, 1f, 0.9f);
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
 
@@ -390,13 +392,13 @@ namespace AIBeat.UI
             statsRect.anchoredPosition = new Vector2(-8, -60);
             statsRect.sizeDelta = new Vector2(140, 115);
 
-            // 반투명 어두운 배경
+            // 반투명 DJ 콘솔 배경
             var bgImage = statsPanel.AddComponent<Image>();
-            bgImage.color = new Color(0.02f, 0.02f, 0.08f, 0.35f);
+            bgImage.color = new Color(0.03f, 0.02f, 0.1f, 0.4f);
 
-            // 네온 테두리
+            // 이퀄라이저 테두리
             var statsOutline = statsPanel.AddComponent<Outline>();
-            statsOutline.effectColor = new Color(0f, 0.8f, 1f, 0.25f);
+            statsOutline.effectColor = new Color(0.3f, 0.4f, 1f, 0.3f);
             statsOutline.effectDistance = new Vector2(1, -1);
 
             // VerticalLayoutGroup으로 행 정렬
@@ -572,17 +574,17 @@ namespace AIBeat.UI
             {
                 comboText.text = combo > 0 ? $"{combo} COMBO" : "";
 
-                // 콤보 색상 단계
+                // 콤보 색상 단계 (이퀄라이저 바 그라데이션)
                 if (combo >= 100)
-                    comboText.color = new Color(1f, 0.3f, 1f, 1f); // 마젠타
+                    comboText.color = new Color(1f, 0.2f, 0.8f, 1f); // 핫 핑크 (MAX)
                 else if (combo >= 50)
-                    comboText.color = new Color(1f, 0.85f, 0.2f, 1f); // 골드
+                    comboText.color = new Color(1f, 0.85f, 0.1f, 1f); // 골드 비트
                 else if (combo >= 25)
-                    comboText.color = new Color(1f, 1f, 0.3f, 1f); // 노랑
+                    comboText.color = new Color(0.2f, 0.9f, 1f, 1f); // 네온 시안
                 else if (combo >= 10)
-                    comboText.color = new Color(0.3f, 1f, 1f, 1f); // 시안
+                    comboText.color = new Color(0.4f, 1f, 0.6f, 1f); // 민트
                 else
-                    comboText.color = new Color(1f, 1f, 1f, 0.9f); // 흰색
+                    comboText.color = new Color(0.8f, 0.85f, 1f, 0.9f); // 라이트 블루
 
                 // 10콤보 단위 마일스톤 펄스
                 if (combo > 0 && combo % 10 == 0)
@@ -617,8 +619,8 @@ namespace AIBeat.UI
 
             (string text, Color color) = result switch
             {
-                JudgementResult.Perfect => ("PERFECT!", perfectColor),
-                JudgementResult.Great => ("GREAT!", greatColor),
+                JudgementResult.Perfect => ("\u266B PERFECT!", perfectColor),
+                JudgementResult.Great => ("\u266A GREAT!", greatColor),
                 JudgementResult.Good => ("GOOD", goodColor),
                 JudgementResult.Bad => ("BAD", badColor),
                 _ => ("MISS", missColor)
@@ -717,13 +719,13 @@ namespace AIBeat.UI
             if (pausePanel != null) pausePanel.SetActive(false);
             if (judgementText != null) judgementText.gameObject.SetActive(false);
 
-            // ResultPanel에 배경 Image가 없으면 추가
-            var bgImage = resultPanel.GetComponent<Image>();
-            if (bgImage == null)
+            // ResultPanel에 배경 Image (DJ 부스 / 스테이지 느낌)
+            var bgImage2 = resultPanel.GetComponent<Image>();
+            if (bgImage2 == null)
             {
-                bgImage = resultPanel.AddComponent<Image>();
-                bgImage.color = new Color(0.05f, 0.05f, 0.12f, 0.95f);
+                bgImage2 = resultPanel.AddComponent<Image>();
             }
+            bgImage2.color = new Color(0.04f, 0.03f, 0.12f, 0.96f);
 
             resultPanel.SetActive(true);
 
@@ -781,7 +783,7 @@ namespace AIBeat.UI
             // 이미 생성되어 있으면 업데이트만
             if (resultSongInfoText != null)
             {
-                resultSongInfoText.text = $"{currentSongData.Title}  |  {currentSongData.Genre}  |  BPM {currentSongData.BPM:F0}";
+                resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {currentSongData.Genre}  |  BPM {currentSongData.BPM:F0}";
                 return;
             }
 
@@ -794,9 +796,9 @@ namespace AIBeat.UI
             songInfoRect.offsetMax = Vector2.zero;
 
             resultSongInfoText = songInfoGo.AddComponent<TextMeshProUGUI>();
-            resultSongInfoText.text = $"{currentSongData.Title}  |  {currentSongData.Genre}  |  BPM {currentSongData.BPM:F0}";
+            resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {currentSongData.Genre}  |  BPM {currentSongData.BPM:F0}";
             resultSongInfoText.fontSize = 18;
-            resultSongInfoText.color = new Color(0f, 0.9f, 1f, 0.7f);
+            resultSongInfoText.color = new Color(0.5f, 0.6f, 1f, 0.75f);
             resultSongInfoText.alignment = TextAlignmentOptions.Center;
         }
 
@@ -900,12 +902,12 @@ namespace AIBeat.UI
         {
             return rank switch
             {
-                "S+" => Color.yellow,
-                "S" => Color.yellow,
-                "A" => Color.green,
-                "B" => Color.cyan,
-                "C" => Color.white,
-                _ => Color.gray
+                "S+" => new Color(1f, 0.85f, 0.1f),    // 골드 비트
+                "S" => new Color(1f, 0.75f, 0.2f),      // 오렌지 골드
+                "A" => new Color(0.2f, 0.9f, 1f),       // 네온 시안
+                "B" => new Color(0.4f, 1f, 0.6f),       // 민트
+                "C" => new Color(0.7f, 0.75f, 0.9f),    // 라벤더
+                _ => new Color(0.4f, 0.4f, 0.5f)        // 다크 그레이
             };
         }
 

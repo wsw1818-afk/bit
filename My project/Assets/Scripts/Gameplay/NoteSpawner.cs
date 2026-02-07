@@ -155,13 +155,13 @@ namespace AIBeat.Gameplay
 
         private void InitializePools()
         {
-            // 노트 프리팹이 없으면 동적 생성
+            // 노트 프리팹이 없으면 동적 생성 (음악 테마 컬러)
             if (tapNotePrefab == null)
-                tapNotePrefab = CreateNotePrefab("TapNote", new Color(0.2f, 0.6f, 1f)); // 밝은 파랑
+                tapNotePrefab = CreateNotePrefab("TapNote", new Color(0.2f, 0.7f, 1f));      // 네온 블루 (비트)
             if (longNotePrefab == null)
-                longNotePrefab = CreateNotePrefab("LongNote", new Color(0.1f, 1f, 0.6f)); // 밝은 초록
+                longNotePrefab = CreateNotePrefab("LongNote", new Color(0.3f, 1f, 0.7f));     // 민트 그린 (멜로디)
             if (scratchNotePrefab == null)
-                scratchNotePrefab = CreateNotePrefab("ScratchNote", new Color(1f, 0.4f, 0.1f)); // 밝은 주황
+                scratchNotePrefab = CreateNotePrefab("ScratchNote", new Color(0.8f, 0.3f, 1f)); // 바이올렛 (스크래치/DJ)
 
             // 각 노트 타입별 풀 생성
             notePools[NoteType.Tap] = CreatePool(tapNotePrefab, poolSize);
@@ -180,7 +180,7 @@ namespace AIBeat.Gameplay
         {
             var noteObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
             noteObj.name = name;
-            noteObj.transform.localScale = new Vector3(0.85f, 0.25f, 1f);
+            noteObj.transform.localScale = new Vector3(0.82f, 0.22f, 1f);
 
             // Collider 제거 (불필요)
             var collider = noteObj.GetComponent<Collider>();

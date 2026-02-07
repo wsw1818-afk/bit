@@ -7,15 +7,16 @@ using AIBeat.Core;
 namespace AIBeat.Gameplay
 {
     /// <summary>
-    /// 터치/키 입력 시 레인 시각적 피드백 (Neon Style)
+    /// 터치/키 입력 시 레인 시각적 피드백 (Music/DJ Theme)
     /// + 하단 히트존 (2존), 판정선 글로우, 키 라벨, 스크래치 오버레이
     /// 모바일 최적화: 4 비주얼 레인 (2키 + 2스크래치) + 2 터치 존 히트존
+    /// 음악 테마: 이퀄라이저 배경, 턴테이블 스크래치, 비트 반응 판정선
     /// </summary>
     public class LaneVisualFeedback : MonoBehaviour
     {
         [Header("Settings")]
         [SerializeField] private float flashDuration = 0.2f;
-        [SerializeField] private Color flashColor = new Color(0.0f, 1.0f, 1.0f, 0.8f);
+        [SerializeField] private Color flashColor = new Color(0.4f, 0.8f, 1.0f, 0.85f);
         [SerializeField] private Color idleColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
 
         private static LaneVisualFeedback instance;
@@ -27,15 +28,15 @@ namespace AIBeat.Gameplay
         private static Dictionary<int, MeshRenderer> hitZoneRenderers;
         private static Dictionary<int, Material> hitZoneMaterials;
 
-        // 키 라벨 (2존: Lane 1-2)
+        // 키 라벨 (2존: Lane 1-2) - 음표 스타일
         private static Dictionary<int, TextMeshPro> keyLabels;
-        private static Color keyLabelIdleColor = new Color(0.7f, 0.8f, 1f, 0.7f);
-        private static Color keyLabelFlashColor = new Color(0f, 1f, 1f, 1f);
+        private static Color keyLabelIdleColor = new Color(0.5f, 0.7f, 1f, 0.75f);
+        private static Color keyLabelFlashColor = new Color(0.4f, 1f, 1f, 1f);
 
-        // 스크래치 오버레이 라벨
+        // 스크래치 오버레이 라벨 (턴테이블 테마)
         private static Dictionary<int, TextMeshPro> scratchOverlayLabels;
-        private static Color scratchIdleColor = new Color(1f, 0.3f, 0.3f, 0.4f);
-        private static Color scratchFlashColor = new Color(1f, 0.5f, 0.2f, 1f);
+        private static Color scratchIdleColor = new Color(0.7f, 0.3f, 1f, 0.5f);
+        private static Color scratchFlashColor = new Color(1f, 0.5f, 1f, 1f);
 
         // 판정선 글로우
         private static MeshRenderer glowRenderer;
@@ -68,26 +69,26 @@ namespace AIBeat.Gameplay
             public Color StartColor;
         }
 
-        // 판정별 이펙트 색상
-        private static readonly Color perfectEffectColor = new Color(1f, 1f, 0.2f, 1f);   // 노랑
-        private static readonly Color greatEffectColor = new Color(0.5f, 1f, 0.3f, 1f);    // 연두
-        private static readonly Color goodEffectColor = new Color(0.3f, 1f, 1f, 1f);       // 시안
-        private static readonly Color badEffectColor = new Color(1f, 0.5f, 0.2f, 1f);      // 주황
+        // 판정별 이펙트 색상 (음악 이퀄라이저 그라데이션)
+        private static readonly Color perfectEffectColor = new Color(1f, 0.85f, 0.1f, 1f);  // 골드 (최고 비트)
+        private static readonly Color greatEffectColor = new Color(0.2f, 0.9f, 1f, 1f);     // 네온 시안
+        private static readonly Color goodEffectColor = new Color(0.4f, 1f, 0.6f, 1f);      // 민트 그린
+        private static readonly Color badEffectColor = new Color(0.8f, 0.3f, 0.6f, 1f);     // 핑크
 
         private const int LANE_COUNT = 4;          // 비주얼 레인: 0=ScratchL, 1=Key1, 2=Key2, 3=ScratchR
         private const int TOUCH_ZONE_COUNT = 2;    // 터치 존 (입력용 히트존/라벨): Key1, Key2
 
-        // 4레인 색상 (어두운 톤 + 낮은 알파)
+        // 4레인 색상 (음악 테마: 턴테이블+이퀄라이저)
         private static readonly Color[] laneColors = new Color[]
         {
-            new Color(0.8f, 0.1f, 0.1f, 0.25f),    // Lane 0: Scratch L (어두운 빨강)
-            new Color(0.1f, 0.15f, 0.4f, 0.22f),    // Lane 1: Key 1 (파랑)
-            new Color(0.15f, 0.15f, 0.25f, 0.20f),  // Lane 2: Key 2 (보라)
-            new Color(0.8f, 0.1f, 0.1f, 0.25f),     // Lane 3: Scratch R (어두운 빨강)
+            new Color(0.6f, 0.1f, 0.8f, 0.28f),     // Lane 0: Scratch L (바이올렛 - 턴테이블)
+            new Color(0.0f, 0.5f, 1.0f, 0.24f),     // Lane 1: Key 1 (네온 블루 - 이퀄라이저)
+            new Color(0.0f, 0.8f, 0.6f, 0.22f),     // Lane 2: Key 2 (시안 그린 - 이퀄라이저)
+            new Color(0.6f, 0.1f, 0.8f, 0.28f),     // Lane 3: Scratch R (바이올렛 - 턴테이블)
         };
 
-        // 모바일 터치 존 키 라벨 (2개: Lane 1-2)
-        private static readonly string[] touchZoneKeyNames = { "1", "2" };
+        // 모바일 터치 존 키 라벨 (2개: Lane 1-2) - 음표 아이콘
+        private static readonly string[] touchZoneKeyNames = { "\u266A", "\u266B" };
 
         public static LaneVisualFeedback Instance => instance;
 
@@ -171,12 +172,12 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 판정선 글로우 효과 (가로 전체, 중앙 밝고 위아래 페이드)
+        /// 판정선 글로우 효과 (음파 스타일 - 중앙 밝고 위아래 페이드)
         /// </summary>
         private void CreateJudgementLineGlow(float judgeY, float startX, float laneWidth)
         {
             float glowWidth = LANE_COUNT * laneWidth + 0.5f;
-            float glowHeight = 1.0f;
+            float glowHeight = 1.2f;
 
             var glowGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             glowGo.name = "JudgementLineGlow";
@@ -193,7 +194,7 @@ namespace AIBeat.Gameplay
             if (glowShader == null) glowShader = Shader.Find("Unlit/Transparent");
             glowMaterial = new Material(glowShader);
             glowMaterial.mainTexture = glowTex;
-            glowMaterial.color = new Color(0f, 1f, 1f, 0.6f);
+            glowMaterial.color = new Color(0.3f, 0.6f, 1f, 0.65f); // 블루-시안 음파 글로우
 
             glowRenderer = glowGo.GetComponent<MeshRenderer>();
             glowRenderer.material = glowMaterial;
@@ -226,7 +227,7 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 글로우 pulse 애니메이션 (밝기 0.5~0.7 반복)
+        /// 글로우 pulse 애니메이션 (비트에 맞춘 색상 시프트)
         /// </summary>
         private IEnumerator GlowPulseCoroutine()
         {
@@ -235,9 +236,12 @@ namespace AIBeat.Gameplay
             {
                 yield return null;
                 time += Time.deltaTime;
-                float alpha = 0.6f + 0.1f * Mathf.Sin(time * 2f);
+                // 비트감 있는 색상 변화 (블루↔시안↔퍼플)
+                float pulse = 0.65f + 0.12f * Mathf.Sin(time * 3f);
+                float r = 0.2f + 0.15f * Mathf.Sin(time * 1.3f);
+                float g = 0.5f + 0.2f * Mathf.Sin(time * 2.1f);
                 if (glowMaterial != null)
-                    glowMaterial.color = new Color(0f, 1f, 1f, alpha);
+                    glowMaterial.color = new Color(r, g, 1f, pulse);
             }
         }
 
@@ -344,10 +348,10 @@ namespace AIBeat.Gameplay
         /// </summary>
         private void CreateScratchOverlays(float judgeY, float startX, float laneWidth)
         {
-            // 좌측 스크래치 오버레이 (Lane 0 위치)
-            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 0, "\u2195 SC");
-            // 우측 스크래치 오버레이 (Lane 3 위치)
-            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 3, "SC \u2195");
+            // 좌측 스크래치 오버레이 (Lane 0 위치) - 턴테이블 디스크
+            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 0, "\u266C DJ");
+            // 우측 스크래치 오버레이 (Lane 3 위치) - 턴테이블 디스크
+            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 3, "DJ \u266C");
         }
 
         private void CreateSingleScratchOverlay(float judgeY, float startX, float laneWidth, int laneIndex, string text)
@@ -465,7 +469,7 @@ namespace AIBeat.Gameplay
 
             if (highlighted)
             {
-                mat.color = new Color(0.0f, 0.5f, 1.0f, 0.5f);
+                mat.color = new Color(0.3f, 0.4f, 1.0f, 0.45f); // 음파 바이올렛-블루
             }
             else
             {
@@ -737,18 +741,21 @@ namespace AIBeat.Gameplay
         {
             if (glowMaterial == null) yield break;
 
-            float duration = 0.2f;
+            float duration = 0.25f;
             float elapsed = 0f;
-            float baseAlpha = 0.6f;
+            float baseAlpha = 0.65f;
 
-            glowMaterial.color = new Color(0f, 1f, 1f, targetAlpha);
+            // 비트 히트 시 밝은 화이트-시안 플래시
+            glowMaterial.color = new Color(0.5f, 0.8f, 1f, targetAlpha);
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
                 float alpha = Mathf.Lerp(targetAlpha, baseAlpha, t);
-                glowMaterial.color = new Color(0f, 1f, 1f, alpha);
+                float r = Mathf.Lerp(0.5f, 0.2f, t);
+                float g = Mathf.Lerp(0.8f, 0.5f, t);
+                glowMaterial.color = new Color(r, g, 1f, alpha);
                 yield return null;
             }
         }
