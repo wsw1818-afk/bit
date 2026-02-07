@@ -1,1 +1,1 @@
-🔧 곡 카드 가시성 버그 수정 + UI 개선: Mask→RectMask2D 전환, 카드 레이아웃/폰트 크기 조정, 제목 대문자 포맷
+🎨 전체 UI/UX 개선 + 한국어화: 3씬(MainMenu/SongSelect/Gameplay) 폰트 크기 조정, 버튼 네온 스타일, 결과/일시정지 버튼 한국어 텍스트

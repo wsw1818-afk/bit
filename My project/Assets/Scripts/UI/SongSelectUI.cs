@@ -50,7 +50,7 @@ namespace AIBeat.UI
             // StreamingAssets 내 MP3 파일 자동 스캔 → 라이브러리에 등록
             ScanAndRegisterStreamingAssets();
 
-            // 뒤로가기 버튼
+            // 뒤로가기 버튼 스타일
             if (backButton != null)
             {
                 backButton.onClick.AddListener(OnBackClicked);
@@ -58,7 +58,25 @@ namespace AIBeat.UI
                 if (backRect != null)
                 {
                     var size = backRect.sizeDelta;
-                    if (size.y < 50f) { size.y = 50f; backRect.sizeDelta = size; }
+                    if (size.y < 60f) { size.y = 60f; backRect.sizeDelta = size; }
+                }
+                // 배경색 + 네온 테두리
+                var btnImg = backButton.GetComponent<Image>();
+                if (btnImg != null)
+                    btnImg.color = new Color(0.05f, 0.05f, 0.15f, 0.9f);
+                var outline = backButton.GetComponent<Outline>();
+                if (outline == null)
+                    outline = backButton.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0.9f, 1f, 0.5f);
+                outline.effectDistance = new Vector2(1, -1);
+                // 텍스트 스타일
+                var btnTmp = backButton.GetComponentInChildren<TMP_Text>();
+                if (btnTmp != null)
+                {
+                    btnTmp.text = "\u2190 뒤로";
+                    btnTmp.fontSize = 36;
+                    btnTmp.fontStyle = FontStyles.Bold;
+                    btnTmp.color = new Color(0.4f, 0.95f, 1f, 1f);
                 }
             }
 
@@ -124,7 +142,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "내 라이브러리";
-            tmp.fontSize = 56;
+            tmp.fontSize = 48;
             tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;

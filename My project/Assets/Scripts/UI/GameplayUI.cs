@@ -190,7 +190,7 @@ namespace AIBeat.UI
                         panelRect.anchorMax = new Vector2(0.5f, 1f);
                         panelRect.pivot = new Vector2(0.5f, 1f);
                         panelRect.anchoredPosition = new Vector2(0, -10);
-                        panelRect.sizeDelta = new Vector2(320, 48);
+                        panelRect.sizeDelta = new Vector2(380, 56);
                     }
 
                     // Score 패널 배경 (다크 그라데이션)
@@ -213,7 +213,7 @@ namespace AIBeat.UI
                         labelTransform.gameObject.SetActive(false);
 
                     // ScoreText 스타일 (LED 디스플레이 느낌)
-                    scoreText.fontSize = 30;
+                    scoreText.fontSize = 38;
                     scoreText.alignment = TextAlignmentOptions.Center;
                     scoreText.color = new Color(0.9f, 0.95f, 1f);
                     scoreText.fontStyle = FontStyles.Bold;
@@ -234,7 +234,7 @@ namespace AIBeat.UI
                     comboRect.anchoredPosition = new Vector2(15, -60);
                     comboRect.sizeDelta = new Vector2(250, 40);
                 }
-                comboText.fontSize = 28;
+                comboText.fontSize = 34;
                 comboText.alignment = TextAlignmentOptions.Left;
                 comboText.color = new Color(1f, 1f, 1f, 0.9f);
                 comboText.fontStyle = FontStyles.Bold;
@@ -254,7 +254,7 @@ namespace AIBeat.UI
                     judgeRect.anchoredPosition = new Vector2(0, 0);
                     judgeRect.sizeDelta = new Vector2(500, 60);
                 }
-                judgementText.fontSize = 42;
+                judgementText.fontSize = 48;
                 judgementText.fontStyle = FontStyles.Bold;
                 judgementText.outlineWidth = 0.2f;
                 judgementText.outlineColor = new Color32(0, 0, 0, 200);
@@ -542,6 +542,43 @@ namespace AIBeat.UI
             EnsureMinButtonSize(quitButton);
             EnsureMinButtonSize(retryButton);
             EnsureMinButtonSize(menuButton);
+
+            // 한국어 버튼 텍스트 + 스타일 적용
+            ApplyButtonStyle(resumeButton, "이어하기");
+            ApplyButtonStyle(restartButton, "다시하기");
+            ApplyButtonStyle(quitButton, "나가기");
+            ApplyButtonStyle(retryButton, "재시도");
+            ApplyButtonStyle(menuButton, "메뉴");
+        }
+
+        /// <summary>
+        /// 버튼에 한국어 텍스트 + 네온 스타일 적용
+        /// </summary>
+        private void ApplyButtonStyle(Button btn, string koreanText)
+        {
+            if (btn == null) return;
+
+            // 배경색
+            var img = btn.GetComponent<Image>();
+            if (img != null)
+                img.color = new Color(0.05f, 0.05f, 0.15f, 0.95f);
+
+            // 네온 테두리
+            var outline = btn.GetComponent<Outline>();
+            if (outline == null)
+                outline = btn.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0.9f, 1f, 0.5f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            // 텍스트
+            var tmp = btn.GetComponentInChildren<TMP_Text>();
+            if (tmp != null)
+            {
+                tmp.text = koreanText;
+                tmp.fontSize = 30;
+                tmp.fontStyle = FontStyles.Bold;
+                tmp.color = new Color(0.4f, 0.95f, 1f, 1f);
+            }
         }
 
         /// <summary>
@@ -742,10 +779,10 @@ namespace AIBeat.UI
             CreateResultBonusScore(result);
 
             if (resultComboText != null)
-                resultComboText.text = $"MAX COMBO: {result.MaxCombo}";
+                resultComboText.text = $"최대 콤보: {result.MaxCombo}";
 
             if (resultAccuracyText != null)
-                resultAccuracyText.text = $"ACCURACY: {result.Accuracy:F2}%";
+                resultAccuracyText.text = $"정확도: {result.Accuracy:F1}%";
 
             if (resultRankText != null)
             {
@@ -887,7 +924,7 @@ namespace AIBeat.UI
 
             if (isNewRecord)
             {
-                resultNewRecordText.text = "\u2605 NEW RECORD! \u2605";
+                resultNewRecordText.text = "\u2605 신기록! \u2605";
                 resultNewRecordText.color = new Color(1f, 1f, 0.2f, 1f); // 노란색
                 resultNewRecordText.gameObject.SetActive(true);
 

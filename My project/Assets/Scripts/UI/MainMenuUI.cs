@@ -146,7 +146,7 @@ namespace AIBeat.UI
                 if (rect != null)
                 {
                     var size = rect.sizeDelta;
-                    if (size.y < 60f) { size.y = 60f; rect.sizeDelta = size; }
+                    if (size.y < 70f) { size.y = 70f; rect.sizeDelta = size; }
                 }
 
                 // 배경 이미지 색상
@@ -176,7 +176,7 @@ namespace AIBeat.UI
                 if (tmp != null)
                 {
                     tmp.text = koreanText;  // 한국어 텍스트 설정
-                    tmp.fontSize = 24;  // 강제 적용
+                    tmp.fontSize = 36;  // 모바일 터치 가독성
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.color = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
                 }
@@ -188,7 +188,7 @@ namespace AIBeat.UI
             if (titleText == null) return;
 
             // 타이틀 스타일 강화 - 강제 적용
-            titleText.fontSize = 48;  // 강제로 48 설정 (Mathf.Max 제거)
+            titleText.fontSize = 64;  // 타이틀은 크고 임팩트 있게
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = new Color(0f, 0.85f, 1f, 1f);
 
