@@ -1,1 +1,1 @@
-📱 화면 방향 Portrait 강제 고정: ProjectSettings defaultScreenOrientation=1 + AndroidBuilder 빌드시 적용
+📱 세로 모드 강제: RuntimeInitializeOnLoadMethod로 앱 시작 즉시 Portrait 고정 + ProjectSettings + GameManager

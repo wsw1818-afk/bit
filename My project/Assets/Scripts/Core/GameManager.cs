@@ -52,10 +52,30 @@ namespace AIBeat.Core
             CheckTutorial();
         }
 
+        /// <summary>
+        /// 앱 시작 시 가장 먼저 실행 — 씬 로드 전에 Portrait 강제
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ForcePortrait()
+        {
+            Screen.orientation = ScreenOrientation.Portrait;
+            Screen.autorotateToPortrait = true;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = false;
+            Screen.autorotateToLandscapeRight = false;
+        }
+
         private void Initialize()
         {
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+            // 세로 모드 강제 (Initialize에서도 재확인)
+            Screen.orientation = ScreenOrientation.Portrait;
+            Screen.autorotateToPortrait = true;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = false;
+            Screen.autorotateToLandscapeRight = false;
         }
 
         /// <summary>
