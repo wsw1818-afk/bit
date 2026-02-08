@@ -114,7 +114,11 @@ namespace AIBeat.Core
             if (ttfFont != null)
             {
                 Debug.Log("[KoreanFontManager] Resources TTF 로드 성공");
-                var created = TMP_FontAsset.CreateFontAsset(ttfFont);
+                // 충분한 아틀라스 크기로 생성 (글리프 겹침/깨짐 방지)
+                var created = TMP_FontAsset.CreateFontAsset(
+                    ttfFont, 44, 5,
+                    UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
+                    2048, 2048);
                 if (created != null)
                 {
                     created.name = "Korean Dynamic Font (Resources)";
@@ -159,7 +163,10 @@ namespace AIBeat.Core
                     var osFont = new Font(fontPath);
                     if (osFont != null)
                     {
-                        var created = TMP_FontAsset.CreateFontAsset(osFont);
+                        var created = TMP_FontAsset.CreateFontAsset(
+                            osFont, 44, 5,
+                            UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
+                            2048, 2048);
                         if (created != null)
                         {
                             created.name = "Korean Dynamic Font (OS)";
@@ -183,7 +190,10 @@ namespace AIBeat.Core
                 var osFont = Font.CreateDynamicFontFromOSFont(name, 44);
                 if (osFont != null)
                 {
-                    var created = TMP_FontAsset.CreateFontAsset(osFont);
+                    var created = TMP_FontAsset.CreateFontAsset(
+                        osFont, 44, 5,
+                        UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
+                        2048, 2048);
                     if (created != null)
                     {
                         created.name = $"Korean Dynamic Font ({name})";
@@ -202,7 +212,10 @@ namespace AIBeat.Core
             ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
             if (ttfFont != null)
             {
-                _koreanFont = TMP_FontAsset.CreateFontAsset(ttfFont);
+                _koreanFont = TMP_FontAsset.CreateFontAsset(
+                    ttfFont, 44, 5,
+                    UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
+                    2048, 2048);
                 if (_koreanFont != null)
                 {
                     _koreanFont.name = "Korean Dynamic Font (Fallback)";

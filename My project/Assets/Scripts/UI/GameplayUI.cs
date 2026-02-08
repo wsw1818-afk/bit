@@ -86,6 +86,10 @@ namespace AIBeat.UI
 
         private void Awake()
         {
+            // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
+            // (AddComponent<TextMeshProUGUI>() 시점에 LiberationSans SDF 경고 방지)
+            var _ = KoreanFontManager.KoreanFont;
+
             EnsureCanvasScaler();
             AutoSetupReferences();
             CreateStatsHUD();
