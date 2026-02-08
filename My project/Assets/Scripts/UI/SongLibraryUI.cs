@@ -68,7 +68,7 @@ namespace AIBeat.UI
             rootRect.anchorMin = Vector2.zero;
             rootRect.anchorMax = Vector2.one;
             rootRect.offsetMin = new Vector2(0, 0);
-            rootRect.offsetMax = new Vector2(0, -100); // 타이틀 바(100px) 아래부터
+            rootRect.offsetMax = new Vector2(0, -80); // 슬림 타이틀 바(80px) 아래부터
 
             // 반투명 배경 (BIT.jpg 배경이 살짝 비침)
             var rootBg = rootPanel.AddComponent<Image>();
@@ -165,15 +165,16 @@ namespace AIBeat.UI
             var emptyGo = new GameObject("EmptyText");
             emptyGo.transform.SetParent(content.transform, false);
             var emptyRect = emptyGo.AddComponent<RectTransform>();
-            emptyRect.sizeDelta = new Vector2(0, 200);
+            emptyRect.sizeDelta = new Vector2(0, 500);
             var emptyLayout = emptyGo.AddComponent<LayoutElement>();
-            emptyLayout.preferredHeight = 200;
+            emptyLayout.preferredHeight = 500;
 
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyText.text = "아직 곡이 없습니다!\nMP3 파일을 Music 또는\nDownloads 폴더에 넣어주세요.";
-            emptyText.fontSize = 52;
+            emptyText.text = "\u266B\n\n\uC74C\uC545\uC744 \uCD94\uAC00\uD574\uBCF4\uC138\uC694!\n\n<size=28>\uD578\uB4DC\uD3F0\uC758 Music \uB610\uB294\nDownloads \uD3F4\uB354\uC5D0\nMP3 \uD30C\uC77C\uC744 \uB123\uC73C\uBA74\n\uC790\uB3D9\uC73C\uB85C \uC778\uC2DD\uB429\uB2C8\uB2E4</size>\n\n<size=24><color=#00D9FF>Suno AI\uB85C \uB9CC\uB4E0 \uC74C\uC545\uB3C4\n\uBC14\uB85C \uD50C\uB808\uC774 \uAC00\uB2A5!</color></size>";
+            emptyText.fontSize = 40;
             emptyText.color = new Color(0.5f, 0.5f, 0.6f);
             emptyText.alignment = TextAlignmentOptions.Center;
+            emptyText.richText = true;
         }
 
         /// <summary>
@@ -199,9 +200,11 @@ namespace AIBeat.UI
             List<SongRecord> songs = manager.GetSongsSortedByDate();
             displayedSongs = songs;
 
-            // 곡 수 표시
+            // 곡 수 표시 (안내 포함)
             if (songCountText != null)
-                songCountText.text = $"{songs.Count}곡";
+                songCountText.text = songs.Count > 0
+                    ? $"\u266B {songs.Count}\uACE1 \u00B7 \uD130\uCE58\uD558\uC5EC \uD50C\uB808\uC774"
+                    : "0\uACE1";
 
             // 빈 목록 처리
             UpdateEmptyState(songs.Count == 0);
@@ -229,17 +232,20 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 개별 곡 카드 생성 (네온 사이버펑크 스타일)
+        /// 개별 곡 카드 생성 — 컴팩트 3행 구조 + ▶ 플레이 아이콘
+        /// Row 1: 🎵 곡 제목
+        /// Row 2: 120 BPM · ★★★★ · 3회
+        /// Row 3: Best: A · 1,234,567   [✕] [▶]
         /// </summary>
         private void CreateSongCard(SongRecord song, int index)
         {
-            // 카드 루트
+            // 카드 루트 (140px 컴팩트)
             var card = new GameObject($"SongCard_{index}");
             card.transform.SetParent(contentContainer, false);
             var cardRect = card.AddComponent<RectTransform>();
-            cardRect.sizeDelta = new Vector2(0, 160);
+            cardRect.sizeDelta = new Vector2(0, 140);
             var cardLayout = card.AddComponent<LayoutElement>();
-            cardLayout.preferredHeight = 160;
+            cardLayout.preferredHeight = 140;
 
             // 카드 배경
             var cardBg = card.AddComponent<Image>();
@@ -260,16 +266,16 @@ namespace AIBeat.UI
             int capturedIndex = index;
             cardButton.onClick.AddListener(() => OnSongCardClicked(capturedIndex));
 
-            // 카드 내부 레이아웃 (좌: 곡 정보, 우: 랭크/점수)
+            // 카드 내부: 좌측 정보(flex) + 우측 액션(70px)
             var hLayout = card.AddComponent<HorizontalLayoutGroup>();
-            hLayout.padding = new RectOffset(20, 15, 12, 12);
-            hLayout.spacing = 10;
+            hLayout.padding = new RectOffset(16, 10, 10, 10);
+            hLayout.spacing = 8;
             hLayout.childControlWidth = true;
             hLayout.childControlHeight = true;
             hLayout.childForceExpandWidth = false;
             hLayout.childForceExpandHeight = true;
 
-            // 좌측: 곡 정보
+            // === 좌측: 3행 정보 ===
             var infoPanel = new GameObject("InfoPanel");
             infoPanel.transform.SetParent(card.transform, false);
             infoPanel.AddComponent<RectTransform>();
@@ -277,56 +283,64 @@ namespace AIBeat.UI
             infoLayout.flexibleWidth = 1;
 
             var infoVLayout = infoPanel.AddComponent<VerticalLayoutGroup>();
-            infoVLayout.spacing = 4;
+            infoVLayout.spacing = 3;
             infoVLayout.childControlWidth = true;
             infoVLayout.childControlHeight = true;
             infoVLayout.childForceExpandWidth = true;
             infoVLayout.childForceExpandHeight = false;
             infoVLayout.childAlignment = TextAnchor.MiddleLeft;
 
-            // 곡 제목 (첫 글자 대문자 처리)
+            // Row 1: 곡 제목 (Bold, 흰색)
             string displayTitle = FormatTitle(song.Title);
-            CreateTMPText(infoPanel, "Title", displayTitle, 40, Color.white,
+            CreateTMPText(infoPanel, "Title", displayTitle, 32, Color.white,
                 TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
 
-            // BPM + 난이도 별
+            // Row 2: BPM · 난이도 · 플레이 횟수 (한 줄에 모든 정보)
             string diffStars = new string('\u2605', Mathf.Clamp(song.DifficultyLevel, 0, 10));
-            string bpmInfo = song.BPM > 0 ? $"{song.BPM} BPM  |  {diffStars}" : diffStars;
-            CreateTMPText(infoPanel, "Info", bpmInfo, 28,
+            string playsStr = song.PlayCount > 0 ? $"{song.PlayCount}\uD68C" : "NEW";
+            string row2 = song.BPM > 0
+                ? $"{song.BPM} BPM \u00B7 {diffStars} \u00B7 {playsStr}"
+                : $"{diffStars} \u00B7 {playsStr}";
+            CreateTMPText(infoPanel, "Info", row2, 20,
                 NEON_CYAN_BRIGHT, TextAlignmentOptions.MidlineLeft);
 
-            // 플레이 횟수
-            CreateTMPText(infoPanel, "Plays",
-                song.PlayCount > 0 ? $"{song.PlayCount}회 플레이" : "아직 플레이 안 함", 24,
-                new Color(0.5f, 0.5f, 0.6f), TextAlignmentOptions.MidlineLeft);
-
-            // 우측: 랭크 + 점수 + 삭제
-            var scorePanel = new GameObject("ScorePanel");
-            scorePanel.transform.SetParent(card.transform, false);
-            scorePanel.AddComponent<RectTransform>();
-            var scoreLayout = scorePanel.AddComponent<LayoutElement>();
-            scoreLayout.preferredWidth = 150;
-
-            var scoreVLayout = scorePanel.AddComponent<VerticalLayoutGroup>();
-            scoreVLayout.spacing = 2;
-            scoreVLayout.childControlWidth = true;
-            scoreVLayout.childControlHeight = true;
-            scoreVLayout.childForceExpandWidth = true;
-            scoreVLayout.childForceExpandHeight = false;
-            scoreVLayout.childAlignment = TextAnchor.MiddleCenter;
-
-            // 랭크 표시
+            // Row 3: 랭크 + 점수
             string rankDisplay = string.IsNullOrEmpty(song.BestRank) ? "-" : song.BestRank;
-            CreateTMPText(scorePanel, "Rank", rankDisplay, 48,
-                GetRankColor(song.BestRank), TextAlignmentOptions.Center, FontStyles.Bold);
-
-            // 최고 점수
             string scoreDisplay = song.BestScore > 0 ? song.BestScore.ToString("N0") : "--";
-            CreateTMPText(scorePanel, "Score", scoreDisplay, 24,
-                Color.white, TextAlignmentOptions.Center);
+            var rankTmp = CreateTMPText(infoPanel, "RankScore",
+                $"Best: <color=#{ColorUtility.ToHtmlStringRGB(GetRankColor(song.BestRank))}>{rankDisplay}</color> \u00B7 {scoreDisplay}",
+                20, new Color(0.6f, 0.6f, 0.7f), TextAlignmentOptions.MidlineLeft);
+            rankTmp.richText = true;
 
-            // 삭제 버튼
-            CreateDeleteButton(scorePanel.transform, capturedIndex);
+            // === 우측: 삭제 + 플레이 아이콘 ===
+            var actionPanel = new GameObject("ActionPanel");
+            actionPanel.transform.SetParent(card.transform, false);
+            actionPanel.AddComponent<RectTransform>();
+            var actionLayout = actionPanel.AddComponent<LayoutElement>();
+            actionLayout.preferredWidth = 70;
+
+            var actionVLayout = actionPanel.AddComponent<VerticalLayoutGroup>();
+            actionVLayout.spacing = 6;
+            actionVLayout.childControlWidth = true;
+            actionVLayout.childControlHeight = false;
+            actionVLayout.childForceExpandWidth = true;
+            actionVLayout.childForceExpandHeight = false;
+            actionVLayout.childAlignment = TextAnchor.MiddleCenter;
+
+            // ▶ 플레이 아이콘 (시각적 어포던스)
+            var playIconGo = new GameObject("PlayIcon");
+            playIconGo.transform.SetParent(actionPanel.transform, false);
+            var playIconLE = playIconGo.AddComponent<LayoutElement>();
+            playIconLE.preferredHeight = 60;
+            var playIconTmp = playIconGo.AddComponent<TextMeshProUGUI>();
+            playIconTmp.text = "\u25B6";
+            playIconTmp.fontSize = 40;
+            playIconTmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            playIconTmp.alignment = TextAlignmentOptions.Center;
+            playIconTmp.raycastTarget = false;
+
+            // ✕ 삭제 아이콘 (작게)
+            CreateDeleteButton(actionPanel.transform, capturedIndex);
 
             songItems.Add(card);
         }
@@ -347,19 +361,19 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 삭제 버튼 생성
+        /// 삭제 버튼 — 작은 "✕" 아이콘
         /// </summary>
         private void CreateDeleteButton(Transform parent, int index)
         {
             var delGo = new GameObject("DeleteBtn");
             delGo.transform.SetParent(parent, false);
             var delRect = delGo.AddComponent<RectTransform>();
-            delRect.sizeDelta = new Vector2(0, 30);
+            delRect.sizeDelta = new Vector2(0, 36);
             var delLayout = delGo.AddComponent<LayoutElement>();
-            delLayout.preferredHeight = 30;
+            delLayout.preferredHeight = 36;
 
             var delBg = delGo.AddComponent<Image>();
-            delBg.color = new Color(0.15f, 0.02f, 0.02f, 0.4f);
+            delBg.color = new Color(0.15f, 0.02f, 0.02f, 0.3f);
 
             var delBtn = delGo.AddComponent<Button>();
             var delColors = delBtn.colors;
@@ -368,8 +382,8 @@ namespace AIBeat.UI
             delColors.pressedColor = new Color(0.7f, 0.7f, 0.7f);
             delBtn.colors = delColors;
 
-            CreateTMPText(delGo, "DelText", "삭제", 20,
-                new Color(0.6f, 0.15f, 0.15f, 0.7f), TextAlignmentOptions.Center);
+            CreateTMPText(delGo, "DelText", "\u2715", 18,
+                new Color(0.6f, 0.15f, 0.15f, 0.6f), TextAlignmentOptions.Center);
 
             int capturedIndex = index;
             delBtn.onClick.AddListener(() => OnDeleteClicked(capturedIndex));

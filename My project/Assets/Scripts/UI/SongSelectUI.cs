@@ -207,39 +207,38 @@ namespace AIBeat.UI
             // StreamingAssets 내 MP3 파일 자동 스캔 → 라이브러리에 등록
             ScanAndRegisterStreamingAssets();
 
-            // 뒤로가기 버튼 스타일 (타이틀 바 왼쪽에 배치)
+            // 뒤로가기 버튼 — 슬림 아이콘 "◀" (56x56px)
             if (backButton != null)
             {
                 backButton.onClick.AddListener(OnBackClicked);
                 var backRect = backButton.GetComponent<RectTransform>();
                 if (backRect != null)
                 {
-                    // 왼쪽 상단 고정, 타이틀 바(120px) 안에 수직 정렬
                     backRect.anchorMin = new Vector2(0, 1);
                     backRect.anchorMax = new Vector2(0, 1);
                     backRect.pivot = new Vector2(0, 1);
-                    backRect.anchoredPosition = new Vector2(10, -10);
-                    backRect.sizeDelta = new Vector2(200, 100);
+                    backRect.anchoredPosition = new Vector2(8, -12);
+                    backRect.sizeDelta = new Vector2(56, 56);
                 }
-                // 투명 배경 (타이틀 바 위에 겹치므로 별도 배경 불필요)
+                // 반투명 배경 (터치 영역 시각화)
                 var btnImg = backButton.GetComponent<Image>();
                 if (btnImg != null)
-                    btnImg.color = new Color(0f, 0f, 0f, 0f);
-                // 기존 outline 제거
+                    btnImg.color = new Color(0.06f, 0.04f, 0.18f, 0.7f);
+                // 기존 outline 제거 후 마젠타 테두리
                 var outline = backButton.GetComponent<Outline>();
-                if (outline != null)
-                    Destroy(outline);
-                // 텍스트 스타일
+                if (outline == null)
+                    outline = backButton.gameObject.AddComponent<Outline>();
+                outline.effectColor = UIColorPalette.NEON_MAGENTA.WithAlpha(0.5f);
+                outline.effectDistance = new Vector2(1, -1);
+                // 아이콘만 표시
                 var btnTmp = backButton.GetComponentInChildren<TMP_Text>();
                 if (btnTmp != null)
                 {
-                    btnTmp.text = "\u2190 뒤로";
-                    btnTmp.fontSize = 48;
+                    btnTmp.text = "\u25C0";
+                    btnTmp.fontSize = 28;
                     btnTmp.fontStyle = FontStyles.Bold;
                     btnTmp.color = UIColorPalette.NEON_MAGENTA;
-                    btnTmp.alignment = TextAlignmentOptions.MidlineLeft;
-                    var korFont = KoreanFontManager.KoreanFont;
-                    if (korFont != null) btnTmp.font = korFont;
+                    btnTmp.alignment = TextAlignmentOptions.Center;
                 }
             }
 
@@ -290,25 +289,25 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(1, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 120);
+            rect.sizeDelta = new Vector2(0, 80); // 슬림 헤더 (120→80px)
 
             var bg = titleBar.AddComponent<Image>();
             bg.color = UIColorPalette.BG_TOPBAR;
 
-            // 타이틀 텍스트 (왼쪽 여백 확보하여 뒤로 버튼과 겹치지 않게)
+            // 타이틀 텍스트 (뒤로 버튼 56px + padding 후 시작)
             var textGo = new GameObject("TitleText");
             textGo.transform.SetParent(titleBar.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(200, 0); // 왼쪽 200px 여백 (뒤로 버튼 공간)
+            textRect.offsetMin = new Vector2(72, 0); // 뒤로 버튼(56) + 여백(16)
             textRect.offsetMax = new Vector2(-20, 0);
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = "내 라이브러리";
-            tmp.fontSize = 52;
+            tmp.text = "\uB0B4 \uC74C\uC545"; // "내 음악"
+            tmp.fontSize = 36;
             tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
-            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.alignment = TextAlignmentOptions.MidlineLeft;
             tmp.fontStyle = FontStyles.Bold;
             tmp.outlineWidth = 0.1f;
             tmp.outlineColor = new Color32(0, 100, 255, 150);

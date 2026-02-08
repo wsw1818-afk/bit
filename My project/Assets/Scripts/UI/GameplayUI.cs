@@ -61,7 +61,7 @@ namespace AIBeat.UI
         [SerializeField] private Color greatColor = new Color(0f, 0.85f, 1f);        // 시안
         [SerializeField] private Color goodColor = new Color(0.2f, 1f, 0.4f);        // 그린
         [SerializeField] private Color badColor = new Color(1f, 0.15f, 0.65f);       // 마젠타
-        [SerializeField] private Color missColor = new Color(0.35f, 0.35f, 0.45f);   // 그레이
+        [SerializeField] private Color missColor = new Color(0.9f, 0.15f, 0.15f);     // 빨간색 강조
 
         private Coroutine judgementCoroutine;
         private TMP_Text earlyLateText; // Early/Late 피드백 표시
@@ -1007,11 +1007,11 @@ namespace AIBeat.UI
             // 판정별 스케일 차별화 팝업
             float startScale = result switch
             {
-                JudgementResult.Perfect => 1.4f,
-                JudgementResult.Great => 1.3f,
-                JudgementResult.Good => 1.1f,
+                JudgementResult.Perfect => 1.6f,  // 더 강렬한 펄스
+                JudgementResult.Great => 1.35f,
+                JudgementResult.Good => 1.15f,
                 JudgementResult.Bad => 1.1f,
-                _ => 0.8f // Miss: 축소 등장
+                _ => 0.85f // Miss: 축소 등장
             };
             judgementText.transform.localScale = Vector3.one * startScale;
             UIAnimator.ScaleTo(this, judgementText.gameObject, Vector3.one, 0.15f);

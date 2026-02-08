@@ -1,1 +1,1 @@
-🔧 세로 모드 UI 수정: 배경 이미지 제거 + 씬 StatsHUD 중복 제거 + TopBar/StatsBar 크기 세로화면 최적화
+✨ UI/UX 센세이셔널 개선: MainMenu 서브타이틀/캐치프레이즈/듀얼이퀄라이저/배경펄스 + SongSelect 슬림헤더/아이콘버튼 + 곡카드 컴팩트3행 + MISS빨간색/PERFECT강화

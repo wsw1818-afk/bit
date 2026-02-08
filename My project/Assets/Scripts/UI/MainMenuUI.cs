@@ -8,8 +8,8 @@ using System.Collections.Generic;
 namespace AIBeat.UI
 {
     /// <summary>
-    /// 메인 메뉴 UI - BIT.jpg 네온 사이버펑크 디자인
-    /// 배경 이미지 + 이퀄라이저 바 + 네온 버튼
+    /// 메인 메뉴 UI - 센세이셔널 네온 사이버펑크 디자인
+    /// 서브타이틀 + 캐치프레이즈 + 아이콘 버튼 + 듀얼 이퀄라이저 + 배경 펄스
     /// </summary>
     public class MainMenuUI : MonoBehaviour
     {
@@ -27,8 +27,14 @@ namespace AIBeat.UI
         [SerializeField] private GameObject settingsPanel;
 
         // 이퀄라이저 바 참조
-        private List<Image> eqBars = new List<Image>();
+        private List<Image> eqBarsBottom = new List<Image>();
+        private List<Image> eqBarsTop = new List<Image>();
         private Coroutine eqAnimCoroutine;
+        private Coroutine breatheCoroutine;
+
+        // 서브타이틀/캐치프레이즈 참조
+        private TextMeshProUGUI subtitleText;
+        private TextMeshProUGUI catchphraseText;
 
         private void Start()
         {
@@ -36,12 +42,12 @@ namespace AIBeat.UI
             CreateBackgroundImage();
             AutoSetupReferences();
             Initialize();
-            CreateEqualizerBar();
+            CreateEqualizerBars();
             EnsureSafeArea();
         }
 
         /// <summary>
-        /// BIT.jpg 배경 이미지 설정
+        /// BIT.jpg 배경 이미지 + 숨쉬기(Breathe) 펄스 효과
         /// </summary>
         private void CreateBackgroundImage()
         {
@@ -67,14 +73,14 @@ namespace AIBeat.UI
                 img.sprite = sprite;
                 img.type = Image.Type.Simple;
                 img.preserveAspect = false;
-                img.color = new Color(1f, 1f, 1f, 0.5f); // 반투명 (UI 가독성)
+                img.color = new Color(1f, 1f, 1f, 0.5f);
             }
             else
             {
                 img.color = UIColorPalette.BG_DEEP;
             }
 
-            // 배경 위에 어두운 오버레이 (텍스트 가독성)
+            // 어두운 오버레이 (숨쉬기 효과 대상)
             var overlayGo = new GameObject("DarkOverlay");
             overlayGo.transform.SetParent(transform, false);
             overlayGo.transform.SetSiblingIndex(1);
@@ -86,67 +92,115 @@ namespace AIBeat.UI
             var overlayImg = overlayGo.AddComponent<Image>();
             overlayImg.raycastTarget = false;
             overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.55f);
+
+            // 배경 숨쉬기(Breathe) 효과 코루틴
+            breatheCoroutine = StartCoroutine(AnimateBreathe(overlayImg));
         }
 
         /// <summary>
-        /// 하단 이퀄라이저 바 애니메이션 (BIT.jpg 하단 스타일)
+        /// 배경 오버레이 투명도를 천천히 순환 (3초 주기)
         /// </summary>
-        private void CreateEqualizerBar()
+        private IEnumerator AnimateBreathe(Image overlay)
         {
-            var eqContainer = new GameObject("EqualizerBar");
-            eqContainer.transform.SetParent(transform, false);
+            float phase = 0f;
+            while (true)
+            {
+                phase += Time.unscaledDeltaTime / 3f * Mathf.PI * 2f;
+                float alpha = 0.45f + 0.15f * Mathf.Sin(phase); // 0.30 ~ 0.60
+                if (overlay != null)
+                    overlay.color = new Color(0.01f, 0.005f, 0.04f, alpha);
+                yield return null;
+            }
+        }
 
-            var containerRect = eqContainer.AddComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0, 0);
-            containerRect.anchorMax = new Vector2(1, 0);
-            containerRect.pivot = new Vector2(0.5f, 0);
+        /// <summary>
+        /// 상단 + 하단 듀얼 이퀄라이저 바 (시안→마젠타 그라데이션)
+        /// </summary>
+        private void CreateEqualizerBars()
+        {
+            // === 하단 이퀄라이저 (120px, 위로 솟아오름) ===
+            CreateSingleEqualizer("EqualizerBottom", eqBarsBottom,
+                anchorY: 0f, pivotY: 0f, height: 120f, barCount: 30, flipY: false);
+
+            // === 상단 이퀄라이저 (70px, 아래로 내려옴) ===
+            CreateSingleEqualizer("EqualizerTop", eqBarsTop,
+                anchorY: 1f, pivotY: 1f, height: 70f, barCount: 20, flipY: true);
+
+            eqAnimCoroutine = StartCoroutine(AnimateEqualizer());
+        }
+
+        private void CreateSingleEqualizer(string name, List<Image> barList,
+            float anchorY, float pivotY, float height, int barCount, bool flipY)
+        {
+            var container = new GameObject(name);
+            container.transform.SetParent(transform, false);
+
+            var containerRect = container.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0, anchorY);
+            containerRect.anchorMax = new Vector2(1, anchorY);
+            containerRect.pivot = new Vector2(0.5f, pivotY);
             containerRect.anchoredPosition = Vector2.zero;
-            containerRect.sizeDelta = new Vector2(0, 140);
+            containerRect.sizeDelta = new Vector2(0, height);
 
-            int barCount = 30;
             float barWidth = 1f / barCount;
-
             for (int i = 0; i < barCount; i++)
             {
                 var barGo = new GameObject($"EqBar_{i}");
-                barGo.transform.SetParent(eqContainer.transform, false);
+                barGo.transform.SetParent(container.transform, false);
 
                 var barRect = barGo.AddComponent<RectTransform>();
-                barRect.anchorMin = new Vector2(i * barWidth + 0.002f, 0);
-                barRect.anchorMax = new Vector2((i + 1) * barWidth - 0.002f, 0.5f);
+                if (flipY)
+                {
+                    // 상단: 위에서 아래로 내려옴
+                    barRect.anchorMin = new Vector2(i * barWidth + 0.002f, 0.5f);
+                    barRect.anchorMax = new Vector2((i + 1) * barWidth - 0.002f, 1f);
+                }
+                else
+                {
+                    barRect.anchorMin = new Vector2(i * barWidth + 0.002f, 0);
+                    barRect.anchorMax = new Vector2((i + 1) * barWidth - 0.002f, 0.5f);
+                }
                 barRect.offsetMin = Vector2.zero;
                 barRect.offsetMax = Vector2.zero;
 
                 var barImg = barGo.AddComponent<Image>();
                 barImg.raycastTarget = false;
-                // 오렌지→옐로우 그라데이션 (BIT.jpg 이퀄라이저 색상)
+                // 시안→마젠타 그라데이션 (사이버펑크)
                 float t = (float)i / barCount;
-                barImg.color = Color.Lerp(UIColorPalette.EQ_ORANGE, UIColorPalette.EQ_YELLOW, t);
-                eqBars.Add(barImg);
+                barImg.color = Color.Lerp(UIColorPalette.NEON_CYAN, UIColorPalette.NEON_MAGENTA, t);
+                barList.Add(barImg);
             }
-
-            // 이퀄라이저 애니메이션 시작
-            eqAnimCoroutine = StartCoroutine(AnimateEqualizer());
         }
 
         private IEnumerator AnimateEqualizer()
         {
-            float[] phases = new float[eqBars.Count];
-            float[] speeds = new float[eqBars.Count];
-            for (int i = 0; i < phases.Length; i++)
+            int totalBars = eqBarsBottom.Count + eqBarsTop.Count;
+            float[] phases = new float[totalBars];
+            float[] speeds = new float[totalBars];
+            for (int i = 0; i < totalBars; i++)
             {
                 phases[i] = Random.Range(0f, Mathf.PI * 2f);
-                speeds[i] = Random.Range(1.5f, 4f);
+                speeds[i] = Random.Range(1.5f, 4.5f);
             }
 
             while (true)
             {
-                for (int i = 0; i < eqBars.Count; i++)
+                // 하단 바
+                for (int i = 0; i < eqBarsBottom.Count; i++)
                 {
-                    if (eqBars[i] == null) continue;
-                    float barRect_anchorMaxY = 0.15f + 0.85f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * speeds[i] + phases[i]));
-                    var rect = eqBars[i].GetComponent<RectTransform>();
-                    rect.anchorMax = new Vector2(rect.anchorMax.x, barRect_anchorMaxY);
+                    if (eqBarsBottom[i] == null) continue;
+                    float h = 0.12f + 0.88f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * speeds[i] + phases[i]));
+                    var rect = eqBarsBottom[i].GetComponent<RectTransform>();
+                    rect.anchorMax = new Vector2(rect.anchorMax.x, h);
+                }
+                // 상단 바
+                int offset = eqBarsBottom.Count;
+                for (int i = 0; i < eqBarsTop.Count; i++)
+                {
+                    if (eqBarsTop[i] == null) continue;
+                    float h = 0.12f + 0.88f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * speeds[offset + i] + phases[offset + i]));
+                    var rect = eqBarsTop[i].GetComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(rect.anchorMin.x, 1f - h);
                 }
                 yield return null;
             }
@@ -228,37 +282,56 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// BIT.jpg 스타일 네온 버튼 (마젠타/시안/퍼플 그라데이션)
+        /// 센세이셔널 버튼 리디자인 — 아이콘 + 서브텍스트 + 네온 글래스모피즘
         /// </summary>
         private void EnsureButtonMobileSize()
         {
-            var buttonConfigs = new (Button btn, string text, Color glowColor)[]
+            var buttonConfigs = new (Button btn, string icon, string text, string subText, Color glowColor)[]
             {
-                (playButton, "플레이", UIColorPalette.NEON_MAGENTA),
-                (libraryButton, "라이브러리", UIColorPalette.NEON_CYAN),
-                (settingsButton, "설정", UIColorPalette.NEON_PURPLE),
-                (exitButton, "종료", UIColorPalette.NEON_ORANGE)
+                (playButton, "\u25B6", "플레이", "지금 바로 리듬에 맞춰!", UIColorPalette.NEON_MAGENTA),
+                (libraryButton, "\u266B", "라이브러리", "내 음악으로 플레이", UIColorPalette.NEON_CYAN),
+                (settingsButton, "\u2699", "설정", "노트 속도 \u00B7 볼륨 조절", UIColorPalette.NEON_PURPLE),
+                (exitButton, "\u2715", "종료", "", UIColorPalette.NEON_ORANGE)
             };
+
+            // 버튼 컨테이너: 세로 중앙 배치
+            var btnContainer = new GameObject("ButtonContainer");
+            btnContainer.transform.SetParent(transform, false);
+            var btnContainerRect = btnContainer.AddComponent<RectTransform>();
+            btnContainerRect.anchorMin = new Vector2(0.075f, 0.12f);
+            btnContainerRect.anchorMax = new Vector2(0.925f, 0.52f);
+            btnContainerRect.offsetMin = Vector2.zero;
+            btnContainerRect.offsetMax = Vector2.zero;
+
+            var vLayout = btnContainer.AddComponent<VerticalLayoutGroup>();
+            vLayout.spacing = 12;
+            vLayout.childAlignment = TextAnchor.MiddleCenter;
+            vLayout.childControlWidth = true;
+            vLayout.childControlHeight = false;
+            vLayout.childForceExpandWidth = true;
+            vLayout.childForceExpandHeight = false;
+            vLayout.padding = new RectOffset(0, 0, 0, 0);
 
             foreach (var cfg in buttonConfigs)
             {
                 if (cfg.btn == null) continue;
 
+                cfg.btn.transform.SetParent(btnContainer.transform, false);
+
                 var rect = cfg.btn.GetComponent<RectTransform>();
                 if (rect != null)
-                {
-                    var size = rect.sizeDelta;
-                    size.y = 120f;
-                    size.x = Mathf.Max(size.x, 500f);
-                    rect.sizeDelta = size;
-                }
+                    rect.sizeDelta = new Vector2(0, 100f);
+
+                var le = cfg.btn.gameObject.GetComponent<LayoutElement>();
+                if (le == null) le = cfg.btn.gameObject.AddComponent<LayoutElement>();
+                le.preferredHeight = 100f;
 
                 // 어두운 반투명 배경
                 var img = cfg.btn.GetComponent<Image>();
                 if (img != null)
                     img.color = UIColorPalette.BG_BUTTON;
 
-                // 네온 테두리 (각 버튼별 고유 글로우 색상)
+                // 네온 테두리
                 var outline = cfg.btn.GetComponent<Outline>();
                 if (outline == null)
                     outline = cfg.btn.gameObject.AddComponent<Outline>();
@@ -273,29 +346,103 @@ namespace AIBeat.UI
                 colors.disabledColor = UIColorPalette.STATE_DISABLED;
                 cfg.btn.colors = colors;
 
-                // 텍스트 스타일
-                var tmp = cfg.btn.GetComponentInChildren<TMP_Text>();
-                if (tmp != null)
+                // 기존 텍스트를 아이콘 + 메인텍스트 + 서브텍스트 구조로 교체
+                var existingTmp = cfg.btn.GetComponentInChildren<TMP_Text>();
+
+                // HorizontalLayoutGroup으로 아이콘 + 텍스트 구성
+                // 기존 자식 모두 제거 후 새로 구성
+                foreach (Transform child in cfg.btn.transform)
                 {
-                    tmp.text = cfg.text;
-                    tmp.fontSize = 48;
-                    tmp.fontStyle = FontStyles.Bold;
-                    tmp.color = cfg.glowColor;
+                    Destroy(child.gameObject);
+                }
+
+                var hLayout = cfg.btn.gameObject.AddComponent<HorizontalLayoutGroup>();
+                hLayout.padding = new RectOffset(16, 16, 8, 8);
+                hLayout.spacing = 12;
+                hLayout.childAlignment = TextAnchor.MiddleLeft;
+                hLayout.childControlWidth = false;
+                hLayout.childControlHeight = true;
+                hLayout.childForceExpandWidth = false;
+                hLayout.childForceExpandHeight = true;
+
+                // 아이콘 텍스트
+                var iconGo = new GameObject("Icon");
+                iconGo.transform.SetParent(cfg.btn.transform, false);
+                var iconLE = iconGo.AddComponent<LayoutElement>();
+                iconLE.preferredWidth = 50;
+                var iconTmp = iconGo.AddComponent<TextMeshProUGUI>();
+                iconTmp.text = cfg.icon;
+                iconTmp.fontSize = 36;
+                iconTmp.color = cfg.glowColor;
+                iconTmp.alignment = TextAlignmentOptions.Center;
+                iconTmp.fontStyle = FontStyles.Bold;
+                iconTmp.raycastTarget = false;
+
+                // 메인 텍스트 + 서브텍스트 (세로 배치)
+                var textPanel = new GameObject("TextPanel");
+                textPanel.transform.SetParent(cfg.btn.transform, false);
+                var textPanelLE = textPanel.AddComponent<LayoutElement>();
+                textPanelLE.flexibleWidth = 1;
+
+                var textVLayout = textPanel.AddComponent<VerticalLayoutGroup>();
+                textVLayout.spacing = 2;
+                textVLayout.childAlignment = TextAnchor.MiddleLeft;
+                textVLayout.childControlWidth = true;
+                textVLayout.childControlHeight = true;
+                textVLayout.childForceExpandWidth = true;
+                textVLayout.childForceExpandHeight = false;
+
+                // 메인 텍스트
+                var mainTextGo = new GameObject("MainText");
+                mainTextGo.transform.SetParent(textPanel.transform, false);
+                var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
+                mainTmp.text = cfg.text;
+                mainTmp.fontSize = 36;
+                mainTmp.fontStyle = FontStyles.Bold;
+                mainTmp.color = cfg.glowColor;
+                mainTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                mainTmp.raycastTarget = false;
+
+                // 서브텍스트 (있는 경우)
+                if (!string.IsNullOrEmpty(cfg.subText))
+                {
+                    var subTextGo = new GameObject("SubText");
+                    subTextGo.transform.SetParent(textPanel.transform, false);
+                    var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
+                    subTmp.text = cfg.subText;
+                    subTmp.fontSize = 16;
+                    subTmp.color = cfg.glowColor.WithAlpha(0.5f);
+                    subTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                    subTmp.raycastTarget = false;
                 }
             }
         }
 
+        /// <summary>
+        /// 타이틀 애니메이션 — "A.I. BEAT" + "INFINITE MIX" + 캐치프레이즈
+        /// </summary>
         private void AnimateTitle()
         {
             if (titleText == null) return;
 
-            titleText.fontSize = 100;
+            // 타이틀 위치 조정 (화면 상단 55~75% 영역)
+            var titleRect = titleText.GetComponent<RectTransform>();
+            if (titleRect != null)
+            {
+                titleRect.anchorMin = new Vector2(0, 0.60f);
+                titleRect.anchorMax = new Vector2(1, 0.82f);
+                titleRect.offsetMin = new Vector2(20, 0);
+                titleRect.offsetMax = new Vector2(-20, 0);
+            }
+
+            titleText.fontSize = 110;
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            titleText.alignment = TextAlignmentOptions.Center;
 
             // 강한 네온 글로우
-            titleText.outlineWidth = 0.15f;
-            titleText.outlineColor = new Color32(0, 140, 255, 200);
+            titleText.outlineWidth = 0.25f;
+            titleText.outlineColor = new Color32(0, 140, 255, 220);
 
             var outline = titleText.GetComponent<Outline>();
             if (outline == null)
@@ -305,6 +452,89 @@ namespace AIBeat.UI
 
             titleText.transform.localScale = Vector3.zero;
             UIAnimator.ScaleTo(this, titleText.transform, Vector3.one, 0.5f);
+
+            // === 서브타이틀: "INFINITE MIX" ===
+            var subGo = new GameObject("SubtitleText");
+            subGo.transform.SetParent(transform, false);
+            var subRect = subGo.AddComponent<RectTransform>();
+            subRect.anchorMin = new Vector2(0, 0.55f);
+            subRect.anchorMax = new Vector2(1, 0.62f);
+            subRect.offsetMin = new Vector2(20, 0);
+            subRect.offsetMax = new Vector2(-20, 0);
+
+            subtitleText = subGo.AddComponent<TextMeshProUGUI>();
+            subtitleText.text = "\u221E  I N F I N I T E   M I X  \u221E";
+            subtitleText.fontSize = 28;
+            subtitleText.color = UIColorPalette.NEON_MAGENTA;
+            subtitleText.alignment = TextAlignmentOptions.Center;
+            subtitleText.fontStyle = FontStyles.Bold;
+            subtitleText.characterSpacing = 6f;
+            subtitleText.raycastTarget = false;
+
+            // 서브타이틀 글로우
+            subtitleText.outlineWidth = 0.12f;
+            subtitleText.outlineColor = new Color32(255, 40, 160, 160);
+
+            subGo.transform.localScale = Vector3.zero;
+            UIAnimator.ScaleTo(this, subGo.transform, Vector3.one, 0.6f);
+
+            // === 캐치프레이즈: "AI가 만드는 무한 리듬" ===
+            var catchGo = new GameObject("CatchphraseText");
+            catchGo.transform.SetParent(transform, false);
+            var catchRect = catchGo.AddComponent<RectTransform>();
+            catchRect.anchorMin = new Vector2(0, 0.50f);
+            catchRect.anchorMax = new Vector2(1, 0.56f);
+            catchRect.offsetMin = new Vector2(20, 0);
+            catchRect.offsetMax = new Vector2(-20, 0);
+
+            catchphraseText = catchGo.AddComponent<TextMeshProUGUI>();
+            catchphraseText.text = "AI\uAC00 \uB9CC\uB4DC\uB294 \uBB34\uD55C \uB9AC\uB4EC";
+            catchphraseText.fontSize = 20;
+            catchphraseText.color = new Color(0.6f, 0.65f, 0.8f, 0f); // 투명에서 시작
+            catchphraseText.alignment = TextAlignmentOptions.Center;
+            catchphraseText.raycastTarget = false;
+
+            // 페이드인 애니메이션 (1초 딜레이 후)
+            StartCoroutine(FadeInCatchphrase());
+
+            // 버전 텍스트 위치 조정 (화면 최하단)
+            if (versionText != null)
+            {
+                var verRect = versionText.GetComponent<RectTransform>();
+                if (verRect != null)
+                {
+                    verRect.anchorMin = new Vector2(0, 0);
+                    verRect.anchorMax = new Vector2(1, 0.04f);
+                    verRect.offsetMin = Vector2.zero;
+                    verRect.offsetMax = Vector2.zero;
+                }
+                versionText.fontSize = 14;
+                versionText.alignment = TextAlignmentOptions.Center;
+                versionText.color = new Color(0.4f, 0.4f, 0.5f, 0.6f);
+            }
+
+            // 한국어 폰트 적용
+            var korFont = KoreanFontManager.KoreanFont;
+            if (korFont != null)
+            {
+                subtitleText.font = korFont;
+                catchphraseText.font = korFont;
+            }
+        }
+
+        private IEnumerator FadeInCatchphrase()
+        {
+            yield return new WaitForSecondsRealtime(0.8f);
+            float elapsed = 0f;
+            float duration = 1.2f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float alpha = Mathf.Clamp01(elapsed / duration);
+                if (catchphraseText != null)
+                    catchphraseText.color = new Color(0.6f, 0.65f, 0.8f, alpha * 0.8f);
+                yield return null;
+            }
         }
 
         private void OnPlayClicked()
@@ -370,6 +600,7 @@ namespace AIBeat.UI
         private void OnDestroy()
         {
             if (eqAnimCoroutine != null) StopCoroutine(eqAnimCoroutine);
+            if (breatheCoroutine != null) StopCoroutine(breatheCoroutine);
             if (playButton != null) playButton.onClick.RemoveAllListeners();
             if (libraryButton != null) libraryButton.onClick.RemoveAllListeners();
             if (settingsButton != null) settingsButton.onClick.RemoveAllListeners();
