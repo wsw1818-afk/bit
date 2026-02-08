@@ -104,8 +104,7 @@ namespace AIBeat.UI
             if (resultPanel != null) resultPanel.SetActive(false);
             if (judgementText != null) judgementText.gameObject.SetActive(false);
 
-            // Z-order 보장: 일시정지 버튼과 패널이 항상 최상위
-            if (pauseButton != null) pauseButton.transform.SetAsLastSibling();
+            // Z-order 보장: 일시정지 패널이 항상 최상위 (버튼은 TopBar 내부)
             if (pausePanel != null) pausePanel.transform.SetAsLastSibling();
 
             // Combo 초기 텍스트 비우기 (콤보 0일때 표시 안함)
@@ -193,14 +192,14 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// HUD 리디자인 — 사이버펑크 네온 스타일
-        /// 상단: [곡명 | ★점수★ | 콤보 | ⏸] + 네온 글로우
-        /// 하단: 판정 통계 바 (네온 그라데이션)
+        /// HUD 리디자인 — unnamed.jpg 레퍼런스 기반
+        /// 상단 1행: [곡명(녹색)] [LED 점수] [COMBO] [||일시정지(마젠타)]
+        /// 상단 2행: [P 0][G 0][OK 0][B 0][M 0] (StatsHUD에서 별도 처리)
         /// </summary>
         private void RepositionHUD()
         {
             // ============================================================
-            // === 메인 TopBar (전체 너비, 글래스모피즘 배경) ===
+            // === 메인 TopBar (전체 너비, 높이 100px) ===
             // ============================================================
             var topBar = new GameObject("TopBar");
             topBar.transform.SetParent(transform, false);
@@ -209,64 +208,39 @@ namespace AIBeat.UI
             topBarRect.anchorMax = new Vector2(1, 1);
             topBarRect.pivot = new Vector2(0.5f, 1);
             topBarRect.anchoredPosition = Vector2.zero;
-            topBarRect.sizeDelta = new Vector2(0, 130);
+            topBarRect.sizeDelta = new Vector2(0, 100);
 
-            // 글래스 배경 (그라데이션 느낌 - 상단이 더 어둡게)
+            // 검정에 가까운 진한 배경
             var topBarBg = topBar.AddComponent<Image>();
-            topBarBg.color = new Color(0.01f, 0.005f, 0.04f, 0.92f);
+            topBarBg.color = new Color(0.01f, 0.005f, 0.03f, 0.95f);
             topBarBg.raycastTarget = false;
-
-            // 하단 네온 라인 (시안 글로우)
-            var glowLine = new GameObject("GlowLine");
-            glowLine.transform.SetParent(topBar.transform, false);
-            var glowRect = glowLine.AddComponent<RectTransform>();
-            glowRect.anchorMin = new Vector2(0, 0);
-            glowRect.anchorMax = new Vector2(1, 0);
-            glowRect.pivot = new Vector2(0.5f, 0);
-            glowRect.anchoredPosition = Vector2.zero;
-            glowRect.sizeDelta = new Vector2(0, 3);
-            var glowImg = glowLine.AddComponent<Image>();
-            glowImg.color = UIColorPalette.NEON_CYAN.WithAlpha(0.7f);
-            glowImg.raycastTarget = false;
-
-            // 넓은 글로우 (소프트)
-            var softGlow = new GameObject("SoftGlow");
-            softGlow.transform.SetParent(topBar.transform, false);
-            var softGlowRect = softGlow.AddComponent<RectTransform>();
-            softGlowRect.anchorMin = new Vector2(0, 0);
-            softGlowRect.anchorMax = new Vector2(1, 0);
-            softGlowRect.pivot = new Vector2(0.5f, 0.5f);
-            softGlowRect.anchoredPosition = new Vector2(0, -4);
-            softGlowRect.sizeDelta = new Vector2(0, 12);
-            var softGlowImg = softGlow.AddComponent<Image>();
-            softGlowImg.color = UIColorPalette.NEON_CYAN.WithAlpha(0.15f);
-            softGlowImg.raycastTarget = false;
 
             // HorizontalLayoutGroup
             var hLayout = topBar.AddComponent<HorizontalLayoutGroup>();
-            hLayout.padding = new RectOffset(16, 16, 6, 10);
-            hLayout.spacing = 8;
+            hLayout.padding = new RectOffset(10, 10, 6, 6);
+            hLayout.spacing = 6;
             hLayout.childAlignment = TextAnchor.MiddleCenter;
             hLayout.childControlWidth = false;
             hLayout.childControlHeight = true;
             hLayout.childForceExpandWidth = false;
             hLayout.childForceExpandHeight = true;
 
-            // --- 곡명 (왼쪽, 컴팩트) ---
+            // --- 곡명 (좌측, 녹색, 2줄 가능) ---
             if (songTitleText != null)
             {
                 songTitleText.transform.SetParent(topBar.transform, false);
                 var titleLE = songTitleText.gameObject.AddComponent<LayoutElement>();
-                titleLE.preferredWidth = 220;
-                songTitleText.fontSize = 28;
+                titleLE.preferredWidth = 160;
+                songTitleText.fontSize = 22;
                 songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
-                songTitleText.color = UIColorPalette.NEON_CYAN.WithAlpha(0.65f);
+                songTitleText.color = UIColorPalette.NEON_GREEN;
                 songTitleText.fontStyle = FontStyles.Bold;
-                songTitleText.textWrappingMode = TextWrappingModes.NoWrap;
+                songTitleText.textWrappingMode = TextWrappingModes.Normal;
                 songTitleText.overflowMode = TextOverflowModes.Ellipsis;
+                songTitleText.maxVisibleLines = 2;
             }
 
-            // --- 점수 (중앙, 대형 네온 스타일) ---
+            // --- 점수 (중앙, LED 도트 매트릭스 느낌) ---
             if (scoreText != null)
             {
                 var scorePanel = scoreText.transform.parent;
@@ -276,8 +250,10 @@ namespace AIBeat.UI
                     if (labelTransform != null)
                         labelTransform.gameObject.SetActive(false);
 
+                    // 점수 패널 배경: 어두운 사각형
                     var panelImage = scorePanel.GetComponent<Image>();
-                    if (panelImage != null) panelImage.color = Color.clear;
+                    if (panelImage != null)
+                        panelImage.color = new Color(0.02f, 0.02f, 0.05f, 0.8f);
                     var panelOutline = scorePanel.GetComponent<Outline>();
                     if (panelOutline != null) Destroy(panelOutline);
 
@@ -286,37 +262,36 @@ namespace AIBeat.UI
                     scoreLE.flexibleWidth = 1;
                 }
 
-                scoreText.fontSize = 72;
+                scoreText.fontSize = 48;
                 scoreText.alignment = TextAlignmentOptions.Center;
                 scoreText.color = Color.white;
                 scoreText.fontStyle = FontStyles.Bold;
-                // 네온 시안 아웃라인 글로우
-                scoreText.outlineWidth = 0.15f;
-                scoreText.outlineColor = new Color32(0, 200, 255, 180);
+                scoreText.characterSpacing = 4f; // LED 느낌 글자 간격
+                scoreText.outlineWidth = 0.12f;
+                scoreText.outlineColor = new Color32(0, 200, 255, 140);
             }
 
-            // --- 콤보 (오른쪽, 세로 2줄: 숫자 + "COMBO" 라벨) ---
-            // 우측에 일시정지 버튼(90px) 공간 확보를 위해 축소
+            // --- COMBO (우측, 2줄: "COMBO" 라벨 + 숫자) ---
             if (comboText != null)
             {
                 comboText.transform.SetParent(topBar.transform, false);
                 var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
-                comboLE.preferredWidth = 180;
-                comboText.fontSize = 44;
-                comboText.alignment = TextAlignmentOptions.MidlineRight;
-                comboText.color = UIColorPalette.NEON_YELLOW.WithAlpha(0.95f);
+                comboLE.preferredWidth = 130;
+                comboText.fontSize = 40;
+                comboText.alignment = TextAlignmentOptions.Center;
+                comboText.color = Color.white;
                 comboText.fontStyle = FontStyles.Bold;
-                comboText.outlineWidth = 0.2f;
-                comboText.outlineColor = new Color32(255, 120, 0, 160);
                 comboText.text = "";
             }
 
-            // 일시정지 버튼은 독립 배치 (TopBar에 넣지 않음 - 레이아웃 밀림 방지)
-            // PauseButton은 Canvas 직접 자식으로 우상단 고정
-            // sibling order를 TopBar보다 뒤로 설정하여 항상 위에 렌더링
+            // --- 일시정지 버튼 (TopBar 내부 우측 끝, 마젠타) ---
             if (pauseButton != null)
             {
-                pauseButton.transform.SetAsLastSibling();
+                pauseButton.transform.SetParent(topBar.transform, false);
+                var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
+                pauseLE.preferredWidth = 70;
+                pauseLE.preferredHeight = 70;
+                pauseLE.minWidth = 70;
             }
 
             // ============================================================
@@ -340,32 +315,21 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일용 일시정지 버튼 — 독립 고정 배치 (TopBar 우측)
-        /// TopBar의 HorizontalLayoutGroup과 무관하게 항상 표시
+        /// 모바일용 일시정지 버튼 — 마젠타 배경, TopBar 내부 배치용
         /// </summary>
         private void CreatePauseButton()
         {
             var pauseBtnGo = new GameObject("PauseButton");
             pauseBtnGo.transform.SetParent(transform, false);
 
-            // 화면 우상단 고정 (TopBar 영역 내, 레이아웃과 무관)
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
-            btnRect.anchorMin = new Vector2(1, 1);
-            btnRect.anchorMax = new Vector2(1, 1);
-            btnRect.pivot = new Vector2(1, 1);
-            btnRect.anchoredPosition = new Vector2(-12, -25);
-            btnRect.sizeDelta = new Vector2(90, 90);
+            btnRect.sizeDelta = new Vector2(70, 70);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
-            btnImage.color = new Color(0.05f, 0.02f, 0.15f, 0.85f);
-            btnImage.raycastTarget = true; // 터치 감지 필수
+            btnImage.color = UIColorPalette.PAUSE_BTN_BG;
+            btnImage.raycastTarget = true;
 
-            // 시안 네온 테두리
-            var btnOutline = pauseBtnGo.AddComponent<Outline>();
-            btnOutline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.7f);
-            btnOutline.effectDistance = new Vector2(2f, -2f);
-
-            // 일시정지 아이콘 (||)
+            // "||" 아이콘 (흰색)
             var textGo = new GameObject("PauseIcon");
             textGo.transform.SetParent(pauseBtnGo.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
@@ -375,8 +339,8 @@ namespace AIBeat.UI
             textRect.offsetMax = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
             iconText.text = "| |";
-            iconText.fontSize = 40;
-            iconText.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            iconText.fontSize = 36;
+            iconText.color = Color.white;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
             iconText.raycastTarget = false;
@@ -390,8 +354,6 @@ namespace AIBeat.UI
                     gameplayController = FindFirstObjectByType<GameplayController>();
                 gameplayController?.PauseGame();
             });
-
-            Debug.Log("[GameplayUI] PauseButton created");
         }
 
         /// <summary>
@@ -696,8 +658,9 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 판정 통계 HUD — TopBar 바로 아래, 네온 글로우 셀 스타일
-        /// 각 판정에 개별 배경 + 네온 테두리 + 컬러풀 라벨
+        /// 판정 통계 HUD — unnamed.jpg 레퍼런스 기반
+        /// TopBar 바로 아래, 각 셀에 고유 색상 배경
+        /// [P 0] [G 0] [OK 0] [B 0] [M 0]
         /// </summary>
         private void CreateStatsHUD()
         {
@@ -708,62 +671,44 @@ namespace AIBeat.UI
             statsRect.anchorMin = new Vector2(0, 1);
             statsRect.anchorMax = new Vector2(1, 1);
             statsRect.pivot = new Vector2(0.5f, 1);
-            statsRect.anchoredPosition = new Vector2(0, -130); // TopBar(130px) 바로 아래
-            statsRect.sizeDelta = new Vector2(0, 50);
+            statsRect.anchoredPosition = new Vector2(0, -100); // TopBar(100px) 바로 아래
+            statsRect.sizeDelta = new Vector2(0, 44);
 
-            // 배경 (거의 투명, 미묘한 그라데이션 느낌)
+            // 배경 (어두운, 거의 투명)
             var bgImage = statsPanel.AddComponent<Image>();
-            bgImage.color = new Color(0.01f, 0.005f, 0.03f, 0.7f);
+            bgImage.color = new Color(0.005f, 0.005f, 0.02f, 0.8f);
             bgImage.raycastTarget = false;
-
-            // 하단 구분선 (마젠타 글로우)
-            var statGlow = new GameObject("StatGlowLine");
-            statGlow.transform.SetParent(statsPanel.transform, false);
-            var statGlowRect = statGlow.AddComponent<RectTransform>();
-            statGlowRect.anchorMin = new Vector2(0, 0);
-            statGlowRect.anchorMax = new Vector2(1, 0);
-            statGlowRect.pivot = new Vector2(0.5f, 0);
-            statGlowRect.anchoredPosition = Vector2.zero;
-            statGlowRect.sizeDelta = new Vector2(0, 2);
-            var statGlowImg = statGlow.AddComponent<Image>();
-            statGlowImg.color = UIColorPalette.NEON_MAGENTA.WithAlpha(0.4f);
-            statGlowImg.raycastTarget = false;
 
             // HorizontalLayoutGroup
             var layout = statsPanel.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 4, 4);
-            layout.spacing = 6;
+            layout.padding = new RectOffset(6, 6, 3, 3);
+            layout.spacing = 4;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            // 판정별 네온 셀 생성
-            statsPerfectText = CreateStatsCell(statsPanel.transform, "P", "0", perfectColor, UIColorPalette.NEON_YELLOW);
-            statsGreatText = CreateStatsCell(statsPanel.transform, "G", "0", greatColor, UIColorPalette.NEON_CYAN);
-            statsGoodText = CreateStatsCell(statsPanel.transform, "OK", "0", goodColor, UIColorPalette.NEON_GREEN);
-            statsBadText = CreateStatsCell(statsPanel.transform, "B", "0", badColor, UIColorPalette.NEON_MAGENTA);
-            statsMissText = CreateStatsCell(statsPanel.transform, "M", "0", missColor, UIColorPalette.TEXT_DIM);
+            // 판정별 색상 셀 생성
+            statsPerfectText = CreateStatsCell(statsPanel.transform, "P", "0", perfectColor, UIColorPalette.STATS_BG_PERFECT);
+            statsGreatText = CreateStatsCell(statsPanel.transform, "G", "0", greatColor, UIColorPalette.STATS_BG_GREAT);
+            statsGoodText = CreateStatsCell(statsPanel.transform, "OK", "0", goodColor, UIColorPalette.STATS_BG_GOOD);
+            statsBadText = CreateStatsCell(statsPanel.transform, "B", "0", badColor, UIColorPalette.STATS_BG_BAD);
+            statsMissText = CreateStatsCell(statsPanel.transform, "M", "0", missColor, UIColorPalette.STATS_BG_MISS);
         }
 
         /// <summary>
-        /// 판정 통계 셀 생성 — 개별 네온 배경 + 컬러 텍스트
+        /// 판정 통계 셀 — 고유 색상 배경 + 라벨 + 카운트
         /// </summary>
-        private TMP_Text CreateStatsCell(Transform parent, string label, string value, Color textColor, Color borderColor)
+        private TMP_Text CreateStatsCell(Transform parent, string label, string value, Color textColor, Color bgColor)
         {
             var cell = new GameObject($"Stats_{label}");
             cell.transform.SetParent(parent, false);
 
-            // 셀 배경 (어두운 + 미묘한 컬러 틴트)
+            // 셀 배경 (각 판정의 고유 색상)
             var cellBg = cell.AddComponent<Image>();
-            cellBg.color = new Color(borderColor.r * 0.08f, borderColor.g * 0.08f, borderColor.b * 0.08f, 0.6f);
+            cellBg.color = bgColor;
             cellBg.raycastTarget = false;
-
-            // 네온 테두리
-            var cellOutline = cell.AddComponent<Outline>();
-            cellOutline.effectColor = borderColor.WithAlpha(0.35f);
-            cellOutline.effectDistance = new Vector2(1f, -1f);
 
             // 텍스트
             var textGo = new GameObject("Text");
@@ -775,8 +720,8 @@ namespace AIBeat.UI
             textRect.offsetMax = Vector2.zero;
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = $"<color=#{ColorUtility.ToHtmlStringRGB(textColor)}>{label}</color> {value}";
-            tmp.fontSize = 30;
+            tmp.text = $"<color=#{ColorUtility.ToHtmlStringRGB(textColor)}>{label}</color>{value}";
+            tmp.fontSize = 24;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
@@ -939,44 +884,36 @@ namespace AIBeat.UI
         {
             if (comboText != null)
             {
+                // 레퍼런스: "COMBO" 라벨 위, 숫자 아래
                 if (combo <= 0)
                 {
-                    comboText.text = "";
-                }
-                else if (combo >= 100)
-                {
-                    comboText.text = $"<size=56>{combo}</size>\n<size=20>MAX COMBO</size>";
+                    comboText.text = "<size=18>COMBO</size>\n<size=36>0</size>";
                 }
                 else
                 {
-                    comboText.text = $"<size=50>{combo}</size>\n<size=18>COMBO</size>";
+                    comboText.text = $"<size=18>COMBO</size>\n<size=40>{combo}</size>";
                 }
 
-                // 콤보 색상 단계 (네온 글로우 + 아웃라인 변화)
+                // 콤보 색상 단계
                 if (combo >= 100)
                 {
-                    comboText.color = UIColorPalette.COMBO_100; // 마젠타
-                    comboText.outlineColor = new Color32(255, 40, 160, 200);
+                    comboText.color = UIColorPalette.COMBO_100;
                 }
                 else if (combo >= 50)
                 {
-                    comboText.color = UIColorPalette.COMBO_50;  // 옐로우
-                    comboText.outlineColor = new Color32(255, 200, 0, 180);
+                    comboText.color = UIColorPalette.COMBO_50;
                 }
                 else if (combo >= 25)
                 {
-                    comboText.color = UIColorPalette.COMBO_25;  // 시안
-                    comboText.outlineColor = new Color32(0, 200, 255, 160);
+                    comboText.color = UIColorPalette.COMBO_25;
                 }
                 else if (combo >= 10)
                 {
-                    comboText.color = UIColorPalette.COMBO_10;  // 그린
-                    comboText.outlineColor = new Color32(50, 255, 100, 140);
+                    comboText.color = UIColorPalette.COMBO_10;
                 }
                 else
                 {
-                    comboText.color = UIColorPalette.COMBO_LOW; // 라이트 블루
-                    comboText.outlineColor = new Color32(100, 150, 255, 100);
+                    comboText.color = Color.white;
                 }
 
                 // 10콤보 마일스톤: 큰 펄스

@@ -68,6 +68,14 @@ namespace AIBeat.UI
         public static readonly Color COMBO_50 = NEON_YELLOW;                               // 50+
         public static readonly Color COMBO_100 = NEON_MAGENTA;                             // 100+
 
+        // ===== 판정 통계 셀 배경색 (unnamed.jpg 레퍼런스) =====
+        public static readonly Color STATS_BG_PERFECT = new Color(0.55f, 0.50f, 0.0f, 0.85f);  // 어두운 노랑
+        public static readonly Color STATS_BG_GREAT = new Color(0.0f, 0.35f, 0.45f, 0.85f);    // 어두운 시안
+        public static readonly Color STATS_BG_GOOD = new Color(0.0f, 0.35f, 0.1f, 0.85f);      // 어두운 초록
+        public static readonly Color STATS_BG_BAD = new Color(0.5f, 0.0f, 0.15f, 0.85f);       // 어두운 레드/마젠타
+        public static readonly Color STATS_BG_MISS = new Color(0.2f, 0.2f, 0.25f, 0.85f);      // 어두운 회색
+        public static readonly Color PAUSE_BTN_BG = new Color(0.75f, 0.08f, 0.45f, 0.95f);     // 마젠타/핑크
+
         // ===== 특수 용도 =====
         public static readonly Color ERROR_RED = new Color(1f, 0.15f, 0.15f, 1f);
         public static readonly Color SUCCESS_GREEN = NEON_GREEN;
