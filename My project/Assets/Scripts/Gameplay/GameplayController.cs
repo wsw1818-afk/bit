@@ -864,9 +864,7 @@ namespace AIBeat.Gameplay
             AudioManager.Instance?.PauseBGM();
             if (noteSpawner != null) noteSpawner.enabled = false;
             gameplayUI?.ShowPauseMenu(true);
-#if UNITY_EDITOR
-            Debug.Log("[GameplayController] Game paused");
-#endif
+            Debug.Log($"[GameplayController] Game paused, isPaused={isPaused}, isPlaying={isPlaying}");
         }
 
         public void ResumeGame()
@@ -884,9 +882,7 @@ namespace AIBeat.Gameplay
             AudioManager.Instance?.ResumeBGM();
             if (noteSpawner != null) noteSpawner.enabled = true;
             gameplayUI?.ShowPauseMenu(false);
-#if UNITY_EDITOR
-            Debug.Log("[GameplayController] Game resumed");
-#endif
+            Debug.Log($"[GameplayController] Game resumed, isPaused={isPaused}, isPlaying={isPlaying}");
         }
 
         /// <summary>

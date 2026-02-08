@@ -104,6 +104,10 @@ namespace AIBeat.UI
             if (resultPanel != null) resultPanel.SetActive(false);
             if (judgementText != null) judgementText.gameObject.SetActive(false);
 
+            // Z-order 보장: 일시정지 버튼과 패널이 항상 최상위
+            if (pauseButton != null) pauseButton.transform.SetAsLastSibling();
+            if (pausePanel != null) pausePanel.transform.SetAsLastSibling();
+
             // Combo 초기 텍스트 비우기 (콤보 0일때 표시 안함)
             if (comboText != null) comboText.text = "";
 
@@ -111,6 +115,8 @@ namespace AIBeat.UI
             KoreanFontManager.ApplyFontToAll(gameObject);
 
             EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
+
+            Debug.Log($"[GameplayUI] Awake complete - pauseBtn:{pauseButton != null}, pausePanel:{pausePanel != null}, gameplayCtrl:{gameplayController != null}");
         }
 
         /// <summary>
@@ -290,11 +296,12 @@ namespace AIBeat.UI
             }
 
             // --- 콤보 (오른쪽, 세로 2줄: 숫자 + "COMBO" 라벨) ---
+            // 우측에 일시정지 버튼(90px) 공간 확보를 위해 축소
             if (comboText != null)
             {
                 comboText.transform.SetParent(topBar.transform, false);
                 var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
-                comboLE.preferredWidth = 240;
+                comboLE.preferredWidth = 180;
                 comboText.fontSize = 44;
                 comboText.alignment = TextAlignmentOptions.MidlineRight;
                 comboText.color = UIColorPalette.NEON_YELLOW.WithAlpha(0.95f);
@@ -304,13 +311,12 @@ namespace AIBeat.UI
                 comboText.text = "";
             }
 
-            // --- 일시정지 버튼 (오른쪽 끝, 원형 네온) ---
+            // 일시정지 버튼은 독립 배치 (TopBar에 넣지 않음 - 레이아웃 밀림 방지)
+            // PauseButton은 Canvas 직접 자식으로 우상단 고정
+            // sibling order를 TopBar보다 뒤로 설정하여 항상 위에 렌더링
             if (pauseButton != null)
             {
-                pauseButton.transform.SetParent(topBar.transform, false);
-                var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
-                pauseLE.preferredWidth = 80;
-                pauseLE.preferredHeight = 80;
+                pauseButton.transform.SetAsLastSibling();
             }
 
             // ============================================================
@@ -334,45 +340,58 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 모바일용 일시정지 버튼 — 네온 원형 스타일
+        /// 모바일용 일시정지 버튼 — 독립 고정 배치 (TopBar 우측)
+        /// TopBar의 HorizontalLayoutGroup과 무관하게 항상 표시
         /// </summary>
         private void CreatePauseButton()
         {
             var pauseBtnGo = new GameObject("PauseButton");
             pauseBtnGo.transform.SetParent(transform, false);
 
+            // 화면 우상단 고정 (TopBar 영역 내, 레이아웃과 무관)
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
             btnRect.anchorMin = new Vector2(1, 1);
             btnRect.anchorMax = new Vector2(1, 1);
             btnRect.pivot = new Vector2(1, 1);
-            btnRect.anchoredPosition = new Vector2(-10, -10);
-            btnRect.sizeDelta = new Vector2(80, 80);
+            btnRect.anchoredPosition = new Vector2(-12, -25);
+            btnRect.sizeDelta = new Vector2(90, 90);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
-            btnImage.color = new Color(0.05f, 0.02f, 0.15f, 0.8f);
+            btnImage.color = new Color(0.05f, 0.02f, 0.15f, 0.85f);
+            btnImage.raycastTarget = true; // 터치 감지 필수
 
             // 시안 네온 테두리
             var btnOutline = pauseBtnGo.AddComponent<Outline>();
-            btnOutline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.6f);
-            btnOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            btnOutline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.7f);
+            btnOutline.effectDistance = new Vector2(2f, -2f);
 
-            // 일시정지 아이콘 (두꺼운 바 2개)
+            // 일시정지 아이콘 (||)
             var textGo = new GameObject("PauseIcon");
             textGo.transform.SetParent(pauseBtnGo.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
             iconText.text = "| |";
-            iconText.fontSize = 36;
+            iconText.fontSize = 40;
             iconText.color = UIColorPalette.NEON_CYAN_BRIGHT;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
+            iconText.raycastTarget = false;
 
             pauseButton = pauseBtnGo.AddComponent<Button>();
             pauseButton.targetGraphic = btnImage;
-            pauseButton.onClick.AddListener(() => gameplayController?.PauseGame());
+            pauseButton.onClick.AddListener(() =>
+            {
+                Debug.Log("[GameplayUI] Pause button clicked!");
+                if (gameplayController == null)
+                    gameplayController = FindFirstObjectByType<GameplayController>();
+                gameplayController?.PauseGame();
+            });
+
+            Debug.Log("[GameplayUI] PauseButton created");
         }
 
         /// <summary>
@@ -1077,8 +1096,16 @@ namespace AIBeat.UI
 
         public void ShowPauseMenu(bool show)
         {
+            Debug.Log($"[GameplayUI] ShowPauseMenu({show}), pausePanel:{pausePanel != null}");
             if (pausePanel != null)
+            {
                 pausePanel.SetActive(show);
+                if (show)
+                {
+                    // 최상위에 렌더링되도록 보장
+                    pausePanel.transform.SetAsLastSibling();
+                }
+            }
             // 일시정지 중에는 버튼 숨김
             if (pauseButton != null)
                 pauseButton.gameObject.SetActive(!show);
