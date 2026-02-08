@@ -26,30 +26,7 @@ namespace AIBeat.Core
         {
             _initialized = true;
 
-#if UNITY_EDITOR
-            // 에디터: 기존 Dynamic SDF 에셋 시도 (에디터는 런타임 글리프 생성 가능)
-            string[] paths = {
-                "Fonts & Materials/MalgunGothicBold SDF",
-                "Fonts/MalgunGothicBold SDF",
-                "MalgunGothicBold SDF",
-            };
-
-            foreach (var path in paths)
-            {
-                var loaded = Resources.Load<TMP_FontAsset>(path);
-                if (loaded != null && loaded.atlasPopulationMode == AtlasPopulationMode.Dynamic
-                    && loaded.sourceFontFile != null)
-                {
-                    if (loaded.TryAddCharacters("가나다라마바사"))
-                    {
-                        _koreanFont = loaded;
-                        Debug.Log($"[KoreanFontManager] Editor: Dynamic SDF 사용: {path}");
-                        SetAsGlobalDefault(_koreanFont);
-                        return;
-                    }
-                }
-            }
-#endif
+            // 에디터/런타임 공통: 항상 TTF에서 새로 생성 (기존 SDF 에셋의 글리프 메트릭 문제 방지)
 
             // APK + 에디터 폴백: TTF에서 런타임 Dynamic SDF 생성
             CreateFromTTF();
