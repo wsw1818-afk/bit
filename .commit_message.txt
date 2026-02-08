@@ -1,1 +1,1 @@
-🎨 unnamed.jpg 배경 이미지 적용: 좌/우 DJ클럽 사이드 + 하단 턴테이블 크롭 배치
+🔧 배경 이미지 Android 호환 수정: Sprite.Create→RawImage+uvRect (isReadable 불필요)
