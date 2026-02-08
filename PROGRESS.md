@@ -1,13 +1,22 @@
 # PROGRESS.md (현재 진행: 얇게 유지)
 
 ## Dashboard
-- Progress: 100% (세션 34 - 전체 플로우 종합 재검증 통과)
+- Progress: 100% (세션 35 - UI 비주얼 오버홀 완료)
 - Risk: 낮음
 
 ## Today Goal
 - 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
+- **UI 비주얼 오버홀 (Bitmania 스타일 개편)**
 
 ## What changed (현재 세션)
+
+### 비주얼 오버홀 (NanoBanana Procedural)
+- **ProceduralImageGenerator**: API 제한 문제로 런타임 텍스처 생성 시스템 구현 (배경, 버튼 프레임, 트랙 등)
+- **UIColorPalette**: 고대비 네온(Cyan/Magenta/Gold) + 딥 블랙 테마로 전면 교체
+- **UI 스크립트 개편**:
+  - `MainMenuUI`: 사이버펑크 그리드 배경 + 네온 버튼 프레임 적용
+  - `SongSelectUI`: 이퀄라이저 바 높이/개수 증가, 반투명 리스트 디자인 적용
+  - `GameplayUI`: 노트 레인 배경에 Dark Procedural Texture 적용으로 시인성 개선
 
 ### 로컬 MP3 재생 전체 연결 완료
 - **SongRecord.AudioFileName** 필드 추가 — StreamingAssets 내 MP3 파일명 참조
@@ -19,6 +28,7 @@
 
 ### 검증
 - recompile_scripts → 0 에러, 0 경고 ✅
+- 런타임 텍스처 생성 정상 동작 확인
 
 ## Commands & Results (현재 세션)
 - recompile_scripts → **0 에러, 0 경고** ✅
@@ -38,6 +48,7 @@
 7. ~~**에너지 시스템**~~ → **제거됨** (곡 생성 기능 제거로 불필요)
 
 ## 아키텍처 결정 (세션 35)
+- **UI/UX**: 고대비 네온 스타일(Bitmania) + 런타임 절차적 텍스처 생성(ProceduralImageGenerator) 도입
 - **음악 소스**: Suno AI에서 수동 생성 → MP3 다운로드 → 게임에 로컬 로드
 - **API 연동 취소**: 비용 문제로 AIApiClient 사용 안 함
 - **노트 생성**: OfflineAudioAnalyzer(FFT 분석) + SmartBeatMapper(온셋→노트)로 자동 생성

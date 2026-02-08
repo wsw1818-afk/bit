@@ -95,20 +95,13 @@ namespace AIBeat.UI
             rect.offsetMax = Vector2.zero;
 
             var img = bgGo.AddComponent<Image>();
-            img.raycastTarget = false; // 배경은 터치 차단 안 함
-            var tex = Resources.Load<Texture2D>("UI/BIT");
-            if (tex != null)
-            {
-                var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-                img.sprite = sprite;
-                img.type = Image.Type.Simple;
-                img.preserveAspect = false;
-                img.color = new Color(1f, 1f, 1f, 0.35f);
-            }
-            else
-            {
-                img.color = UIColorPalette.BG_DEEP;
-            }
+            img.raycastTarget = false;
+            
+            // Procedural Generation 호출
+            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+            img.type = Image.Type.Sliced;
+            
+            // Legacy Resource Load 제거됨
 
             // 오버레이
             var overlayGo = new GameObject("DarkOverlay");
@@ -137,9 +130,14 @@ namespace AIBeat.UI
             containerRect.anchorMax = new Vector2(1, 0);
             containerRect.pivot = new Vector2(0.5f, 0);
             containerRect.anchoredPosition = Vector2.zero;
-            containerRect.sizeDelta = new Vector2(0, 100);
+            var containerRect = eqContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0, 0);
+            containerRect.anchorMax = new Vector2(1, 0);
+            containerRect.pivot = new Vector2(0.5f, 0);
+            containerRect.anchoredPosition = Vector2.zero;
+            containerRect.sizeDelta = new Vector2(0, 150); // Height increased for dramatic effect
 
-            int barCount = 25;
+            int barCount = 30; // More bars
             float barWidth = 1f / barCount;
 
             for (int i = 0; i < barCount; i++)

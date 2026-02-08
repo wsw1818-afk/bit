@@ -47,7 +47,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// BIT.jpg 배경 이미지 + 숨쉬기(Breathe) 펄스 효과
+        /// 배경 이미지 생성 (Procedural Cyberpunk)
         /// </summary>
         private void CreateBackgroundImage()
         {
@@ -66,20 +66,11 @@ namespace AIBeat.UI
 
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
-            var tex = Resources.Load<Texture2D>("UI/BIT");
-            if (tex != null)
-            {
-                var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-                img.sprite = sprite;
-                img.type = Image.Type.Simple;
-                img.preserveAspect = false;
-                img.color = new Color(1f, 1f, 1f, 0.5f);
-            }
-            else
-            {
-                img.color = UIColorPalette.BG_DEEP;
-            }
-
+            
+            // Procedural Generation 호출
+            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+            img.type = Image.Type.Sliced; // 또는 Simple, 텍스처에 따라
+            
             // 어두운 오버레이 (숨쉬기 효과 대상)
             var overlayGo = new GameObject("DarkOverlay");
             overlayGo.transform.SetParent(transform, false);
@@ -91,7 +82,7 @@ namespace AIBeat.UI
             overlayRect.offsetMax = Vector2.zero;
             var overlayImg = overlayGo.AddComponent<Image>();
             overlayImg.raycastTarget = false;
-            overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.55f);
+            overlayImg.color = UIColorPalette.BG_DEEP.WithAlpha(0.6f);
 
             // 배경 숨쉬기(Breathe) 효과 코루틴
             breatheCoroutine = StartCoroutine(AnimateBreathe(overlayImg));
@@ -106,9 +97,9 @@ namespace AIBeat.UI
             while (true)
             {
                 phase += Time.unscaledDeltaTime / 3f * Mathf.PI * 2f;
-                float alpha = 0.45f + 0.15f * Mathf.Sin(phase); // 0.30 ~ 0.60
+                float alpha = 0.5f + 0.1f * Mathf.Sin(phase);
                 if (overlay != null)
-                    overlay.color = new Color(0.01f, 0.005f, 0.04f, alpha);
+                    overlay.color = UIColorPalette.BG_DEEP.WithAlpha(alpha);
                 yield return null;
             }
         }

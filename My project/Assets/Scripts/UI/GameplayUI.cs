@@ -195,9 +195,29 @@ namespace AIBeat.UI
         /// <summary>
         /// 배경 이미지 — 현재 비활성 (노트 레인과 겹침 문제로 제거)
         /// </summary>
+        /// <summary>
+        /// 배경 이미지 (Procedural Cyberpunk)
+        /// </summary>
         private void CreateGameplayBackground()
         {
-            // 배경 이미지 비활성화: 사이드 배경이 노트 레인을 가리는 문제
+            var existing = transform.Find("Gameplay_Background");
+            if (existing != null) return;
+
+            var bgGo = new GameObject("Gameplay_Background");
+            bgGo.transform.SetParent(transform, false);
+            bgGo.transform.SetAsFirstSibling();
+
+            var rect = bgGo.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var img = bgGo.AddComponent<Image>();
+            img.raycastTarget = false;
+            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.6f, 0.6f, 0.6f, 1f); // Slightly dimmed
         }
 
         /// <summary>
