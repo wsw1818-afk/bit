@@ -87,8 +87,8 @@ namespace AIBeat.Gameplay
             new Color(0.6f, 0.1f, 0.8f, 0.28f),     // Lane 3: Scratch R (바이올렛 - 턴테이블)
         };
 
-        // 모바일 터치 존 키 라벨 (2개: Lane 1-2) - 음표 아이콘
-        private static readonly string[] touchZoneKeyNames = { "\u266A", "\u266B" };
+        // 모바일 터치 존 키 라벨 (2개: Lane 1-2)
+        private static readonly string[] touchZoneKeyNames = { "1", "2" };
 
         public static LaneVisualFeedback Instance => instance;
 
@@ -332,6 +332,8 @@ namespace AIBeat.Gameplay
                 tmp.alignment = TextAlignmentOptions.Center;
                 tmp.color = keyLabelIdleColor;
                 tmp.fontStyle = FontStyles.Bold;
+                var korFont = KoreanFontManager.KoreanFont;
+                if (korFont != null) tmp.font = korFont;
                 tmp.outlineWidth = 0.2f;
                 tmp.outlineColor = new Color32(0, 0, 0, 180);
 
@@ -349,9 +351,9 @@ namespace AIBeat.Gameplay
         private void CreateScratchOverlays(float judgeY, float startX, float laneWidth)
         {
             // 좌측 스크래치 오버레이 (Lane 0 위치) - 턴테이블 디스크
-            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 0, "\u266C DJ");
+            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 0, "<< DJ");
             // 우측 스크래치 오버레이 (Lane 3 위치) - 턴테이블 디스크
-            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 3, "DJ \u266C");
+            CreateSingleScratchOverlay(judgeY, startX, laneWidth, 3, "DJ >>");
         }
 
         private void CreateSingleScratchOverlay(float judgeY, float startX, float laneWidth, int laneIndex, string text)

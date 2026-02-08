@@ -1,1 +1,1 @@
-🐛 Gemini UI 리디자인 컴파일 에러 29개 수정: UIColorPalette 누락 멤버 15종 추가 + SongSelectUI 중복변수 제거 + 특수문자→ASCII 교체
+🐛 outlineWidth null 크래시 전면 수정: GameplayUI 4곳 + MainMenuUI 2곳 + LaneVisualFeedback 폰트 선할당 + Unicode 특수문자(♪♫♬) ASCII 대체

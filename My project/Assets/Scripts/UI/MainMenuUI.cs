@@ -403,7 +403,9 @@ namespace AIBeat.UI
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.enableAutoSizing = false;
 
-            // 네온 글로우 (가볍게)
+            // 네온 글로우 (가볍게) - 폰트가 있어야 outlineWidth 설정 가능
+            var korFontTitle = KoreanFontManager.KoreanFont;
+            if (korFontTitle != null) titleText.font = korFontTitle;
             titleText.outlineWidth = 0.15f;
             titleText.outlineColor = new Color32(0, 140, 255, 180);
 
@@ -434,7 +436,9 @@ namespace AIBeat.UI
             subtitleText.characterSpacing = 6f;
             subtitleText.raycastTarget = false;
 
-            // 서브타이틀 글로우
+            // 서브타이틀 글로우 - 폰트가 있어야 outlineWidth 설정 가능
+            var korFontSub = KoreanFontManager.KoreanFont;
+            if (korFontSub != null) subtitleText.font = korFontSub;
             subtitleText.outlineWidth = 0.12f;
             subtitleText.outlineColor = new Color32(255, 40, 160, 160);
 
