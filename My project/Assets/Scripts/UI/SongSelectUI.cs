@@ -234,7 +234,7 @@ namespace AIBeat.UI
                 var btnTmp = backButton.GetComponentInChildren<TMP_Text>();
                 if (btnTmp != null)
                 {
-                    btnTmp.text = "\u25C0";
+                    btnTmp.text = "<";
                     btnTmp.fontSize = 28;
                     btnTmp.fontStyle = FontStyles.Bold;
                     btnTmp.color = UIColorPalette.NEON_MAGENTA;

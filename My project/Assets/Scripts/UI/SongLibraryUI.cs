@@ -170,7 +170,7 @@ namespace AIBeat.UI
             emptyLayout.preferredHeight = 500;
 
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyText.text = "\u266B\n\n\uC74C\uC545\uC744 \uCD94\uAC00\uD574\uBCF4\uC138\uC694!\n\n<size=28>\uD578\uB4DC\uD3F0\uC758 Music \uB610\uB294\nDownloads \uD3F4\uB354\uC5D0\nMP3 \uD30C\uC77C\uC744 \uB123\uC73C\uBA74\n\uC790\uB3D9\uC73C\uB85C \uC778\uC2DD\uB429\uB2C8\uB2E4</size>\n\n<size=24><color=#00D9FF>Suno AI\uB85C \uB9CC\uB4E0 \uC74C\uC545\uB3C4\n\uBC14\uB85C \uD50C\uB808\uC774 \uAC00\uB2A5!</color></size>";
+            emptyText.text = "\n\n\uC74C\uC545\uC744 \uCD94\uAC00\uD574\uBCF4\uC138\uC694!\n\n<size=28>\uD578\uB4DC\uD3F0\uC758 Music \uB610\uB294\nDownloads \uD3F4\uB354\uC5D0\nMP3 \uD30C\uC77C\uC744 \uB123\uC73C\uBA74\n\uC790\uB3D9\uC73C\uB85C \uC778\uC2DD\uB429\uB2C8\uB2E4</size>\n\n<size=24><color=#00D9FF>Suno AI\uB85C \uB9CC\uB4E0 \uC74C\uC545\uB3C4\n\uBC14\uB85C \uD50C\uB808\uC774 \uAC00\uB2A5!</color></size>";
             emptyText.fontSize = 40;
             emptyText.color = new Color(0.5f, 0.5f, 0.6f);
             emptyText.alignment = TextAlignmentOptions.Center;
@@ -203,7 +203,7 @@ namespace AIBeat.UI
             // 곡 수 표시 (안내 포함)
             if (songCountText != null)
                 songCountText.text = songs.Count > 0
-                    ? $"\u266B {songs.Count}\uACE1 \u00B7 \uD130\uCE58\uD558\uC5EC \uD50C\uB808\uC774"
+                    ? $"{songs.Count}\uACE1 \u00B7 \uD130\uCE58\uD558\uC5EC \uD50C\uB808\uC774"
                     : "0\uACE1";
 
             // 빈 목록 처리
@@ -296,7 +296,7 @@ namespace AIBeat.UI
                 TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
 
             // Row 2: BPM · 난이도 · 플레이 횟수 (한 줄에 모든 정보)
-            string diffStars = new string('\u2605', Mathf.Clamp(song.DifficultyLevel, 0, 10));
+            string diffStars = "Lv." + Mathf.Clamp(song.DifficultyLevel, 0, 10);
             string playsStr = song.PlayCount > 0 ? $"{song.PlayCount}\uD68C" : "NEW";
             string row2 = song.BPM > 0
                 ? $"{song.BPM} BPM \u00B7 {diffStars} \u00B7 {playsStr}"
@@ -333,7 +333,7 @@ namespace AIBeat.UI
             var playIconLE = playIconGo.AddComponent<LayoutElement>();
             playIconLE.preferredHeight = 60;
             var playIconTmp = playIconGo.AddComponent<TextMeshProUGUI>();
-            playIconTmp.text = "\u25B6";
+            playIconTmp.text = ">";
             playIconTmp.fontSize = 40;
             playIconTmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
             playIconTmp.alignment = TextAlignmentOptions.Center;
@@ -382,7 +382,7 @@ namespace AIBeat.UI
             delColors.pressedColor = new Color(0.7f, 0.7f, 0.7f);
             delBtn.colors = delColors;
 
-            CreateTMPText(delGo, "DelText", "\u2715", 18,
+            CreateTMPText(delGo, "DelText", "X", 18,
                 new Color(0.6f, 0.15f, 0.15f, 0.6f), TextAlignmentOptions.Center);
 
             int capturedIndex = index;

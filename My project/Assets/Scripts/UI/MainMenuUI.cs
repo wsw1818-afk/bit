@@ -288,10 +288,10 @@ namespace AIBeat.UI
         {
             var buttonConfigs = new (Button btn, string icon, string text, string subText, Color glowColor)[]
             {
-                (playButton, "\u25B6", "플레이", "지금 바로 리듬에 맞춰!", UIColorPalette.NEON_MAGENTA),
-                (libraryButton, "\u266B", "라이브러리", "내 음악으로 플레이", UIColorPalette.NEON_CYAN),
-                (settingsButton, "\u2699", "설정", "노트 속도 \u00B7 볼륨 조절", UIColorPalette.NEON_PURPLE),
-                (exitButton, "\u2715", "종료", "", UIColorPalette.NEON_ORANGE)
+                (playButton, ">", "플레이", "지금 바로 리듬에 맞춰!", UIColorPalette.NEON_MAGENTA),
+                (libraryButton, "#", "라이브러리", "내 음악으로 플레이", UIColorPalette.NEON_CYAN),
+                (settingsButton, "@", "설정", "노트 속도 · 볼륨 조절", UIColorPalette.NEON_PURPLE),
+                (exitButton, "X", "종료", "", UIColorPalette.NEON_ORANGE)
             };
 
             // 버튼 컨테이너: 세로 중앙 배치
