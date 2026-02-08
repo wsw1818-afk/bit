@@ -459,17 +459,18 @@ namespace AIBeat.Gameplay
             }
 
             var note = pool.Dequeue();
-            note.gameObject.SetActive(true);
+
+            // 판정선 Y 위치 (judgementLine이 없으면 기본값 -5)
+            float judgeY = judgementLine != null ? judgementLine.position.y : -5f;
+
+            // Initialize를 SetActive 전에 호출 (OnEnable의 MoveCoroutine이 올바른 값 사용하도록)
+            note.Initialize(data, noteSpeed, judgeY);
 
             // 스폰 위치 계산
             Vector3 spawnPos = GetSpawnPosition(data.LaneIndex);
             note.transform.position = spawnPos;
 
-            // 판정선 Y 위치 (judgementLine이 없으면 기본값 -5)
-            float judgeY = judgementLine != null ? judgementLine.position.y : -5f;
-
-            // 노트 초기화
-            note.Initialize(data, noteSpeed, judgeY);
+            note.gameObject.SetActive(true);
 
             activeNotes.Add(note);
 

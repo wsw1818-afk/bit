@@ -1,1 +1,1 @@
-🎵 Suno AI MP3 자동 스캔: Music/Downloads/외부저장소 폴더 스캔 + Android 권한 요청 + 로딩 영상(VideoPlayer) 추가
+🔧 한국어 폰트 깨짐 수정(SongSelect/LaneVisual) + 노트 스폰 순서 수정(Initialize→SetActive) + AndroidManifest 삭제(런처 누락 해결)

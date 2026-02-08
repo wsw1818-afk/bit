@@ -370,6 +370,8 @@ namespace AIBeat.Gameplay
             tmp.fontStyle = FontStyles.Bold;
             tmp.outlineWidth = 0.15f;
             tmp.outlineColor = new Color32(0, 0, 0, 150);
+            var korFont = KoreanFontManager.KoreanFont;
+            if (korFont != null) tmp.font = korFont;
 
             var rect = tmp.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(1.2f, 0.6f);

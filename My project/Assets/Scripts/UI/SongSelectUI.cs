@@ -238,6 +238,8 @@ namespace AIBeat.UI
                     btnTmp.fontStyle = FontStyles.Bold;
                     btnTmp.color = UIColorPalette.NEON_MAGENTA;
                     btnTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                    var korFont = KoreanFontManager.KoreanFont;
+                    if (korFont != null) btnTmp.font = korFont;
                 }
             }
 
@@ -310,6 +312,8 @@ namespace AIBeat.UI
             tmp.fontStyle = FontStyles.Bold;
             tmp.outlineWidth = 0.1f;
             tmp.outlineColor = new Color32(0, 100, 255, 150);
+            var korFont = KoreanFontManager.KoreanFont;
+            if (korFont != null) tmp.font = korFont;
         }
 
         /// <summary>
