@@ -1,1 +1,1 @@
-🎨 노트 안보임 수정: GameplayUI 전체화면 배경(CyberpunkBackground) 제거 → 3D 노트가 Screen Space Overlay Canvas에 가려지던 문제 해결
+🔧 게임플레이 UI 수정: 배경 제거(노트 가림 해결) + EarlyLate/StatsHUD 텍스트 폰트 미할당 경고 수정

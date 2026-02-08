@@ -637,6 +637,8 @@ namespace AIBeat.UI
             earlyLateText.alignment = TextAlignmentOptions.Center;
             earlyLateText.fontStyle = FontStyles.Bold;
             earlyLateText.text = "";
+            var korFontEL = KoreanFontManager.KoreanFont;
+            if (korFontEL != null) earlyLateText.font = korFontEL;
             go.SetActive(false);
         }
 
@@ -772,6 +774,8 @@ namespace AIBeat.UI
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            var korFontCell = KoreanFontManager.KoreanFont;
+            if (korFontCell != null) tmp.font = korFontCell;
 
             return tmp;
         }
