@@ -26,10 +26,8 @@ namespace AIBeat.Core
         {
             _initialized = true;
 
-            // APK 빌드에서는 기존 SDF 에셋의 글리프가 m_ClearDynamicDataOnBuild=1로 삭제됨
-            // → 항상 TTF에서 런타임 Dynamic SDF를 새로 생성하는 것이 가장 확실
 #if UNITY_EDITOR
-            // 에디터에서만 기존 SDF 에셋 시도 (에디터는 동적 글리프 생성 가능)
+            // 에디터: 기존 Dynamic SDF 에셋 시도 (에디터는 런타임 글리프 생성 가능)
             string[] paths = {
                 "Fonts & Materials/MalgunGothicBold SDF",
                 "Fonts/MalgunGothicBold SDF",
@@ -39,76 +37,129 @@ namespace AIBeat.Core
             foreach (var path in paths)
             {
                 var loaded = Resources.Load<TMP_FontAsset>(path);
-                if (loaded != null)
+                if (loaded != null && loaded.atlasPopulationMode == AtlasPopulationMode.Dynamic
+                    && loaded.sourceFontFile != null)
                 {
-                    if (loaded.atlasPopulationMode == AtlasPopulationMode.Static
-                        && loaded.characterTable != null
-                        && loaded.characterTable.Count > 0)
+                    if (loaded.TryAddCharacters("가나다라마바사"))
                     {
                         _koreanFont = loaded;
-                        Debug.Log($"[KoreanFontManager] Static SDF 폰트 로드 성공: {path} (글리프 {loaded.characterTable.Count}개)");
+                        Debug.Log($"[KoreanFontManager] Editor: Dynamic SDF 사용: {path}");
                         return;
                     }
+                }
+            }
+#endif
 
-                    if (loaded.atlasPopulationMode == AtlasPopulationMode.Dynamic
-                        && loaded.sourceFontFile != null)
+            // APK + 에디터 폴백: TTF에서 런타임 Dynamic SDF 생성
+            CreateFromTTF();
+        }
+
+        private static void CreateFromTTF()
+        {
+            // 1단계: Resources에서 TTF 폰트 로드
+            var ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
+            if (ttfFont != null)
+            {
+                Debug.Log("[KoreanFontManager] Resources TTF 로드 성공");
+                var created = TMP_FontAsset.CreateFontAsset(ttfFont);
+                if (created != null)
+                {
+                    created.name = "Korean Dynamic Font (Resources)";
+                    created.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+
+                    // 실제 글리프 렌더링 가능한지 검증
+                    if (created.TryAddCharacters("가나다"))
                     {
-                        bool canAddChars = loaded.TryAddCharacters("가나다라마바사");
-                        if (canAddChars)
+                        _koreanFont = created;
+                        Debug.Log("[KoreanFontManager] Resources TTF → Dynamic SDF 성공");
+                        return;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[KoreanFontManager] Resources TTF → TryAddCharacters 실패");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("[KoreanFontManager] Resources TTF → CreateFontAsset 실패");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[KoreanFontManager] Resources TTF 로드 실패");
+            }
+
+            // 2단계: Android OS 폰트 파일에서 직접 로드
+#if UNITY_ANDROID && !UNITY_EDITOR
+            string[] androidFontPaths = {
+                "/system/fonts/NotoSansCJK-Regular.ttc",
+                "/system/fonts/NotoSansKR-Regular.otf",
+                "/system/fonts/DroidSansFallback.ttf",
+                "/system/fonts/DroidSans.ttf",
+            };
+
+            foreach (var fontPath in androidFontPaths)
+            {
+                if (System.IO.File.Exists(fontPath))
+                {
+                    Debug.Log($"[KoreanFontManager] Android OS 폰트 발견: {fontPath}");
+                    var osFont = new Font(fontPath);
+                    if (osFont != null)
+                    {
+                        var created = TMP_FontAsset.CreateFontAsset(osFont);
+                        if (created != null)
                         {
-                            _koreanFont = loaded;
-                            Debug.Log($"[KoreanFontManager] Dynamic SDF 폰트 사용 (소스 폰트 연결됨): {path}");
-                            return;
+                            created.name = "Korean Dynamic Font (OS)";
+                            created.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+                            if (created.TryAddCharacters("가나다"))
+                            {
+                                _koreanFont = created;
+                                Debug.Log($"[KoreanFontManager] Android OS 폰트 → Dynamic SDF 성공: {fontPath}");
+                                return;
+                            }
                         }
                     }
                 }
             }
 #endif
 
-            // TTF로부터 Dynamic SDF 생성 (APK에서 가장 확실한 방법)
-            CreateFromTTF();
-        }
-
-        private static void CreateFromTTF()
-        {
-            // Resources에서 TTF 폰트 로드
-            var ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
-            if (ttfFont == null)
+            // 3단계: OS 폰트 이름으로 시도
+            string[] fontNames = { "NotoSansCJK", "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "sans-serif" };
+            foreach (var name in fontNames)
             {
-                // OS 폰트에서 시도
-                string[] fontNames = { "Malgun Gothic", "맑은 고딕", "NanumGothic", "Gulim", "Dotum" };
-                foreach (var name in fontNames)
+                var osFont = Font.CreateDynamicFontFromOSFont(name, 44);
+                if (osFont != null)
                 {
-                    ttfFont = Font.CreateDynamicFontFromOSFont(name, 36);
-                    if (ttfFont != null)
+                    var created = TMP_FontAsset.CreateFontAsset(osFont);
+                    if (created != null)
                     {
-                        Debug.Log("[KoreanFontManager] OS 폰트 발견: " + name);
-                        break;
+                        created.name = $"Korean Dynamic Font ({name})";
+                        created.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+                        if (created.TryAddCharacters("가나다"))
+                        {
+                            _koreanFont = created;
+                            Debug.Log($"[KoreanFontManager] OS 폰트 이름 → Dynamic SDF 성공: {name}");
+                            return;
+                        }
                     }
                 }
             }
-            else
+
+            // 최종 폴백: 검증 없이라도 Resources TTF로 생성
+            ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
+            if (ttfFont != null)
             {
-                Debug.Log("[KoreanFontManager] Resources에서 TTF 폰트 로드 성공");
+                _koreanFont = TMP_FontAsset.CreateFontAsset(ttfFont);
+                if (_koreanFont != null)
+                {
+                    _koreanFont.name = "Korean Dynamic Font (Fallback)";
+                    _koreanFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+                    Debug.LogWarning("[KoreanFontManager] 최종 폴백: 검증 없이 생성 (글리프 렌더링 불확실)");
+                }
             }
 
-            if (ttfFont == null)
-            {
-                Debug.LogWarning("[KoreanFontManager] 한국어 폰트를 찾을 수 없습니다.");
-                return;
-            }
-
-            _koreanFont = TMP_FontAsset.CreateFontAsset(ttfFont);
-            if (_koreanFont != null)
-            {
-                _koreanFont.name = "Korean Dynamic Font";
-                _koreanFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
-                Debug.Log("[KoreanFontManager] Dynamic TMP 폰트 생성 완료");
-            }
-            else
-            {
-                Debug.LogWarning("[KoreanFontManager] TMP_FontAsset.CreateFontAsset 실패");
-            }
+            if (_koreanFont == null)
+                Debug.LogError("[KoreanFontManager] 한국어 폰트를 생성할 수 없습니다!");
         }
 
         public static void ApplyFont(TMP_Text textComponent)

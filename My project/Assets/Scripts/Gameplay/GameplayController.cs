@@ -35,6 +35,7 @@ namespace AIBeat.Gameplay
         private SongData currentSong;
         private bool isPlaying;
         private bool isPaused;
+        private bool isShowingResult;
         private float gameStartTime;
 
         // 롱노트 홀드 보너스 추적
@@ -62,16 +63,22 @@ namespace AIBeat.Gameplay
 
         /// <summary>
         /// 코루틴 기반 입력 루프 (Update() 미호출 문제 우회)
+        /// Android 뒤로가기 = KeyCode.Escape
         /// </summary>
         private System.Collections.IEnumerator InputLoop()
         {
             while (true)
             {
                 yield return null;
-                // ESC 키로 일시정지/재개
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
-                    if (isPaused)
+                    if (isShowingResult)
+                    {
+                        // 결과 화면에서 뒤로가기 → 메뉴로 복귀
+                        Time.timeScale = 1f;
+                        GameManager.Instance?.ReturnToMenu();
+                    }
+                    else if (isPaused)
                         ResumeGame();
                     else if (isPlaying)
                         PauseGame();
@@ -830,6 +837,7 @@ namespace AIBeat.Gameplay
 
         private void ShowResult(GameResult result)
         {
+            isShowingResult = true;
             GameManager.Instance?.ChangeState(GameManager.GameState.Result);
             gameplayUI?.ShowResult(result);
 
