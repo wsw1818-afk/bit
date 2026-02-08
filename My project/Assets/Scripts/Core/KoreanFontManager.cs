@@ -26,7 +26,10 @@ namespace AIBeat.Core
         {
             _initialized = true;
 
-            // 1단계: 기존 SDF 에셋 로드 시도 (글리프가 있는 경우만 사용)
+            // APK 빌드에서는 기존 SDF 에셋의 글리프가 m_ClearDynamicDataOnBuild=1로 삭제됨
+            // → 항상 TTF에서 런타임 Dynamic SDF를 새로 생성하는 것이 가장 확실
+#if UNITY_EDITOR
+            // 에디터에서만 기존 SDF 에셋 시도 (에디터는 동적 글리프 생성 가능)
             string[] paths = {
                 "Fonts & Materials/MalgunGothicBold SDF",
                 "Fonts/MalgunGothicBold SDF",
@@ -38,7 +41,6 @@ namespace AIBeat.Core
                 var loaded = Resources.Load<TMP_FontAsset>(path);
                 if (loaded != null)
                 {
-                    // Static 모드이고 글리프가 있으면 바로 사용
                     if (loaded.atlasPopulationMode == AtlasPopulationMode.Static
                         && loaded.characterTable != null
                         && loaded.characterTable.Count > 0)
@@ -48,11 +50,9 @@ namespace AIBeat.Core
                         return;
                     }
 
-                    // Dynamic 모드: 소스 폰트 파일이 연결되어 있고 아틀라스가 유효하면 사용
                     if (loaded.atlasPopulationMode == AtlasPopulationMode.Dynamic
                         && loaded.sourceFontFile != null)
                     {
-                        // 한국어 테스트 문자 추가 시도
                         bool canAddChars = loaded.TryAddCharacters("가나다라마바사");
                         if (canAddChars)
                         {
@@ -60,30 +60,12 @@ namespace AIBeat.Core
                             Debug.Log($"[KoreanFontManager] Dynamic SDF 폰트 사용 (소스 폰트 연결됨): {path}");
                             return;
                         }
-                        else
-                        {
-                            Debug.Log($"[KoreanFontManager] Dynamic SDF 폰트가 글리프 추가 실패: {path}, TTF 폴백 시도");
-                        }
                     }
                 }
             }
+#endif
 
-            // 2단계: LiberationSans SDF Fallback 확인
-            var defaultFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-            if (defaultFont != null && defaultFont.fallbackFontAssetTable != null)
-            {
-                foreach (var fallback in defaultFont.fallbackFontAssetTable)
-                {
-                    if (fallback != null && fallback.name.Contains("Malgun"))
-                    {
-                        _koreanFont = fallback;
-                        Debug.Log("[KoreanFontManager] Fallback에서 한국어 폰트 발견");
-                        return;
-                    }
-                }
-            }
-
-            // 3단계: TTF로부터 Dynamic SDF 생성 (가장 확실한 방법)
+            // TTF로부터 Dynamic SDF 생성 (APK에서 가장 확실한 방법)
             CreateFromTTF();
         }
 

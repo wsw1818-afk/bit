@@ -1,1 +1,1 @@
-🔧 한국어 폰트 깨짐 수정(SongSelect/LaneVisual) + 노트 스폰 순서 수정(Initialize→SetActive) + AndroidManifest 삭제(런처 누락 해결)
+🔧 APK 한국어 폰트 깨짐 근본 수정(TTF→런타임 Dynamic SDF) + 노트 시작 위치 보장(lookAhead 오프셋)

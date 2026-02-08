@@ -309,6 +309,20 @@ namespace AIBeat.Gameplay
             // 시간순 정렬
             notes.Sort((a, b) => a.HitTime.CompareTo(b.HitTime));
 
+            // 최소 시작 시간 보장: lookAhead 시간보다 이른 노트는 화면 밖에서 시작할 수 없음
+            // 노트가 화면 위에서 충분히 내려올 시간(lookAhead초)을 확보
+            float minHitTime = lookAhead;
+            if (notes.Count > 0 && notes[0].HitTime < minHitTime)
+            {
+                float offset = minHitTime - notes[0].HitTime;
+                Debug.Log($"[NoteSpawner] Notes start too early ({notes[0].HitTime:F2}s), adding {offset:F2}s offset to all notes");
+                for (int i = 0; i < notes.Count; i++)
+                {
+                    var n = notes[i];
+                    notes[i] = new NoteData(n.HitTime + offset, n.LaneIndex, n.Type, n.Duration);
+                }
+            }
+
             // 필터링: 같은 시간+레인 중복 + 롱노트 구간 내 겹침 제거
             int filteredCount = 0;
             var seen = new HashSet<long>();
