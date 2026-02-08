@@ -39,7 +39,13 @@ namespace AIBeat.Editor
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.useAnimatedAutorotation = false;
-            Debug.Log("[AndroidBuilder] PlayerSettings: Portrait only, autorotate disabled");
+
+            // 외부 저장소 읽기 권한 (Suno AI MP3 스캔용)
+            PlayerSettings.Android.forceInternetPermission = true;
+            // Write Access를 External(SDCard)로 설정 → READ_EXTERNAL_STORAGE 권한 자동 추가
+            PlayerSettings.Android.forceSDCardPermission = true;
+
+            Debug.Log("[AndroidBuilder] PlayerSettings: Portrait only, External storage access enabled");
 
             // 빌드 타겟 확인 및 전환
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
