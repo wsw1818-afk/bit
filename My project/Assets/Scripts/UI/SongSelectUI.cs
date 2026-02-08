@@ -308,8 +308,8 @@ namespace AIBeat.UI
             // 폰트를 먼저 적용해야 outlineWidth 설정 시 material null 방지
             var korFont = KoreanFontManager.KoreanFont;
             if (korFont != null) tmp.font = korFont;
-            tmp.outlineWidth = 0.1f;
-            tmp.outlineColor = new Color32(0, 100, 255, 150);
+            // tmp.outlineWidth = 0.1f; // Dynamic SDF에서 outline 비활성화
+            // tmp.outlineColor = new Color32(0, 100, 255, 150);
         }
 
         /// <summary>

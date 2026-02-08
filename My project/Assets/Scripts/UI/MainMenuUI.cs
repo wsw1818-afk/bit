@@ -409,8 +409,8 @@ namespace AIBeat.UI
             // 네온 글로우 (가볍게) - 폰트가 있어야 outlineWidth 설정 가능
             var korFontTitle = KoreanFontManager.KoreanFont;
             if (korFontTitle != null) titleText.font = korFontTitle;
-            titleText.outlineWidth = 0.15f;
-            titleText.outlineColor = new Color32(0, 140, 255, 180);
+            // titleText.outlineWidth = 0.15f; // Dynamic SDF에서 outline 비활성화
+            // titleText.outlineColor = new Color32(0, 140, 255, 180);
 
             var outline = titleText.GetComponent<Outline>();
             if (outline == null)
@@ -442,8 +442,8 @@ namespace AIBeat.UI
             // 서브타이틀 글로우 - 폰트가 있어야 outlineWidth 설정 가능
             var korFontSub = KoreanFontManager.KoreanFont;
             if (korFontSub != null) subtitleText.font = korFontSub;
-            subtitleText.outlineWidth = 0.12f;
-            subtitleText.outlineColor = new Color32(255, 40, 160, 160);
+            // subtitleText.outlineWidth = 0.12f; // Dynamic SDF에서 outline 비활성화
+            // subtitleText.outlineColor = new Color32(255, 40, 160, 160);
 
             subGo.transform.localScale = Vector3.zero;
             UIAnimator.ScaleTo(this, subGo.transform, Vector3.one, 0.6f);

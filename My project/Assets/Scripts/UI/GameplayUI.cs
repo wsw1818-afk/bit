@@ -304,8 +304,8 @@ namespace AIBeat.UI
                 scoreText.characterSpacing = 4f; // LED 느낌 글자 간격
                 var korFont1 = KoreanFontManager.KoreanFont;
                 if (korFont1 != null) scoreText.font = korFont1;
-                scoreText.outlineWidth = 0.12f;
-                scoreText.outlineColor = new Color32(0, 200, 255, 140);
+                // scoreText.outlineWidth = 0.12f; // Dynamic SDF에서 outline 비활성화
+                // scoreText.outlineColor = new Color32(0, 200, 255, 140);
             }
 
             // --- COMBO (우측, 2줄: "COMBO" 라벨 + 숫자) ---
@@ -348,8 +348,8 @@ namespace AIBeat.UI
                 judgementText.fontStyle = FontStyles.Bold;
                 var korFont2 = KoreanFontManager.KoreanFont;
                 if (korFont2 != null) judgementText.font = korFont2;
-                judgementText.outlineWidth = 0.25f;
-                judgementText.outlineColor = new Color32(0, 0, 0, 220);
+                // judgementText.outlineWidth = 0.25f; // Dynamic SDF에서 outline 비활성화
+                // judgementText.outlineColor = new Color32(0, 0, 0, 220);
             }
         }
 
@@ -534,8 +534,8 @@ namespace AIBeat.UI
             countdownText.fontStyle = FontStyles.Bold;
             var korFont3 = KoreanFontManager.KoreanFont;
             if (korFont3 != null) countdownText.font = korFont3;
-            countdownText.outlineWidth = 0.2f;
-            countdownText.outlineColor = new Color32(0, 120, 255, 200);
+            // countdownText.outlineWidth = 0.2f; // Dynamic SDF에서 outline 비활성화
+            // countdownText.outlineColor = new Color32(0, 120, 255, 200);
         }
 
         /// <summary>
@@ -668,8 +668,8 @@ namespace AIBeat.UI
             bonusScoreText.color = new Color(1f, 0.85f, 0.2f, 1f); // 골드
             var korFont4 = KoreanFontManager.KoreanFont;
             if (korFont4 != null) bonusScoreText.font = korFont4;
-            bonusScoreText.outlineWidth = 0.15f;
-            bonusScoreText.outlineColor = new Color32(0, 0, 0, 180);
+            // bonusScoreText.outlineWidth = 0.15f; // Dynamic SDF에서 outline 비활성화
+            // bonusScoreText.outlineColor = new Color32(0, 0, 0, 180);
             bonusScoreText.text = "";
             go.SetActive(false);
         }
