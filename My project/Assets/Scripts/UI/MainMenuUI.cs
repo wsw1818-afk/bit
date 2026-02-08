@@ -286,12 +286,12 @@ namespace AIBeat.UI
         /// </summary>
         private void EnsureButtonMobileSize()
         {
-            var buttonConfigs = new (Button btn, string icon, string text, string subText, Color glowColor)[]
+            var buttonConfigs = new (Button btn, string icon, string text, Color glowColor)[]
             {
-                (playButton, ">", "플레이", "지금 바로 리듬에 맞춰!", UIColorPalette.NEON_MAGENTA),
-                (libraryButton, "#", "라이브러리", "내 음악으로 플레이", UIColorPalette.NEON_CYAN),
-                (settingsButton, "@", "설정", "노트 속도 · 볼륨 조절", UIColorPalette.NEON_PURPLE),
-                (exitButton, "X", "종료", "", UIColorPalette.NEON_ORANGE)
+                (playButton, ">", "플레이", UIColorPalette.NEON_MAGENTA),
+                (libraryButton, "#", "라이브러리", UIColorPalette.NEON_CYAN),
+                (settingsButton, "@", "설정", UIColorPalette.NEON_PURPLE),
+                (exitButton, "X", "종료", UIColorPalette.NEON_ORANGE)
             };
 
             // 버튼 컨테이너: 세로 중앙 배치
@@ -304,7 +304,7 @@ namespace AIBeat.UI
             btnContainerRect.offsetMax = Vector2.zero;
 
             var vLayout = btnContainer.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 12;
+            vLayout.spacing = 14;
             vLayout.childAlignment = TextAnchor.MiddleCenter;
             vLayout.childControlWidth = true;
             vLayout.childControlHeight = false;
@@ -320,11 +320,11 @@ namespace AIBeat.UI
 
                 var rect = cfg.btn.GetComponent<RectTransform>();
                 if (rect != null)
-                    rect.sizeDelta = new Vector2(0, 100f);
+                    rect.sizeDelta = new Vector2(0, 80f);
 
                 var le = cfg.btn.gameObject.GetComponent<LayoutElement>();
                 if (le == null) le = cfg.btn.gameObject.AddComponent<LayoutElement>();
-                le.preferredHeight = 100f;
+                le.preferredHeight = 80f;
 
                 // 어두운 반투명 배경
                 var img = cfg.btn.GetComponent<Image>();
@@ -346,10 +346,6 @@ namespace AIBeat.UI
                 colors.disabledColor = UIColorPalette.STATE_DISABLED;
                 cfg.btn.colors = colors;
 
-                // 기존 텍스트를 아이콘 + 메인텍스트 + 서브텍스트 구조로 교체
-                var existingTmp = cfg.btn.GetComponentInChildren<TMP_Text>();
-
-                // HorizontalLayoutGroup으로 아이콘 + 텍스트 구성
                 // 기존 자식 모두 제거 후 새로 구성
                 foreach (Transform child in cfg.btn.transform)
                 {
@@ -357,8 +353,8 @@ namespace AIBeat.UI
                 }
 
                 var hLayout = cfg.btn.gameObject.AddComponent<HorizontalLayoutGroup>();
-                hLayout.padding = new RectOffset(16, 16, 8, 8);
-                hLayout.spacing = 12;
+                hLayout.padding = new RectOffset(20, 20, 0, 0);
+                hLayout.spacing = 16;
                 hLayout.childAlignment = TextAnchor.MiddleLeft;
                 hLayout.childControlWidth = false;
                 hLayout.childControlHeight = true;
@@ -372,49 +368,24 @@ namespace AIBeat.UI
                 iconLE.preferredWidth = 50;
                 var iconTmp = iconGo.AddComponent<TextMeshProUGUI>();
                 iconTmp.text = cfg.icon;
-                iconTmp.fontSize = 36;
+                iconTmp.fontSize = 32;
                 iconTmp.color = cfg.glowColor;
                 iconTmp.alignment = TextAlignmentOptions.Center;
                 iconTmp.fontStyle = FontStyles.Bold;
                 iconTmp.raycastTarget = false;
 
-                // 메인 텍스트 + 서브텍스트 (세로 배치)
-                var textPanel = new GameObject("TextPanel");
-                textPanel.transform.SetParent(cfg.btn.transform, false);
-                var textPanelLE = textPanel.AddComponent<LayoutElement>();
-                textPanelLE.flexibleWidth = 1;
-
-                var textVLayout = textPanel.AddComponent<VerticalLayoutGroup>();
-                textVLayout.spacing = 2;
-                textVLayout.childAlignment = TextAnchor.MiddleLeft;
-                textVLayout.childControlWidth = true;
-                textVLayout.childControlHeight = true;
-                textVLayout.childForceExpandWidth = true;
-                textVLayout.childForceExpandHeight = false;
-
-                // 메인 텍스트
+                // 메인 텍스트 (단일 행)
                 var mainTextGo = new GameObject("MainText");
-                mainTextGo.transform.SetParent(textPanel.transform, false);
+                mainTextGo.transform.SetParent(cfg.btn.transform, false);
+                var mainLE = mainTextGo.AddComponent<LayoutElement>();
+                mainLE.flexibleWidth = 1;
                 var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
                 mainTmp.text = cfg.text;
-                mainTmp.fontSize = 36;
+                mainTmp.fontSize = 32;
                 mainTmp.fontStyle = FontStyles.Bold;
                 mainTmp.color = cfg.glowColor;
                 mainTmp.alignment = TextAlignmentOptions.MidlineLeft;
                 mainTmp.raycastTarget = false;
-
-                // 서브텍스트 (있는 경우)
-                if (!string.IsNullOrEmpty(cfg.subText))
-                {
-                    var subTextGo = new GameObject("SubText");
-                    subTextGo.transform.SetParent(textPanel.transform, false);
-                    var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
-                    subTmp.text = cfg.subText;
-                    subTmp.fontSize = 16;
-                    subTmp.color = cfg.glowColor.WithAlpha(0.5f);
-                    subTmp.alignment = TextAlignmentOptions.MidlineLeft;
-                    subTmp.raycastTarget = false;
-                }
             }
         }
 
@@ -425,30 +396,31 @@ namespace AIBeat.UI
         {
             if (titleText == null) return;
 
-            // 타이틀 위치 조정 (화면 상단 55~75% 영역)
+            // 타이틀 위치 조정 (화면 상단 65~78% 영역)
             var titleRect = titleText.GetComponent<RectTransform>();
             if (titleRect != null)
             {
-                titleRect.anchorMin = new Vector2(0, 0.60f);
-                titleRect.anchorMax = new Vector2(1, 0.82f);
-                titleRect.offsetMin = new Vector2(20, 0);
-                titleRect.offsetMax = new Vector2(-20, 0);
+                titleRect.anchorMin = new Vector2(0, 0.65f);
+                titleRect.anchorMax = new Vector2(1, 0.78f);
+                titleRect.offsetMin = new Vector2(10, 0);
+                titleRect.offsetMax = new Vector2(-10, 0);
             }
 
-            titleText.fontSize = 110;
+            titleText.fontSize = 72;
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = UIColorPalette.NEON_CYAN_BRIGHT;
             titleText.alignment = TextAlignmentOptions.Center;
+            titleText.enableAutoSizing = false;
 
-            // 강한 네온 글로우
-            titleText.outlineWidth = 0.25f;
-            titleText.outlineColor = new Color32(0, 140, 255, 220);
+            // 네온 글로우 (가볍게)
+            titleText.outlineWidth = 0.15f;
+            titleText.outlineColor = new Color32(0, 140, 255, 180);
 
             var outline = titleText.GetComponent<Outline>();
             if (outline == null)
                 outline = titleText.gameObject.AddComponent<Outline>();
-            outline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.8f);
-            outline.effectDistance = new Vector2(3, -3);
+            outline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.6f);
+            outline.effectDistance = new Vector2(2, -2);
 
             titleText.transform.localScale = Vector3.zero;
             UIAnimator.ScaleTo(this, titleText.transform, Vector3.one, 0.5f);
@@ -457,8 +429,8 @@ namespace AIBeat.UI
             var subGo = new GameObject("SubtitleText");
             subGo.transform.SetParent(transform, false);
             var subRect = subGo.AddComponent<RectTransform>();
-            subRect.anchorMin = new Vector2(0, 0.55f);
-            subRect.anchorMax = new Vector2(1, 0.62f);
+            subRect.anchorMin = new Vector2(0, 0.59f);
+            subRect.anchorMax = new Vector2(1, 0.65f);
             subRect.offsetMin = new Vector2(20, 0);
             subRect.offsetMax = new Vector2(-20, 0);
 
@@ -482,8 +454,8 @@ namespace AIBeat.UI
             var catchGo = new GameObject("CatchphraseText");
             catchGo.transform.SetParent(transform, false);
             var catchRect = catchGo.AddComponent<RectTransform>();
-            catchRect.anchorMin = new Vector2(0, 0.50f);
-            catchRect.anchorMax = new Vector2(1, 0.56f);
+            catchRect.anchorMin = new Vector2(0, 0.54f);
+            catchRect.anchorMax = new Vector2(1, 0.59f);
             catchRect.offsetMin = new Vector2(20, 0);
             catchRect.offsetMax = new Vector2(-20, 0);
 

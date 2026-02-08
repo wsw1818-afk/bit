@@ -56,9 +56,37 @@ namespace AIBeat.Gameplay
             Application.runInBackground = true;
             // 모바일 세로 모드 고정
             Screen.orientation = ScreenOrientation.Portrait;
+            // 세로 모드에서 레인이 화면 너비를 꽉 채우도록 카메라 조정
+            AdjustCameraForPortrait();
             Initialize();
             StartCoroutine(InputLoop());
             StartCoroutine(HoldBonusTickLoop());
+        }
+
+        /// <summary>
+        /// 세로 모드에서 4레인이 화면 너비를 꽉 채우도록 카메라 orthographicSize 조정
+        /// 레인 범위: -1.5 ~ +2.5 (4유닛), 중심: 0.5
+        /// </summary>
+        private void AdjustCameraForPortrait()
+        {
+            var cam = Camera.main;
+            if (cam == null || !cam.orthographic) return;
+
+            float laneWidth = 4f; // 4레인 x 1유닛
+            float padding = 0.3f; // 좌우 약간의 여백
+            float targetWorldWidth = laneWidth + padding;
+
+            // orthographicSize = (targetWorldWidth / aspect) / 2
+            float aspect = (float)Screen.width / Screen.height;
+            float requiredOrthoSize = (targetWorldWidth / aspect) / 2f;
+
+            // 최소 orthoSize 보장 (너무 작으면 상하가 잘림)
+            cam.orthographicSize = Mathf.Max(requiredOrthoSize, 4f);
+
+            // 카메라 X 위치를 레인 중심(0.5)에 맞춤
+            var pos = cam.transform.position;
+            pos.x = 0.5f;
+            cam.transform.position = pos;
         }
 
         /// <summary>
