@@ -44,6 +44,7 @@ namespace AIBeat.Core
                     {
                         _koreanFont = loaded;
                         Debug.Log($"[KoreanFontManager] Editor: Dynamic SDF 사용: {path}");
+                        SetAsGlobalDefault(_koreanFont);
                         return;
                     }
                 }
@@ -52,6 +53,58 @@ namespace AIBeat.Core
 
             // APK + 에디터 폴백: TTF에서 런타임 Dynamic SDF 생성
             CreateFromTTF();
+
+            // 글로벌 기본 폰트로 설정 (이후 생성되는 모든 TMP_Text에 자동 적용)
+            if (_koreanFont != null)
+                SetAsGlobalDefault(_koreanFont);
+        }
+
+        /// <summary>
+        /// 한국어 폰트를 TMP 글로벌 기본 폰트 + fallback으로 설정.
+        /// 이렇게 하면 이후 생성되는 모든 TMP_Text가 한국어를 렌더링 가능.
+        /// </summary>
+        private static void SetAsGlobalDefault(TMP_FontAsset koreanFont)
+        {
+            // 1) TMP_Settings의 기본 폰트를 한국어 폰트로 교체
+            var settings = TMP_Settings.instance;
+            if (settings != null)
+            {
+                // TMP_Settings.defaultFontAsset은 읽기전용 프로퍼티이므로
+                // 리플렉션으로 내부 필드를 직접 설정
+                var field = typeof(TMP_Settings).GetField("m_defaultFontAsset",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    field.SetValue(settings, koreanFont);
+                    Debug.Log("[KoreanFontManager] TMP_Settings.defaultFontAsset → 한국어 폰트로 변경");
+                }
+            }
+
+            // 2) 기존 LiberationSans SDF의 fallback 리스트에 한국어 폰트 추가
+            //    (이미 LiberationSans SDF를 쓰고 있는 TMP_Text도 한국어 렌더링 가능)
+            var defaultFont = TMP_Settings.defaultFontAsset;
+            if (defaultFont != null && defaultFont != koreanFont)
+            {
+                if (defaultFont.fallbackFontAssetTable == null)
+                    defaultFont.fallbackFontAssetTable = new System.Collections.Generic.List<TMP_FontAsset>();
+
+                if (!defaultFont.fallbackFontAssetTable.Contains(koreanFont))
+                {
+                    defaultFont.fallbackFontAssetTable.Insert(0, koreanFont);
+                    Debug.Log($"[KoreanFontManager] '{defaultFont.name}'의 fallback에 한국어 폰트 추가");
+                }
+            }
+
+            // 3) TMP_Settings의 글로벌 fallback 리스트에도 추가
+            var globalFallbacks = TMP_Settings.fallbackFontAssets;
+            if (globalFallbacks != null)
+            {
+                if (!globalFallbacks.Contains(koreanFont))
+                {
+                    globalFallbacks.Insert(0, koreanFont);
+                    Debug.Log("[KoreanFontManager] TMP_Settings 글로벌 fallback에 한국어 폰트 추가");
+                }
+            }
         }
 
         private static void CreateFromTTF()
