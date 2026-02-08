@@ -1,1 +1,1 @@
-🐛 outlineWidth null 크래시 전면 수정: GameplayUI 4곳 + MainMenuUI 2곳 + LaneVisualFeedback 폰트 선할당 + Unicode 특수문자(♪♫♬) ASCII 대체
+🐛 APK 게임 안됨 수정: debugMode=true가 APK에서도 유지되던 문제 → #if UNITY_EDITOR 전처리기로 에디터만 true, APK는 false + Initialize 진단 로그 추가

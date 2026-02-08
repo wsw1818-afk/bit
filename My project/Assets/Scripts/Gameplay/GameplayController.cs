@@ -28,7 +28,11 @@ namespace AIBeat.Gameplay
         [SerializeField] private float countdownTime = 3f;
 
         [Header("Debug")]
+#if UNITY_EDITOR
         [SerializeField] private bool debugMode = true;
+#else
+        private bool debugMode = false; // APK에서는 항상 일반 모드
+#endif
         [SerializeField] private bool autoPlay = false;
         [SerializeField] private SongData debugSongData;
 
@@ -179,17 +183,18 @@ namespace AIBeat.Gameplay
 
         private void Initialize()
         {
+            Debug.Log($"[GameplayController] Initialize - debugMode={debugMode}");
+
             // 디버그 모드: 테스트 곡 데이터 사용
             if (debugMode && debugSongData != null)
             {
                 currentSong = debugSongData;
-#if UNITY_EDITOR
                 Debug.Log($"[GameplayController] Debug mode: Using {debugSongData.Title}");
-#endif
             }
             else
             {
                 currentSong = GameManager.Instance?.CurrentSongData;
+                Debug.Log($"[GameplayController] Normal mode: song={(currentSong != null ? currentSong.Title : "NULL")}");
             }
 
             if (currentSong == null)
@@ -200,9 +205,7 @@ namespace AIBeat.Gameplay
                     Debug.LogError("[GameplayController] No song data found!");
                     return;
                 }
-#if UNITY_EDITOR
                 Debug.Log("[GameplayController] Loaded test song from Resources");
-#endif
             }
 
             // 컴포넌트 참조 자동 연결
@@ -255,7 +258,9 @@ namespace AIBeat.Gameplay
                 return;
             }
 
-            // 일반 모드 (중복 등록 방지를 위해 먼저 해제)
+            // 일반 모드: 오디오 로드 → 게임 시작
+            Debug.Log($"[GameplayController] Normal mode: AudioClip={(currentSong.AudioClip != null)}, AudioUrl={currentSong.AudioUrl ?? "null"}");
+
             AudioManager.Instance.OnBGMLoaded -= OnAudioLoaded;
             AudioManager.Instance.OnBGMEnded -= OnSongEnd;
             AudioManager.Instance.OnBGMLoadFailed -= OnAudioLoadFailed;
@@ -264,9 +269,15 @@ namespace AIBeat.Gameplay
             AudioManager.Instance.OnBGMLoadFailed += OnAudioLoadFailed;
 
             if (currentSong.AudioClip != null)
+            {
+                Debug.Log("[GameplayController] AudioClip already loaded, starting game");
                 OnAudioLoaded();
+            }
             else if (!string.IsNullOrEmpty(currentSong.AudioUrl))
+            {
+                Debug.Log($"[GameplayController] Loading audio from URL: {currentSong.AudioUrl}");
                 AudioManager.Instance.LoadBGMFromUrl(currentSong.AudioUrl);
+            }
             else
             {
                 Debug.LogWarning("[GameplayController] No audio source, starting without music");
