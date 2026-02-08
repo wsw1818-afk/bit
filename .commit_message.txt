@@ -1,1 +1,1 @@
-🔧 배경 이미지 Android 호환 수정: Sprite.Create→RawImage+uvRect (isReadable 불필요)
+📱 화면 방향 Portrait 강제 고정: ProjectSettings defaultScreenOrientation=1 + AndroidBuilder 빌드시 적용
