@@ -95,6 +95,7 @@ namespace AIBeat.UI
             CreatePausePanel();
             CreateCountdownPanel();
             CreateLoadingVideoPanel();
+            CreateGameplayBackground(); // 배경 이미지 (레퍼런스 기반)
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기
@@ -189,6 +190,96 @@ namespace AIBeat.UI
 #if UNITY_EDITOR
             Debug.Log($"[GameplayUI] AutoSetup - Score:{scoreText != null}, Combo:{comboText != null}, Judgement:{judgementText != null}, ResultPanel:{resultPanel != null}");
 #endif
+        }
+
+        /// <summary>
+        /// 게임플레이 배경 이미지 — unnamed.jpg에서 좌/우 사이드 + 하단 턴테이블 크롭
+        /// 중앙 노트 레인은 비워두고, 양쪽과 하단만 이미지로 채움
+        /// </summary>
+        private void CreateGameplayBackground()
+        {
+            // Resources에서 텍스처 로드 (Assets/Resources/UI/GameplayBG)
+            // 또는 Textures/UI에서 직접 로드
+            Texture2D bgTex = Resources.Load<Texture2D>("UI/GameplayBG");
+            if (bgTex == null)
+            {
+                // Resources 폴더가 아니면 직접 로드 시도
+                Debug.LogWarning("[GameplayUI] GameplayBG 텍스처를 Resources에서 찾을 수 없음. Textures/UI/ 확인 필요");
+                return;
+            }
+
+            int texW = bgTex.width;
+            int texH = bgTex.height;
+
+            // 이미지 영역 비율 (unnamed.jpg 기준)
+            // 좌측 사이드: x 0~29%, 전체 높이
+            // 우측 사이드: x 71~100%, 전체 높이
+            // 하단 턴테이블: x 0~100%, y 0~30%
+            float sideRatio = 0.29f;    // 좌/우 사이드 너비 비율
+            float bottomRatio = 0.30f;  // 하단 턴테이블 높이 비율
+
+            // --- 배경 컨테이너 (최하위 Z-order) ---
+            var bgContainer = new GameObject("GameplayBG");
+            bgContainer.transform.SetParent(transform, false);
+            bgContainer.transform.SetAsFirstSibling(); // 가장 뒤에 배치
+            var bgContainerRect = bgContainer.AddComponent<RectTransform>();
+            bgContainerRect.anchorMin = Vector2.zero;
+            bgContainerRect.anchorMax = Vector2.one;
+            bgContainerRect.offsetMin = Vector2.zero;
+            bgContainerRect.offsetMax = Vector2.zero;
+
+            // --- 좌측 사이드 배경 ---
+            var leftSide = new GameObject("LeftSideBG");
+            leftSide.transform.SetParent(bgContainer.transform, false);
+            var leftRect = leftSide.AddComponent<RectTransform>();
+            leftRect.anchorMin = new Vector2(0, 0);
+            leftRect.anchorMax = new Vector2(sideRatio, 1);
+            leftRect.offsetMin = Vector2.zero;
+            leftRect.offsetMax = Vector2.zero;
+
+            var leftImage = leftSide.AddComponent<Image>();
+            var leftSprite = Sprite.Create(bgTex,
+                new Rect(0, 0, texW * sideRatio, texH),
+                new Vector2(0.5f, 0.5f));
+            leftImage.sprite = leftSprite;
+            leftImage.preserveAspect = false;
+            leftImage.raycastTarget = false;
+
+            // --- 우측 사이드 배경 ---
+            var rightSide = new GameObject("RightSideBG");
+            rightSide.transform.SetParent(bgContainer.transform, false);
+            var rightRect = rightSide.AddComponent<RectTransform>();
+            rightRect.anchorMin = new Vector2(1f - sideRatio, 0);
+            rightRect.anchorMax = new Vector2(1, 1);
+            rightRect.offsetMin = Vector2.zero;
+            rightRect.offsetMax = Vector2.zero;
+
+            var rightImage = rightSide.AddComponent<Image>();
+            var rightSprite = Sprite.Create(bgTex,
+                new Rect(texW * (1f - sideRatio), 0, texW * sideRatio, texH),
+                new Vector2(0.5f, 0.5f));
+            rightImage.sprite = rightSprite;
+            rightImage.preserveAspect = false;
+            rightImage.raycastTarget = false;
+
+            // --- 하단 턴테이블 배경 ---
+            var bottomBG = new GameObject("BottomTurntableBG");
+            bottomBG.transform.SetParent(bgContainer.transform, false);
+            var bottomRect = bottomBG.AddComponent<RectTransform>();
+            bottomRect.anchorMin = new Vector2(sideRatio, 0);
+            bottomRect.anchorMax = new Vector2(1f - sideRatio, bottomRatio);
+            bottomRect.offsetMin = Vector2.zero;
+            bottomRect.offsetMax = Vector2.zero;
+
+            var bottomImage = bottomBG.AddComponent<Image>();
+            var bottomSprite = Sprite.Create(bgTex,
+                new Rect(texW * sideRatio, 0, texW * (1f - 2f * sideRatio), texH * bottomRatio),
+                new Vector2(0.5f, 0.5f));
+            bottomImage.sprite = bottomSprite;
+            bottomImage.preserveAspect = false;
+            bottomImage.raycastTarget = false;
+
+            Debug.Log($"[GameplayUI] GameplayBG 배경 생성 완료 (tex:{texW}x{texH})");
         }
 
         /// <summary>
