@@ -1,1 +1,1 @@
-🐛 APK 게임 안됨 수정: debugMode=true가 APK에서도 유지되던 문제 → #if UNITY_EDITOR 전처리기로 에디터만 true, APK는 false + Initialize 진단 로그 추가
+🎨 노트 안보임 수정: GameplayUI 전체화면 배경(CyberpunkBackground) 제거 → 3D 노트가 Screen Space Overlay Canvas에 가려지던 문제 해결

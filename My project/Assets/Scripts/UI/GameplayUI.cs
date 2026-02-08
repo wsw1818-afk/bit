@@ -95,7 +95,9 @@ namespace AIBeat.UI
             CreatePausePanel();
             CreateCountdownPanel();
             CreateLoadingVideoPanel();
-            CreateGameplayBackground(); // 배경 이미지 (레퍼런스 기반)
+            // 배경 이미지 비활성화: 3D 노트가 UI 뒤에 가려지는 문제 방지
+            // 씬의 LaneBackground(3D Quad)가 배경 역할을 대체
+            // CreateGameplayBackground();
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기
@@ -1327,6 +1329,11 @@ namespace AIBeat.UI
         {
             var canvas = GetComponentInParent<Canvas>();
             if (canvas == null) return;
+
+            // Screen Space - Overlay 유지: UI 요소가 없는 영역은 투명하여 3D 노트가 보임
+            // 배경 Image를 제거했으므로 노트 영역은 자연스럽게 투명
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
             var scaler = canvas.GetComponent<CanvasScaler>();
             if (scaler == null) return;
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

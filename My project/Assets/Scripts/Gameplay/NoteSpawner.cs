@@ -205,6 +205,7 @@ namespace AIBeat.Gameplay
                     mat.SetColor("_BaseColor", color);
 
                 renderer.material = mat;
+                renderer.enabled = true;  // 렌더러 활성화 보장
                 managedMaterials.Add(mat);
             }
 
@@ -491,7 +492,10 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
             if (showDebugLogs)
             {
-                Debug.Log($"[NoteSpawner] Spawned {data.Type} note at lane {data.LaneIndex}, hitTime: {data.HitTime:F2}s | Active: {activeNotes.Count}");
+                var pos = note.transform.position;
+                var scl = note.transform.localScale;
+                var mr = note.GetComponent<MeshRenderer>();
+                Debug.Log($"[NoteSpawner] Spawned {data.Type} note at lane {data.LaneIndex}, hitTime: {data.HitTime:F2}s | Active: {activeNotes.Count} | pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) scale=({scl.x:F2},{scl.y:F2},{scl.z:F2}) visible={mr?.isVisible}");
             }
 #endif
         }
