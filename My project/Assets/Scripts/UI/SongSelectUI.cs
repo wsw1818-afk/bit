@@ -130,11 +130,6 @@ namespace AIBeat.UI
             containerRect.anchorMax = new Vector2(1, 0);
             containerRect.pivot = new Vector2(0.5f, 0);
             containerRect.anchoredPosition = Vector2.zero;
-            var containerRect = eqContainer.AddComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0, 0);
-            containerRect.anchorMax = new Vector2(1, 0);
-            containerRect.pivot = new Vector2(0.5f, 0);
-            containerRect.anchoredPosition = Vector2.zero;
             containerRect.sizeDelta = new Vector2(0, 150); // Height increased for dramatic effect
 
             int barCount = 30; // More bars

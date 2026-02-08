@@ -41,9 +41,36 @@ namespace AIBeat.UI
         public static readonly Color JUDGE_BAD = NEON_MAGENTA;    // Magenta
         public static readonly Color JUDGE_MISS = new Color(0.8f, 0.1f, 0.1f, 1f); // Red
 
+        // ===== Additional Neons =====
+        public static readonly Color NEON_ORANGE = new Color(1.0f, 0.5f, 0.0f, 1f);        // #FF8000
+        public static readonly Color NEON_CYAN_BRIGHT = new Color(0.0f, 0.85f, 1.0f, 1f);  // #00D9FF (Brighter Cyan)
+
+        // ===== Borders =====
+        public static readonly Color BORDER_CYAN = new Color(0.0f, 0.7f, 0.8f, 0.6f);      // Dim Cyan Border
+        public static readonly Color BORDER_MAGENTA = new Color(1.0f, 0.0f, 0.6f, 0.5f);   // Magenta Border
+
+        // ===== Button States =====
+        public static readonly Color STATE_HOVER = new Color(0.15f, 0.12f, 0.30f, 1f);
+        public static readonly Color STATE_DISABLED = new Color(0.08f, 0.06f, 0.12f, 0.6f);
+        public static readonly Color PAUSE_BTN_BG = new Color(0.8f, 0.0f, 0.5f, 0.85f);    // Magenta Pause
+
+        // ===== Error =====
+        public static readonly Color ERROR_RED = new Color(0.9f, 0.1f, 0.1f, 1f);
+
         // ===== Combo Colors =====
         public static readonly Color COMBO_NORMAL = NEON_CYAN;
         public static readonly Color COMBO_HIGH = NEON_GOLD;
+        public static readonly Color COMBO_10 = new Color(0.3f, 0.9f, 1.0f, 1f);    // Light Cyan
+        public static readonly Color COMBO_25 = new Color(0.0f, 1.0f, 0.6f, 1f);    // Green-Cyan
+        public static readonly Color COMBO_50 = NEON_GOLD;                            // Gold
+        public static readonly Color COMBO_100 = new Color(1.0f, 0.3f, 0.8f, 1f);   // Hot Pink
+
+        // ===== Equalizer Extra =====
+        public static readonly Color EQ_ORANGE = new Color(1.0f, 0.5f, 0.0f, 1f);
+        public static readonly Color EQ_YELLOW = new Color(1.0f, 0.9f, 0.2f, 1f);
+
+        // ===== Text Extra =====
+        public static readonly Color TEXT_DIM = new Color(0.35f, 0.35f, 0.45f, 1f);
 
         // ===== Stats Backgrounds (Darkened Versions) =====
         public static readonly Color STATS_BG_PERFECT = new Color(0.5f, 0.4f, 0.0f, 0.8f);

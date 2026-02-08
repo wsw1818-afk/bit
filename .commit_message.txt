@@ -1,1 +1,1 @@
-🔧 UI 레이아웃 수정: MainMenu 타이틀 72px축소+버튼80px단순화 + Gameplay 카메라 세로모드 레인맞춤 + 특수문자→ASCII 교체
+🐛 Gemini UI 리디자인 컴파일 에러 29개 수정: UIColorPalette 누락 멤버 15종 추가 + SongSelectUI 중복변수 제거 + 특수문자→ASCII 교체

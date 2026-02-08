@@ -426,7 +426,7 @@ namespace AIBeat.UI
             subRect.offsetMax = new Vector2(-20, 0);
 
             subtitleText = subGo.AddComponent<TextMeshProUGUI>();
-            subtitleText.text = "\u221E  I N F I N I T E   M I X  \u221E";
+            subtitleText.text = "- I N F I N I T E   M I X -";
             subtitleText.fontSize = 28;
             subtitleText.color = UIColorPalette.NEON_MAGENTA;
             subtitleText.alignment = TextAlignmentOptions.Center;

@@ -996,8 +996,8 @@ namespace AIBeat.UI
 
             (string text, Color color) = result switch
             {
-                JudgementResult.Perfect => ("\u266B PERFECT!", perfectColor),
-                JudgementResult.Great => ("\u266A GREAT!", greatColor),
+                JudgementResult.Perfect => ("PERFECT!", perfectColor),
+                JudgementResult.Great => ("GREAT!", greatColor),
                 JudgementResult.Good => ("GOOD", goodColor),
                 JudgementResult.Bad => ("BAD", badColor),
                 _ => ("MISS", missColor)
@@ -1168,7 +1168,7 @@ namespace AIBeat.UI
             // 이미 생성되어 있으면 업데이트만
             if (resultSongInfoText != null)
             {
-                resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
+                resultSongInfoText.text = $"{currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
                 return;
             }
 
@@ -1181,7 +1181,7 @@ namespace AIBeat.UI
             songInfoRect.offsetMax = Vector2.zero;
 
             resultSongInfoText = songInfoGo.AddComponent<TextMeshProUGUI>();
-            resultSongInfoText.text = $"\u266B {currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
+            resultSongInfoText.text = $"{currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
             resultSongInfoText.fontSize = 18;
             resultSongInfoText.color = UIColorPalette.NEON_BLUE;
             resultSongInfoText.alignment = TextAlignmentOptions.Center;
@@ -1269,7 +1269,7 @@ namespace AIBeat.UI
 
             if (isNewRecord)
             {
-                resultNewRecordText.text = "\u2605 신기록! \u2605";
+                resultNewRecordText.text = "** 신기록! **";
                 resultNewRecordText.color = UIColorPalette.NEON_YELLOW;
                 resultNewRecordText.gameObject.SetActive(true);
 
