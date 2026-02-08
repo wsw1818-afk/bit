@@ -1,1 +1,1 @@
-📱 세로 모드 강제: RuntimeInitializeOnLoadMethod로 앱 시작 즉시 Portrait 고정 + ProjectSettings + GameManager
+🔧 세로 모드 UI 수정: 배경 이미지 제거 + 씬 StatsHUD 중복 제거 + TopBar/StatsBar 크기 세로화면 최적화

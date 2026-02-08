@@ -193,74 +193,11 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 게임플레이 배경 이미지 — unnamed.jpg에서 좌/우 사이드 + 하단 턴테이블 크롭
-        /// RawImage + uvRect 사용 (isReadable 불필요 → Android APK 호환)
+        /// 배경 이미지 — 현재 비활성 (노트 레인과 겹침 문제로 제거)
         /// </summary>
         private void CreateGameplayBackground()
         {
-            Texture2D bgTex = Resources.Load<Texture2D>("UI/GameplayBG");
-            if (bgTex == null)
-            {
-                Debug.LogWarning("[GameplayUI] GameplayBG 텍스처를 Resources에서 찾을 수 없음");
-                return;
-            }
-
-            float sideRatio = 0.29f;
-            float bottomRatio = 0.30f;
-
-            // --- 배경 컨테이너 (최하위 Z-order) ---
-            var bgContainer = new GameObject("GameplayBG");
-            bgContainer.transform.SetParent(transform, false);
-            bgContainer.transform.SetAsFirstSibling();
-            var bgContainerRect = bgContainer.AddComponent<RectTransform>();
-            bgContainerRect.anchorMin = Vector2.zero;
-            bgContainerRect.anchorMax = Vector2.one;
-            bgContainerRect.offsetMin = Vector2.zero;
-            bgContainerRect.offsetMax = Vector2.zero;
-
-            // --- 좌측 사이드 배경 (uvRect로 0~29% 크롭) ---
-            var leftSide = new GameObject("LeftSideBG");
-            leftSide.transform.SetParent(bgContainer.transform, false);
-            var leftRect = leftSide.AddComponent<RectTransform>();
-            leftRect.anchorMin = new Vector2(0, 0);
-            leftRect.anchorMax = new Vector2(sideRatio, 1);
-            leftRect.offsetMin = Vector2.zero;
-            leftRect.offsetMax = Vector2.zero;
-
-            var leftRaw = leftSide.AddComponent<UnityEngine.UI.RawImage>();
-            leftRaw.texture = bgTex;
-            leftRaw.uvRect = new Rect(0f, 0f, sideRatio, 1f);
-            leftRaw.raycastTarget = false;
-
-            // --- 우측 사이드 배경 (uvRect로 71~100% 크롭) ---
-            var rightSide = new GameObject("RightSideBG");
-            rightSide.transform.SetParent(bgContainer.transform, false);
-            var rightRect = rightSide.AddComponent<RectTransform>();
-            rightRect.anchorMin = new Vector2(1f - sideRatio, 0);
-            rightRect.anchorMax = new Vector2(1, 1);
-            rightRect.offsetMin = Vector2.zero;
-            rightRect.offsetMax = Vector2.zero;
-
-            var rightRaw = rightSide.AddComponent<UnityEngine.UI.RawImage>();
-            rightRaw.texture = bgTex;
-            rightRaw.uvRect = new Rect(1f - sideRatio, 0f, sideRatio, 1f);
-            rightRaw.raycastTarget = false;
-
-            // --- 하단 턴테이블 배경 (uvRect로 중앙 하단 크롭) ---
-            var bottomBG = new GameObject("BottomTurntableBG");
-            bottomBG.transform.SetParent(bgContainer.transform, false);
-            var bottomRect = bottomBG.AddComponent<RectTransform>();
-            bottomRect.anchorMin = new Vector2(sideRatio, 0);
-            bottomRect.anchorMax = new Vector2(1f - sideRatio, bottomRatio);
-            bottomRect.offsetMin = Vector2.zero;
-            bottomRect.offsetMax = Vector2.zero;
-
-            var bottomRaw = bottomBG.AddComponent<UnityEngine.UI.RawImage>();
-            bottomRaw.texture = bgTex;
-            bottomRaw.uvRect = new Rect(sideRatio, 0f, 1f - 2f * sideRatio, bottomRatio);
-            bottomRaw.raycastTarget = false;
-
-            Debug.Log($"[GameplayUI] GameplayBG 배경 생성 완료 (RawImage+uvRect, tex:{bgTex.width}x{bgTex.height})");
+            // 배경 이미지 비활성화: 사이드 배경이 노트 레인을 가리는 문제
         }
 
         /// <summary>
@@ -280,7 +217,7 @@ namespace AIBeat.UI
             topBarRect.anchorMax = new Vector2(1, 1);
             topBarRect.pivot = new Vector2(0.5f, 1);
             topBarRect.anchoredPosition = Vector2.zero;
-            topBarRect.sizeDelta = new Vector2(0, 100);
+            topBarRect.sizeDelta = new Vector2(0, 80);
 
             // 검정에 가까운 진한 배경
             var topBarBg = topBar.AddComponent<Image>();
@@ -289,8 +226,8 @@ namespace AIBeat.UI
 
             // HorizontalLayoutGroup
             var hLayout = topBar.AddComponent<HorizontalLayoutGroup>();
-            hLayout.padding = new RectOffset(10, 10, 6, 6);
-            hLayout.spacing = 6;
+            hLayout.padding = new RectOffset(6, 6, 4, 4);
+            hLayout.spacing = 4;
             hLayout.childAlignment = TextAnchor.MiddleCenter;
             hLayout.childControlWidth = false;
             hLayout.childControlHeight = true;
@@ -302,8 +239,8 @@ namespace AIBeat.UI
             {
                 songTitleText.transform.SetParent(topBar.transform, false);
                 var titleLE = songTitleText.gameObject.AddComponent<LayoutElement>();
-                titleLE.preferredWidth = 160;
-                songTitleText.fontSize = 22;
+                titleLE.preferredWidth = 110;
+                songTitleText.fontSize = 18;
                 songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
                 songTitleText.color = UIColorPalette.NEON_GREEN;
                 songTitleText.fontStyle = FontStyles.Bold;
@@ -334,7 +271,7 @@ namespace AIBeat.UI
                     scoreLE.flexibleWidth = 1;
                 }
 
-                scoreText.fontSize = 48;
+                scoreText.fontSize = 36;
                 scoreText.alignment = TextAlignmentOptions.Center;
                 scoreText.color = Color.white;
                 scoreText.fontStyle = FontStyles.Bold;
@@ -348,8 +285,8 @@ namespace AIBeat.UI
             {
                 comboText.transform.SetParent(topBar.transform, false);
                 var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
-                comboLE.preferredWidth = 130;
-                comboText.fontSize = 40;
+                comboLE.preferredWidth = 80;
+                comboText.fontSize = 32;
                 comboText.alignment = TextAlignmentOptions.Center;
                 comboText.color = Color.white;
                 comboText.fontStyle = FontStyles.Bold;
@@ -361,9 +298,9 @@ namespace AIBeat.UI
             {
                 pauseButton.transform.SetParent(topBar.transform, false);
                 var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
-                pauseLE.preferredWidth = 70;
-                pauseLE.preferredHeight = 70;
-                pauseLE.minWidth = 70;
+                pauseLE.preferredWidth = 56;
+                pauseLE.preferredHeight = 56;
+                pauseLE.minWidth = 56;
             }
 
             // ============================================================
@@ -395,7 +332,7 @@ namespace AIBeat.UI
             pauseBtnGo.transform.SetParent(transform, false);
 
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(70, 70);
+            btnRect.sizeDelta = new Vector2(56, 56);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
             btnImage.color = UIColorPalette.PAUSE_BTN_BG;
@@ -411,7 +348,7 @@ namespace AIBeat.UI
             textRect.offsetMax = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
             iconText.text = "| |";
-            iconText.fontSize = 36;
+            iconText.fontSize = 28;
             iconText.color = Color.white;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
@@ -736,6 +673,13 @@ namespace AIBeat.UI
         /// </summary>
         private void CreateStatsHUD()
         {
+            // 씬에 남아있는 기존 판정 텍스트 오브젝트 제거 (중복 방지)
+            string[] legacyNames = { "PerfectText", "GreatText", "GoodText", "BadText", "MissText" };
+            foreach (var name in legacyNames)
+            {
+                var legacy = transform.Find(name);
+                if (legacy != null) Destroy(legacy.gameObject);
+            }
             statsPanel = new GameObject("StatsBar");
             statsPanel.transform.SetParent(transform, false);
 
@@ -743,8 +687,8 @@ namespace AIBeat.UI
             statsRect.anchorMin = new Vector2(0, 1);
             statsRect.anchorMax = new Vector2(1, 1);
             statsRect.pivot = new Vector2(0.5f, 1);
-            statsRect.anchoredPosition = new Vector2(0, -100); // TopBar(100px) 바로 아래
-            statsRect.sizeDelta = new Vector2(0, 44);
+            statsRect.anchoredPosition = new Vector2(0, -80); // TopBar(80px) 바로 아래
+            statsRect.sizeDelta = new Vector2(0, 36);
 
             // 배경 (어두운, 거의 투명)
             var bgImage = statsPanel.AddComponent<Image>();
@@ -793,7 +737,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = $"<color=#{ColorUtility.ToHtmlStringRGB(textColor)}>{label}</color>{value}";
-            tmp.fontSize = 24;
+            tmp.fontSize = 20;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
@@ -959,11 +903,11 @@ namespace AIBeat.UI
                 // 레퍼런스: "COMBO" 라벨 위, 숫자 아래
                 if (combo <= 0)
                 {
-                    comboText.text = "<size=18>COMBO</size>\n<size=36>0</size>";
+                    comboText.text = "<size=14>COMBO</size>\n<size=28>0</size>";
                 }
                 else
                 {
-                    comboText.text = $"<size=18>COMBO</size>\n<size=40>{combo}</size>";
+                    comboText.text = $"<size=14>COMBO</size>\n<size=30>{combo}</size>";
                 }
 
                 // 콤보 색상 단계
