@@ -1107,11 +1107,12 @@ namespace AIBeat.Gameplay
             int textureSize = 512;
             int gridSize = 64;
             Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
-            texture.wrapMode = TextureWrapMode.Repeat;
+            // texture.wrapMode = TextureWrapMode.Repeat; // 주석 처리됨 (필요시 활성화)
 
-            Color topColor = new Color(0.08f, 0.02f, 0.15f, 1f);     // 밝은 보라
-            Color bottomColor = new Color(0.15f, 0.05f, 0.25f, 1f);  // 더 밝은 보라
-            Color gridColor = new Color(1f, 0f, 0.8f, 0.04f);        // 네온 마젠타 (훨씬 더 투명)
+            // 색상 정의
+            Color topColor = new Color(0.08f, 0.02f, 0.15f, 1f);     // 상단 색 (Deep Purple)
+            Color bottomColor = new Color(0.15f, 0.05f, 0.25f, 1f);  // 하단 색 (Darker Purple)
+            Color gridColor = new Color(1f, 0f, 0.8f, 0.04f);        // 그리드 색 (Magenta, 투명도 4%)
 
             for (int y = 0; y < textureSize; y++)
             {
@@ -1122,16 +1123,16 @@ namespace AIBeat.Gameplay
                 {
                     Color finalColor = bgColor;
 
-                    // 세로 그리드 라인
-                    if (x % gridSize == 0)
+                    // 세로 그리드 라인 (4레인 기준, 텍스처 전체에서 균등 분할)
+                    if (x % gridSize == 0 || x == textureSize - 1)
                         finalColor += gridColor;
 
                     // 가로 그리드 라인
-                    if (y % gridSize == 0)
+                    if (y % gridSize == 0 || y == textureSize - 1)
                         finalColor += gridColor;
 
-                    // 노이즈 추가
-                    float noise = UnityEngine.Random.Range(-0.02f, 0.02f);
+                    // 노이즈 추가 (디지털 느낌)
+                    float noise = UnityEngine.Random.Range(-0.01f, 0.01f);
                     finalColor.r += noise;
                     finalColor.g += noise;
                     finalColor.b += noise;
@@ -1142,6 +1143,10 @@ namespace AIBeat.Gameplay
 
             texture.Apply();
             instanceMaterial.mainTexture = texture;
+            
+            // Unlit 셰이더인 경우 _BaseColor 등 설정 필요할 수 있음
+            if (instanceMaterial.HasProperty("_BaseColor"))
+                instanceMaterial.SetColor("_BaseColor", Color.white); // 텍스처 색상 그대로 사용
 
             Debug.Log("[GameplayController] Cyberpunk texture applied to LaneBackground");
         }

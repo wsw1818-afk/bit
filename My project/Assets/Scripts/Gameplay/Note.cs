@@ -114,6 +114,13 @@ namespace AIBeat.Gameplay
             {
                 transform.localScale = originalScale;
             }
+
+            // Lane Color 적용 (NoteVisuals 컴포넌트 사용)
+            var visuals = GetComponent<NoteVisuals>();
+            if (visuals != null)
+            {
+                visuals.SetLaneColor(data.LaneIndex);
+            }
         }
 
         /// <summary>

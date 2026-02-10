@@ -211,6 +211,8 @@ namespace AIBeat.Gameplay
 
             // Note 컴포넌트 추가
             noteObj.AddComponent<Note>();
+            // NoteVisuals 컴포넌트 추가 (Lane별 색상 처리)
+            noteObj.AddComponent<NoteVisuals>();
 
             noteObj.SetActive(false);
             dynamicPrefabs.Add(noteObj);

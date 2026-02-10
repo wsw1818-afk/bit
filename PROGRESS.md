@@ -1,8 +1,13 @@
 # PROGRESS.md - 게임플레이 화면 디자인 요청
 
 ## 현재 상황
-- 게임 기능은 모두 정상 작동 (노트 스폰, 판정, 점수 계산 등)
-- 게임플레이 화면의 비주얼 디자인이 필요함
+- ✅ 게임 기능 모두 정상 작동 (노트 스폰, 판정, 점수 계산 등)
+- ✅ 게임플레이 화면 비주얼 디자인 적용 완료 (Cyberpunk 테마)
+- ✅ 배경 텍스처: Deep Purple 그라데이션 + 투명 Magenta 그리드 (alpha 0.04)
+- ✅ 노트 색상: Cyan/Magenta/Yellow/White (레인별 구분)
+- ✅ 노트 Z=2 / 배경 Z=1 → 노트가 항상 앞에 보임
+- ✅ 카메라 Y=6, ortho=7 → 스폰점(Y=12)부터 판정선(Y=0)까지 전체 범위 가시
+- ⚠️ 실제 게임 화면 스크린샷 미확인 (Unity Play 모드 실행 필요)
 
 ## 재미나이에게 디자인 요청 사항
 
@@ -107,19 +112,81 @@ public static readonly Color DeepBlack = new Color(0.05f, 0.05f, 0.08f, 1f);
    - 어떤 요소를 강조하고 싶은지
 
 ### 기술적 제약사항
-- ⚠️ **노트는 Z=2, 배경은 Z=1** → 배경이 불투명해도 노트가 앞에 보임
-- ⚠️ **그리드는 투명도 필수** (alpha 0.04 권장) → 너무 밝으면 노트 가림
-- ⚠️ **모바일 세로 모드** → 좁은 화면, 4개 레인이 화면 너비 전체 사용
-- ✅ **런타임 텍스처 생성** → 코드로 실시간 생성 (이미지 파일 불필요)
+- ⚠️ **노트는 Z=2, 배경은 Z=1** → 배경이 불투명해도 노트가 앞에 보임 ✅ (적용 완료)
+- ⚠️ **그리드는 투명도 필수** (alpha 0.04 권장) → 너무 밝으면 노트 가림 ✅ (0.04 적용됨)
+- ⚠️ **모바일 세로 모드** → 좁은 화면, 4개 레인이 화면 너비 전체 사용 ✅ (자동 조정)
+- ✅ **런타임 텍스처 생성** → 코드로 실시간 생성 (이미지 파일 불필요) ✅ (구현 완료)
+
+### RGB ↔ Unity Color 변환 참고
+Unity의 `Color(r, g, b, a)`는 **0~1 범위**를 사용합니다:
+- Hex `#140226` (RGB 20, 2, 38) → Unity `new Color(0.08f, 0.01f, 0.15f, 1f)`
+- Hex `#260540` (RGB 38, 5, 64) → Unity `new Color(0.15f, 0.02f, 0.25f, 1f)`
+- Hex `#FF00CC` (RGB 255, 0, 204) → Unity `new Color(1f, 0f, 0.8f, 1f)`
+
+변환 공식: `UnityValue = HexValue / 255.0`
+
+## 완료된 작업
+
+### 코드 구현 상태 (검증 완료)
+- [x] **LaneBackground 텍스처 생성** (`GameplayController.cs` 라인 1082-1148)
+  - Deep Purple 그라데이션 (상단 #140226 → 하단 #260540)
+  - Magenta 그리드 (alpha 0.04, 매우 투명)
+  - 노이즈 효과 추가 (디지털 느낌)
+  - 512x512 텍스처, 64px 그리드 간격
+
+- [x] **NoteVisuals 색상 시스템** (`NoteVisuals.cs` 라인 30-40)
+  - Lane 0: Cyan (#00FFFF)
+  - Lane 1: Magenta (#FF00FF)
+  - Lane 2: Yellow (#FFFF00)
+  - Lane 3: White (#FFFFFF)
+  - MaterialPropertyBlock 사용 (인스턴스별 색상)
+
+- [x] **Z-ordering 수정** (`NoteSpawner.cs` 라인 508)
+  - 노트 Z 위치: **2** (배경 앞)
+  - 배경 Z 위치: **1** (노트 뒤)
+  - 카메라 Z 위치: **-10** (모두 관찰)
+
+- [x] **카메라 설정** (`GameplayController.cs` 라인 87-95)
+  - orthographicSize: **7** (범위 Y -1 ~ 13)
+  - 카메라 Y 위치: **6** (판정선 0과 스폰점 12의 중간)
+  - 4레인 전체가 화면 너비에 꽉 차도록 자동 조정
+
+- [x] **UIColorPalette 시스템** (`UIColorPalette.cs`)
+  - 87줄 분량의 완전한 Cyberpunk 색상 팔레트
+  - Neon 계열: Cyan/Magenta/Yellow/Green/Blue/Purple/Gold
+  - 배경: Deep Black → Dark Violet 계층
+  - 판정 색상, 콤보 색상, 버튼 상태 등 모두 정의됨
+
+### 검증 완료 항목
+- ✅ `GameplayController.cs` 코드 실제 적용됨 (system-reminder로 확인)
+- ✅ `NoteSpawner.cs` noteZ = 2f 적용됨
+- ✅ `NoteVisuals.cs` GetLaneColor() 메서드 존재 및 색상 정의 확인
+- ✅ `UIColorPalette.cs` 완전한 색상 시스템 구축됨
+- ❌ Unity Play 모드 실행 스크린샷 미확인 (다음 단계 필요)
 
 ---
 
 ## 재미나이 작업 흐름
-1. 디자인 컨셉 결정 (색상, 스타일, 분위기)
-2. 색상 코드 제공 (RGB 또는 Hex)
-3. Claude가 코드에 반영
-4. Unity에서 실행하여 스크린샷 확인
-5. 피드백 후 조정
+1. ✅ 디자인 컨셉 결정 (Cyberpunk Neon 스타일) → **완료**
+2. ✅ 기본 색상 코드 적용 (Deep Purple + Magenta) → **완료**
+3. ✅ Claude가 코드에 반영 → **완료**
+4. ⏳ Unity에서 실행하여 스크린샷 확인 → **다음 단계**
+5. ⏳ 피드백 후 조정 (필요 시)
+
+### 다음 단계: Unity Play 모드 실행
+Unity에서 게임을 실행하여 다음을 확인해야 합니다:
+1. 배경 그라데이션이 제대로 보이는지
+2. 그리드가 너무 밝거나 어둡지 않은지
+3. 노트가 명확하게 보이는지
+4. 색감이 Cyberpunk/Neon 느낌인지
+
+**실행 방법:**
+```bash
+# Unity MCP로 Play 모드 진입 (타임아웃 예상되지만 게임은 정상 작동)
+mcp__mcp-unity__execute_menu_item("Tools/A.I. BEAT/Start Play Mode")
+
+# 또는 Unity 에디터에서 직접 Play 버튼 클릭
+```
 
 ---
 
