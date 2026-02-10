@@ -87,12 +87,13 @@ namespace AIBeat.Gameplay
             float requiredOrthoSize = (targetWorldWidth / aspect) / 2f;
 
             // 최소 orthoSize 보장 (노트 스폰 위치까지 보이도록)
-            // 노트는 Y=12에서 스폰되므로 최소 8 이상 필요
-            cam.orthographicSize = Mathf.Max(requiredOrthoSize, 8f);
+            // 노트는 Y=12에서 스폰, 판정선 Y=0 → 카메라 Y=6, ortho=7이면 -1~13 범위
+            cam.orthographicSize = Mathf.Max(requiredOrthoSize, 7f);
 
-            // 카메라 X 위치를 레인 중심(0.5)에 맞춤
+            // 카메라 위치 조정 (X=레인 중심, Y=화면 중앙)
             var pos = cam.transform.position;
-            pos.x = 0.5f;
+            pos.x = 0.5f;  // 레인 중심
+            pos.y = 6f;    // 판정선(Y=0)과 스폰점(Y=12) 중간
             cam.transform.position = pos;
         }
 
