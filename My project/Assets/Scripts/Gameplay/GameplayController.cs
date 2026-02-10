@@ -1131,26 +1131,77 @@ namespace AIBeat.Gameplay
                 Debug.LogWarning("[GameplayController] LaneVisualFeedback component not found");
             }
 
-            // NanoBanana Sensation 에셋 로드 (Background_Sensation.png)
-            Texture2D texture = Resources.Load<Texture2D>("Skins/NanoBanana/Background_Sensation");
+            // NanoBanana 에셋 로드 (Background.png) - 사용자가 원하는 나노바나나 이미지
+            Texture2D texture = Resources.Load<Texture2D>("Skins/NanoBanana/Background");
             
+            // 로드 실패 시 절차적 생성 (Sensational Style)
+            if (texture == null)
+            {
+                Debug.LogWarning("[GameplayController] 'Background_Sensation' asset not found. Generating procedural sensation...");
+                texture = GenerateSensationalTexture();
+            }
+
             if (texture != null)
             {
                 instanceMaterial.mainTexture = texture;
                 
-                // Unlit 셰이더인 경우 색상 초기화 (텍스처 본연의 색 사용)
+                // Unlit 셰이더인 경우 색상 초기화
                 if (instanceMaterial.HasProperty("_BaseColor"))
                     instanceMaterial.SetColor("_BaseColor", Color.white);
                 else if (instanceMaterial.HasProperty("_Color"))
                     instanceMaterial.SetColor("_Color", Color.white);
                     
-                Debug.Log("[GameplayController] NanoBanana Sensation background asset applied");
+                Debug.Log("[GameplayController] Background applied (Source: " + (texture.name == "" ? "Generated" : "Asset") + ")");
             }
-            else
+        }
+
+        private Texture2D GenerateSensationalTexture()
+        {
+            int width = 512;
+            int height = 1024; // 수직형 배경
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            
+            Color colorTop = new Color(0.1f, 0.0f, 0.3f); // Deep Purple
+            Color colorBottom = new Color(0.0f, 0.0f, 0.1f); // Deep Blue/Black
+            Color neonPink = new Color(1f, 0f, 0.8f);
+            Color neonBlue = new Color(0f, 1f, 1f);
+
+            for (int y = 0; y < height; y++)
             {
-                Debug.LogWarning("[GameplayController] Failed to load 'Skins/NanoBanana/Background_Sensation' asset");
-                // 로드 실패 시 기존 절차적 생성으로 폴백? (일단 경고만)
+                float vy = (float)y / height;
+                for (int x = 0; x < width; x++)
+                {
+                    float vx = (float)x / width;
+                    
+                    // 1. Base Gradient
+                    Color finalColor = Color.Lerp(colorBottom, colorTop, vy);
+
+                    // 2. Vertical Equalizer Lines (Bottom)
+                    if (y < height * 0.3f)
+                    {
+                        float barWidth = 0.1f;
+                        if (Mathf.Abs(vx % barWidth - barWidth/2) < 0.02f)
+                        {
+                            // Equalizer bar effect
+                            float barHeight = Mathf.Sin(vx * 20f) * 0.2f + 0.1f + UnityEngine.Random.Range(0f, 0.1f);
+                             if (vy < barHeight)
+                                finalColor += Color.Lerp(neonBlue, neonPink, vy / barHeight) * 0.8f;
+                        }
+                    }
+
+                    // 3. Grid Lines (Perspective-like)
+                    if (x % 64 == 0 || y % 128 == 0)
+                        finalColor += neonPink * 0.15f;
+
+                    // 4. Stars / Particles
+                    if (UnityEngine.Random.value > 0.995f)
+                        finalColor += Color.white * 0.8f;
+
+                    tex.SetPixel(x, y, finalColor);
+                }
             }
+            tex.Apply();
+            return tex;
         }
     }
 }
