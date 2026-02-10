@@ -86,8 +86,9 @@ namespace AIBeat.Gameplay
             float aspect = (float)Screen.width / Screen.height;
             float requiredOrthoSize = (targetWorldWidth / aspect) / 2f;
 
-            // 최소 orthoSize 보장 (너무 작으면 상하가 잘림)
-            cam.orthographicSize = Mathf.Max(requiredOrthoSize, 4f);
+            // 최소 orthoSize 보장 (노트 스폰 위치까지 보이도록)
+            // 노트는 Y=12에서 스폰되므로 최소 8 이상 필요
+            cam.orthographicSize = Mathf.Max(requiredOrthoSize, 8f);
 
             // 카메라 X 위치를 레인 중심(0.5)에 맞춤
             var pos = cam.transform.position;
@@ -1107,9 +1108,9 @@ namespace AIBeat.Gameplay
             Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
             texture.wrapMode = TextureWrapMode.Repeat;
 
-            Color topColor = new Color(0.02f, 0f, 0.1f, 1f);      // 진한 보라
-            Color bottomColor = new Color(0.1f, 0f, 0.2f, 1f);    // 보라
-            Color gridColor = new Color(1f, 0f, 0.8f, 0.15f);     // 네온 마젠타
+            Color topColor = new Color(0.08f, 0.02f, 0.15f, 1f);     // 밝은 보라
+            Color bottomColor = new Color(0.15f, 0.05f, 0.25f, 1f);  // 더 밝은 보라
+            Color gridColor = new Color(1f, 0f, 0.8f, 0.04f);        // 네온 마젠타 (훨씬 더 투명)
 
             for (int y = 0; y < textureSize; y++)
             {

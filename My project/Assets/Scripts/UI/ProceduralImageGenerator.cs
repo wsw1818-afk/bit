@@ -24,9 +24,9 @@ namespace AIBeat.UI
             int height = 512;
             Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
             
-            Color topColor = new Color(0.02f, 0.0f, 0.1f, 1f);
-            Color bottomColor = new Color(0.1f, 0.0f, 0.2f, 1f);
-            Color gridColor = new Color(1f, 0.0f, 0.8f, 0.15f); // Neon Magenta Grid
+            Color topColor = new Color(0.08f, 0.02f, 0.15f, 1f);     // 밝은 보라
+            Color bottomColor = new Color(0.15f, 0.05f, 0.25f, 1f);  // 더 밝은 보라
+            Color gridColor = new Color(1f, 0.0f, 0.8f, 0.04f);      // 네온 마젠타 (훨씬 더 투명)
 
             for (int y = 0; y < height; y++)
             {
