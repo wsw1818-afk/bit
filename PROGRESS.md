@@ -33,6 +33,16 @@
 ## Commands & Results (현재 세션)
 - recompile_scripts → **0 에러, 0 경고** ✅
 
+## What changed (2026-02-09)
+### 프로시저럴 사운드 시스템 구현
+- **ProceduralSoundGenerator.cs**: 외부 에셋 없이 코드로 히트 사운드 동적 생성
+  - Perfect/Great/Good/Bad 판정별 사운드 (주파수 차등)
+  - 스크래치 사운드 (노이즈 기반)
+  - 카운트다운 비프음 지원
+- **AudioManager**: `GenerateProceduralSounds()` 메서드 추가
+  - Initialize 시 자동으로 사운드 생성 (Inspector 미할당 시)
+  - 외부 에셋 없이도 즉시 사용 가능
+
 ## Open issues
 - Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)
 - 롱노트 hold 비주얼 피드백 미확인 (실제 화면 확인 필요)

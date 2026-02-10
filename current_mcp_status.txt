@@ -1,0 +1,33 @@
+Unity MCP 연결 상태 보고 (2026-02-10 11:49)
+
+[현재 상황]
+❌ MCP 연결: 실패
+❌ 포트 8090: 닫힘
+✅ Unity 실행: 3개 프로세스
+
+[원인]
+Unity 에디터에서 MCP 서버를 수동으로 시작해야 합니다.
+manifest.json에 패키지 추가만으로는 자동 시작되지 않습니다.
+
+[Unity 에디터에서 확인할 것]
+1. Window 메뉴 → "Unity MCP" 또는 "MCP" 검색
+2. Package Manager → "jp.justinpbarrett.unity-mcp" 설치 확인
+3. Project Settings → MCP 설정 확인
+
+[해결 방법]
+방법 1: Package Manager에서 직접 설치
+- Window → Package Manager
+- + 버튼 → Add package from git URL
+- https://github.com/justinpbarnett/unity-mcp.git 입력
+- Install 클릭 → Unity 재시작
+
+방법 2: Unity 완전 재시작
+- Unity 종료
+- 30초 대기
+- Unity 다시 실행 (패키지 자동 설치)
+
+[다음 단계]
+Unity 에디터에서 위 방법으로 패키지 설치 후
+"Window → Unity MCP → Start Server" 클릭
+
+연결이 되면 포트 8090이 열립니다.

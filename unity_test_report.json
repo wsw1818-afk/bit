@@ -1,0 +1,73 @@
+{
+  "project": "A.I. BEAT - Rhythm Game",
+  "timestamp": "2026-02-09 22:52:23",
+  "test_results": [
+    {
+      "test": "project_structure",
+      "status": "passed"
+    },
+    {
+      "available_scripts": 8,
+      "missing_scripts": 0
+    },
+    {
+      "test": "script_integrity",
+      "status": "passed"
+    },
+    {
+      "category": "NoteData",
+      "count": 4
+    },
+    {
+      "category": "SongData",
+      "count": 2
+    },
+    {
+      "category": "BeatMapper",
+      "count": 10
+    },
+    {
+      "category": "JudgementResult",
+      "count": 2
+    },
+    {
+      "category": "GameResult",
+      "count": 2
+    },
+    {
+      "category": "Scene",
+      "count": 3
+    },
+    {
+      "category": "Material",
+      "count": 4
+    },
+    {
+      "category": "Scripts",
+      "count": 10
+    },
+    {
+      "test": "editor_tests",
+      "status": "passed"
+    },
+    {
+      "test": "judgement",
+      "result": "Perfect",
+      "status": "passed"
+    },
+    {
+      "test": "scoring",
+      "score": 1250.0,
+      "status": "passed"
+    },
+    {
+      "test": "gameplay_simulation",
+      "status": "passed"
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "passed": 6,
+    "failed": 0
+  }
+}

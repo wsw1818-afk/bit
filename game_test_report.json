@@ -1,0 +1,113 @@
+{
+  "project": "A.I. BEAT",
+  "timestamp": "2026-02-10",
+  "summary": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "warning": 0,
+    "success_rate": "100.0%"
+  },
+  "details": [
+    {
+      "test": "dir_Assets/Scripts/Core",
+      "status": "passed"
+    },
+    {
+      "test": "dir_Assets/Scripts/Gameplay",
+      "status": "passed"
+    },
+    {
+      "test": "dir_Assets/Scripts/Data",
+      "status": "passed"
+    },
+    {
+      "test": "dir_Assets/Scenes",
+      "status": "passed"
+    },
+    {
+      "test": "dir_Assets/Resources/Songs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Core/GameManager.cs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Gameplay/GameplayController.cs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Gameplay/Note.cs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Gameplay/NoteSpawner.cs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Gameplay/JudgementSystem.cs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Data/SongData.cs",
+      "status": "passed"
+    },
+    {
+      "test": "script_Data/NoteData.cs",
+      "status": "passed"
+    },
+    {
+      "test": "scene_MainMenu.unity",
+      "status": "passed"
+    },
+    {
+      "test": "scene_SongSelect.unity",
+      "status": "passed"
+    },
+    {
+      "test": "scene_Gameplay.unity",
+      "status": "passed"
+    },
+    {
+      "test": "judgement_0.02",
+      "status": "passed"
+    },
+    {
+      "test": "judgement_0.07",
+      "status": "passed"
+    },
+    {
+      "test": "judgement_0.15",
+      "status": "passed"
+    },
+    {
+      "test": "judgement_0.3",
+      "status": "passed"
+    },
+    {
+      "test": "judgement_0.5",
+      "status": "passed"
+    },
+    {
+      "test": "scoring_system",
+      "status": "passed"
+    },
+    {
+      "test": "note_data_structure",
+      "status": "passed"
+    },
+    {
+      "test": "audio_resources",
+      "status": "passed"
+    },
+    {
+      "test": "font_resources",
+      "status": "passed"
+    },
+    {
+      "test": "song_resources",
+      "status": "passed"
+    }
+  ]
+}

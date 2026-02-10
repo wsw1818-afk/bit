@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System;
 using System.Collections;
+using AIBeat.Audio;
 
 namespace AIBeat.Core
 {
@@ -110,6 +111,30 @@ namespace AIBeat.Core
 
             // SettingsManager 이벤트 구독 (설정 변경 시 즉시 반영)
             SettingsManager.OnSettingChanged += OnSettingChanged;
+
+            // 프로시저럴 사운드 생성 (외부 에셋 없이 사용 가능)
+            GenerateProceduralSounds();
+        }
+
+        /// <summary>
+        /// 외부 에셋이 없을 때 프로시저럴 방식으로 사운드 생성
+        /// </summary>
+        private void GenerateProceduralSounds()
+        {
+            if (perfectSound == null)
+                perfectSound = ProceduralSoundGenerator.CreatePerfectSound();
+            if (greatSound == null)
+                greatSound = ProceduralSoundGenerator.CreateGreatSound();
+            if (goodSound == null)
+                goodSound = ProceduralSoundGenerator.CreateGoodSound();
+            if (badSound == null)
+                badSound = ProceduralSoundGenerator.CreateBadSound();
+            if (scratchSound == null)
+                scratchSound = ProceduralSoundGenerator.CreateScratchSound();
+
+#if UNITY_EDITOR
+            Debug.Log("[AudioManager] Procedural sounds generated");
+#endif
         }
 
         /// <summary>
