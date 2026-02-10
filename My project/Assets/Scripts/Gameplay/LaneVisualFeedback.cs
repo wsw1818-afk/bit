@@ -106,6 +106,20 @@ namespace AIBeat.Gameplay
 
         private void Start()
         {
+            // NanoBanana 스킨 사용 시 LaneVisualFeedback 비활성화 (배경과 충돌 방지)
+            var laneBackground = GameObject.Find("LaneBackground");
+            if (laneBackground != null)
+            {
+                var renderer = laneBackground.GetComponent<MeshRenderer>();
+                if (renderer != null && renderer.material.mainTexture != null)
+                {
+                    // LaneBackground에 텍스처가 이미 적용되어 있으면 LaneVisualFeedback 비활성화
+                    Debug.Log("[LaneVisualFeedback] NanoBanana background detected, disabling LaneVisualFeedback");
+                    gameObject.SetActive(false);
+                    return;
+                }
+            }
+
             InitializeLanes();
             InitializeHitEffects();
             StartCoroutine(ParticleUpdateCoroutine());

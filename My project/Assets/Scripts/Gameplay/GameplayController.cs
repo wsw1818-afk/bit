@@ -1104,19 +1104,31 @@ namespace AIBeat.Gameplay
             Material instanceMaterial = new Material(meshRenderer.sharedMaterial);
             meshRenderer.material = instanceMaterial;
 
+            // LaneVisualFeedback 컴포넌트 비활성화 (NanoBanana 배경과 충돌 방지)
+            var laneVisualFeedback = FindFirstObjectByType<LaneVisualFeedback>();
+            if (laneVisualFeedback != null)
+            {
+                laneVisualFeedback.gameObject.SetActive(false);
+                Debug.Log("[GameplayController] LaneVisualFeedback component disabled");
+            }
+            else
+            {
+                Debug.LogWarning("[GameplayController] LaneVisualFeedback component not found");
+            }
+
             // NanoBanana 에셋 로드 (Background.png)
             Texture2D texture = Resources.Load<Texture2D>("Skins/NanoBanana/Background");
-            
+
             if (texture != null)
             {
                 instanceMaterial.mainTexture = texture;
-                
+
                 // Unlit 셰이더인 경우 색상 초기화 (텍스처 본연의 색 사용)
                 if (instanceMaterial.HasProperty("_BaseColor"))
                     instanceMaterial.SetColor("_BaseColor", Color.white);
                 else if (instanceMaterial.HasProperty("_Color"))
                     instanceMaterial.SetColor("_Color", Color.white);
-                    
+
                 Debug.Log("[GameplayController] NanoBanana background asset applied");
             }
             else

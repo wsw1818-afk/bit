@@ -1,1 +1,1 @@
-✅ NanoBanana 텍스처 로드 문제 해결: Assets/Refresh로 에셋 인식 완료 + Unity MCP 실시간 검증
+🎨 LaneVisualFeedback 자동 비활성화: NanoBanana 배경 감지 시 Cyan 오버레이 제거 → Deep Purple 그라데이션 표시 완료
