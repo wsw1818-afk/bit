@@ -1,1 +1,1 @@
-🎨 NanoBanana 배경 시 LaneVisualFeedback(Cyan 그리드) 생성 차단 → 디자인 충돌 해결
+🔧 LaneBackground가 카메라 전체 영역 커버하도록 위치/스케일 코드 추가 (Y=6, scaleY=16) → 노트가 화면 전체에서 보이도록 수정

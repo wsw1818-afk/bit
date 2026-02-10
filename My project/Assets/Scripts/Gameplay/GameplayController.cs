@@ -1115,6 +1115,11 @@ namespace AIBeat.Gameplay
                 return;
             }
 
+            // LaneBackground가 카메라 전체 영역을 덮도록 위치/스케일 설정
+            // 카메라: Y=6, orthographicSize=7 → 가시범위 Y=-1~13
+            laneBackground.transform.position = new Vector3(0f, 6f, 1f);
+            laneBackground.transform.localScale = new Vector3(4.5f, 16f, 1f);
+
             // Material 인스턴스 생성
             Material instanceMaterial = new Material(meshRenderer.sharedMaterial);
             meshRenderer.material = instanceMaterial;
