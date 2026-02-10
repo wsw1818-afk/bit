@@ -99,9 +99,7 @@ namespace AIBeat.UI
             CreatePausePanel();
             CreateCountdownPanel();
             CreateLoadingVideoPanel();
-            // 배경 이미지 비활성화: 3D 노트가 UI 뒤에 가려지는 문제 방지
-            // 씬의 LaneBackground(3D Quad)가 배경 역할을 대체
-            // CreateGameplayBackground();
+            CreateGameplayBackground(); // Cyberpunk 배경 활성화
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기

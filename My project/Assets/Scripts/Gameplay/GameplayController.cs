@@ -62,6 +62,8 @@ namespace AIBeat.Gameplay
             Screen.orientation = ScreenOrientation.Portrait;
             // 세로 모드에서 레인이 화면 너비를 꽉 채우도록 카메라 조정
             AdjustCameraForPortrait();
+            // LaneBackground Cyberpunk 스타일 적용
+            ApplyCyberpunkLaneBackground();
             Initialize();
             StartCoroutine(InputLoop());
             StartCoroutine(HoldBonusTickLoop());
@@ -1074,6 +1076,72 @@ namespace AIBeat.Gameplay
                 AudioManager.Instance.OnBGMEnded -= OnSongEnd;
                 AudioManager.Instance.OnBGMLoadFailed -= OnAudioLoadFailed;
             }
+        }
+
+        /// <summary>
+        /// LaneBackground(3D Quad)에 Cyberpunk 테마 텍스처 적용
+        /// </summary>
+        private void ApplyCyberpunkLaneBackground()
+        {
+            var laneBackground = GameObject.Find("LaneBackground");
+            if (laneBackground == null)
+            {
+                Debug.LogWarning("[GameplayController] LaneBackground not found");
+                return;
+            }
+
+            var meshRenderer = laneBackground.GetComponent<MeshRenderer>();
+            if (meshRenderer == null)
+            {
+                Debug.LogWarning("[GameplayController] LaneBackground has no MeshRenderer");
+                return;
+            }
+
+            // Material 인스턴스 생성
+            Material instanceMaterial = new Material(meshRenderer.sharedMaterial);
+            meshRenderer.material = instanceMaterial;
+
+            // Cyberpunk 텍스처 생성
+            int textureSize = 512;
+            int gridSize = 64;
+            Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Repeat;
+
+            Color topColor = new Color(0.02f, 0f, 0.1f, 1f);      // 진한 보라
+            Color bottomColor = new Color(0.1f, 0f, 0.2f, 1f);    // 보라
+            Color gridColor = new Color(1f, 0f, 0.8f, 0.15f);     // 네온 마젠타
+
+            for (int y = 0; y < textureSize; y++)
+            {
+                float vy = (float)y / textureSize;
+                Color bgColor = Color.Lerp(bottomColor, topColor, vy);
+
+                for (int x = 0; x < textureSize; x++)
+                {
+                    Color finalColor = bgColor;
+
+                    // 세로 그리드 라인
+                    if (x % gridSize == 0)
+                        finalColor += gridColor;
+
+                    // 가로 그리드 라인
+                    if (y % gridSize == 0)
+                        finalColor += gridColor;
+
+                    // 노이즈 추가
+                    float noise = UnityEngine.Random.Range(-0.02f, 0.02f);
+                    finalColor.r += noise;
+                    finalColor.g += noise;
+                    finalColor.b += noise;
+
+                    texture.SetPixel(x, y, finalColor);
+                }
+            }
+
+            texture.Apply();
+            instanceMaterial.mainTexture = texture;
+
+            Debug.Log("[GameplayController] Cyberpunk texture applied to LaneBackground");
         }
     }
 }
