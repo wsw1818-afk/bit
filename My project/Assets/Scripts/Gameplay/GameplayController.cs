@@ -1131,24 +1131,24 @@ namespace AIBeat.Gameplay
                 Debug.LogWarning("[GameplayController] LaneVisualFeedback component not found");
             }
 
-            // NanoBanana 에셋 로드 (Background.png)
-            Texture2D texture = Resources.Load<Texture2D>("Skins/NanoBanana/Background");
-
+            // NanoBanana Sensation 에셋 로드 (Background_Sensation.png)
+            Texture2D texture = Resources.Load<Texture2D>("Skins/NanoBanana/Background_Sensation");
+            
             if (texture != null)
             {
                 instanceMaterial.mainTexture = texture;
-
+                
                 // Unlit 셰이더인 경우 색상 초기화 (텍스처 본연의 색 사용)
                 if (instanceMaterial.HasProperty("_BaseColor"))
                     instanceMaterial.SetColor("_BaseColor", Color.white);
                 else if (instanceMaterial.HasProperty("_Color"))
                     instanceMaterial.SetColor("_Color", Color.white);
-
-                Debug.Log("[GameplayController] NanoBanana background asset applied");
+                    
+                Debug.Log("[GameplayController] NanoBanana Sensation background asset applied");
             }
             else
             {
-                Debug.LogWarning("[GameplayController] Failed to load 'Skins/NanoBanana/Background' asset");
+                Debug.LogWarning("[GameplayController] Failed to load 'Skins/NanoBanana/Background_Sensation' asset");
                 // 로드 실패 시 기존 절차적 생성으로 폴백? (일단 경고만)
             }
         }

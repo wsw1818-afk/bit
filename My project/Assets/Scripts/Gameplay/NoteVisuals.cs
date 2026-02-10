@@ -29,12 +29,16 @@ namespace AIBeat.Gameplay
 
         private Color GetLaneColor(int lane)
         {
+            // Neon / Sensation Style Colors
+            // Using HDR intensity (values > 1) for bloom effect if supported
+            float intensity = 1.2f; 
+            
             switch (lane)
             {
-                case 0: return Color.cyan;      // Lane 0: Cyan #00FFFF
-                case 1: return Color.magenta;   // Lane 1: Magenta #FF00FF
-                case 2: return Color.yellow;    // Lane 2: Yellow #FFFF00
-                case 3: return Color.white;     // Lane 3: White #FFFFFF
+                case 0: return new Color(0f, 1f, 1f) * intensity;      // Cyan (Electric Blue)
+                case 1: return new Color(1f, 0f, 0.8f) * intensity;    // Hot Pink (Magenta-ish)
+                case 2: return new Color(1f, 0.9f, 0.1f) * intensity;  // Neon Yellow
+                case 3: return new Color(0.9f, 0.95f, 1f) * intensity; // Cool White
                 default: return Color.white;
             }
         }
