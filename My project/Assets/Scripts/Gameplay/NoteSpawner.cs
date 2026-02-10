@@ -524,8 +524,8 @@ namespace AIBeat.Gameplay
 
         private Vector3 GetSpawnPosition(int laneIndex)
         {
-            // 노트 Z 위치 (배경 Z=1보다 앞에 표시되도록 2)
-            const float noteZ = 2f;
+            // 노트 Z 위치 (배경 Z=1보다 카메라(Z=-10)에 가깝게 → Z=0이 배경 앞)
+            const float noteZ = 0f;
 
             // laneSpawnPoints 유효성 검사
             if (laneSpawnPoints == null || laneSpawnPoints.Length == 0)
