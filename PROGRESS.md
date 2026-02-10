@@ -1,76 +1,128 @@
-# PROGRESS.md (현재 진행: 얇게 유지)
+# PROGRESS.md - 게임플레이 화면 디자인 요청
 
-## Dashboard
-- Progress: 100% (세션 35 - UI 비주얼 오버홀 완료)
-- Risk: 낮음
+## 현재 상황
+- 게임 기능은 모두 정상 작동 (노트 스폰, 판정, 점수 계산 등)
+- 게임플레이 화면의 비주얼 디자인이 필요함
 
-## Today Goal
-- 앱 시작 → 게임 종료까지 전체 플로우 종합 재검증
-- **UI 비주얼 오버홀 (Bitmania 스타일 개편)**
+## 재미나이에게 디자인 요청 사항
 
-## What changed (현재 세션)
+### 게임플레이 화면 구성 요소
+1. **배경 (LaneBackground - 3D Quad)**
+   - 위치: 4개 레인 뒤쪽
+   - 크기: 화면 전체를 덮는 세로 방향 배경
+   - 역할: 노트가 떨어지는 공간의 배경
 
-### 비주얼 오버홀 (NanoBanana Procedural)
-- **ProceduralImageGenerator**: API 제한 문제로 런타임 텍스처 생성 시스템 구현 (배경, 버튼 프레임, 트랙 등)
-- **UIColorPalette**: 고대비 네온(Cyan/Magenta/Gold) + 딥 블랙 테마로 전면 교체
-- **UI 스크립트 개편**:
-  - `MainMenuUI`: 사이버펑크 그리드 배경 + 네온 버튼 프레임 적용
-  - `SongSelectUI`: 이퀄라이저 바 높이/개수 증가, 반투명 리스트 디자인 적용
-  - `GameplayUI`: 노트 레인 배경에 Dark Procedural Texture 적용으로 시인성 개선
+2. **노트 (Note - 3D Cube)**
+   - 4개 레인에서 위에서 아래로 떨어짐
+   - 색상: 레인별로 다른 색 (현재: Cyan, Magenta, Yellow, White)
+   - 판정선(화면 하단)에 도달하면 입력 판정
 
-### 로컬 MP3 재생 전체 연결 완료
-- **SongRecord.AudioFileName** 필드 추가 — StreamingAssets 내 MP3 파일명 참조
-- **SongSelectUI**: StreamingAssets 폴더 자동 스캔 → MP3/WAV/OGG 파일을 라이브러리에 자동 등록
-- **SongLibraryUI.OnSongCardClicked**: FakeSongGenerator 제거 → 직접 StreamingAssets에서 UnityWebRequest로 MP3 로드 → SongData 생성(AudioClip 포함) → GameManager.StartGame 호출
-- **GameplayController.StartGame**: AudioClip이 있으면 AudioManager에 SetBGM 후 PlayBGM
-- **전체 플로우**: StreamingAssets에 MP3 넣기 → SongSelect 진입 시 자동 등록 → 곡 카드 클릭 → MP3 로드 → OfflineAudioAnalyzer 분석 → SmartBeatMapper 노트 생성 → 카운트다운 → 실제 오디오 재생 + 노트 스폰
-- **StreamingAssets/jpop_energetic.mp3** 추가 (J-POP 테스트곡)
+3. **UI 오버레이 (Canvas - Screen Space Overlay)**
+   - 점수, 콤보, Early/Late 표시
+   - 판정 텍스트 (Perfect/Great/Good/Bad/Miss)
+   - 프로그레스 바
 
-### 검증
-- recompile_scripts → 0 에러, 0 경고 ✅
-- 런타임 텍스처 생성 정상 동작 확인
+### 디자인 스타일 요구사항
+- **장르**: 리듬 게임 (Beatmania IIDX, DJMAX, 비트매니아 스타일)
+- **분위기**: Cyberpunk / Neon / 미래적
+- **색감**: 고대비, 어두운 배경 + 밝은 네온 컬러
+- **시인성**: 노트가 명확히 보여야 함 (배경이 노트를 가리면 안 됨)
 
-## Commands & Results (현재 세션)
-- recompile_scripts → **0 에러, 0 경고** ✅
+### 코드 반영 방법
 
-## What changed (2026-02-09)
-### 프로시저럴 사운드 시스템 구현
-- **ProceduralSoundGenerator.cs**: 외부 에셋 없이 코드로 히트 사운드 동적 생성
-  - Perfect/Great/Good/Bad 판정별 사운드 (주파수 차등)
-  - 스크래치 사운드 (노이즈 기반)
-  - 카운트다운 비프음 지원
-- **AudioManager**: `GenerateProceduralSounds()` 메서드 추가
-  - Initialize 시 자동으로 사운드 생성 (Inspector 미할당 시)
-  - 외부 에셋 없이도 즉시 사용 가능
+#### 1. LaneBackground 텍스처 생성
+**파일**: `GameplayController.cs` → `ApplyCyberpunkLaneBackground()` 메서드 (라인 1082-1143)
 
-## Open issues
-- Unity Play 모드 MCP 진입 시 타임아웃 발생 (게임 자체는 정상 작동)
-- 롱노트 hold 비주얼 피드백 미확인 (실제 화면 확인 필요)
-- SettingsPanel은 SettingsButton 클릭 전까지 생성되지 않음 (정상 동작이나 실제 클릭 테스트는 미수행)
+```csharp
+// 현재 코드 위치
+private void ApplyCyberpunkLaneBackground()
+{
+    // ... GameObject 찾기 ...
 
-## 미구현 기능 목록
-1. ~~**AI API 연동**~~ → **취소됨** (비용 문제로 Suno AI에서 수동 다운로드 방식으로 결정)
-2. ~~**로컬 MP3 로드/재생**~~ → **완료** (StreamingAssets 자동 스캔 → 라이브러리 등록 → 곡 선택 → MP3 로드 → 분석 → 노트 생성 → 재생)
-3. **캘리브레이션** — CalibrationManager 코드 존재하나 실제 탭 테스트 미수행
-4. ~~**Android 빌드**~~ → **완료** (APK 57.2MB, `Builds/Android/AIBeat.apk`)
-5. **터치 입력** — InputHandler에 터치 코드 존재, 실기기 테스트 미수행
-6. ~~**곡 라이브러리**~~ → **완료** (StreamingAssets MP3 자동 스캔/등록, 곡 카드 클릭→게임 시작 연결)
-7. ~~**에너지 시스템**~~ → **제거됨** (곡 생성 기능 제거로 불필요)
+    // 텍스처 설정
+    int textureSize = 512;      // 텍스처 해상도
+    int gridSize = 64;          // 그리드 간격
 
-## 아키텍처 결정 (세션 35)
-- **UI/UX**: 고대비 네온 스타일(Bitmania) + 런타임 절차적 텍스처 생성(ProceduralImageGenerator) 도입
-- **음악 소스**: Suno AI에서 수동 생성 → MP3 다운로드 → 게임에 로컬 로드
-- **API 연동 취소**: 비용 문제로 AIApiClient 사용 안 함
-- **노트 생성**: OfflineAudioAnalyzer(FFT 분석) + SmartBeatMapper(온셋→노트)로 자동 생성
-- **기존 코드 활용도**: AudioManager(4가지 로드 방식), OfflineAudioAnalyzer, SmartBeatMapper 모두 이미 구현됨
+    // 색상 정의 (여기를 수정!)
+    Color topColor = new Color(0.08f, 0.02f, 0.15f, 1f);     // 상단 색
+    Color bottomColor = new Color(0.15f, 0.05f, 0.25f, 1f);  // 하단 색
+    Color gridColor = new Color(1f, 0f, 0.8f, 0.04f);        // 그리드 색 (RGBA)
 
-## Next
-1) 2키+스크래치 레인 구조 변경 (계획 파일 존재)
-2) ~~로컬 MP3 파일 로드 → 자동 분석 → 노트 생성 → 실제 재생 연결~~ ✅ 완료
-3) ~~Android 빌드 파이프라인 설정~~ ✅ 완료
-4) 실기기 테스트 (APK 설치 후)
+    // 픽셀별로 그리드/그라데이션 생성
+    for (int y = 0; y < textureSize; y++)
+    {
+        for (int x = 0; x < textureSize; x++)
+        {
+            // 그라데이션 + 그리드 라인 + 노이즈
+        }
+    }
+}
+```
+
+**수정 가능한 값**:
+- `topColor` / `bottomColor`: 배경 그라데이션 색 (RGB 0~1 범위)
+- `gridColor`: 그리드 라인 색 (RGBA, A는 투명도)
+- `gridSize`: 그리드 간격 (작을수록 촘촘)
+- `textureSize`: 텍스처 해상도 (높을수록 선명)
+
+#### 2. 노트 색상 변경
+**파일**: `NoteVisuals.cs` → `GetLaneColor()` 메서드
+
+```csharp
+private Color GetLaneColor(int lane)
+{
+    switch (lane)
+    {
+        case 0: return Color.cyan;      // 레인 0 색
+        case 1: return Color.magenta;   // 레인 1 색
+        case 2: return Color.yellow;    // 레인 2 색
+        case 3: return Color.white;     // 레인 3 색
+        default: return Color.white;
+    }
+}
+```
+
+#### 3. UI 색상 팔레트
+**파일**: `UIColorPalette.cs`
+
+```csharp
+public static readonly Color Cyan = new Color(0f, 1f, 1f, 1f);
+public static readonly Color Magenta = new Color(1f, 0f, 1f, 1f);
+public static readonly Color Gold = new Color(1f, 0.84f, 0f, 1f);
+public static readonly Color DeepBlack = new Color(0.05f, 0.05f, 0.08f, 1f);
+```
+
+### 디자인 제공 형식
+1. **색상 코드** (RGB 또는 Hex)
+   - 배경 상단 색: `#140226` (예시)
+   - 배경 하단 색: `#260540`
+   - 그리드 색: `#FF00CC` + 투명도 4%
+
+2. **이미지 레퍼런스** (선택사항)
+   - Beatmania IIDX, DJMAX 등의 스크린샷
+   - 원하는 비주얼 분위기의 예시 이미지
+
+3. **디자인 의도 설명**
+   - 어떤 느낌을 주고 싶은지
+   - 어떤 요소를 강조하고 싶은지
+
+### 기술적 제약사항
+- ⚠️ **노트는 Z=2, 배경은 Z=1** → 배경이 불투명해도 노트가 앞에 보임
+- ⚠️ **그리드는 투명도 필수** (alpha 0.04 권장) → 너무 밝으면 노트 가림
+- ⚠️ **모바일 세로 모드** → 좁은 화면, 4개 레인이 화면 너비 전체 사용
+- ✅ **런타임 텍스처 생성** → 코드로 실시간 생성 (이미지 파일 불필요)
 
 ---
-## Archive Rule (요약)
+
+## 재미나이 작업 흐름
+1. 디자인 컨셉 결정 (색상, 스타일, 분위기)
+2. 색상 코드 제공 (RGB 또는 Hex)
+3. Claude가 코드에 반영
+4. Unity에서 실행하여 스크린샷 확인
+5. 피드백 후 조정
+
+---
+
+## Archive Rule
 - 완료 항목이 20개를 넘거나 파일이 5KB를 넘으면,
   완료된 내용을 `ARCHIVE_YYYY_MM.md`로 옮기고 PROGRESS는 "현재 이슈"만 남긴다.
