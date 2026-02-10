@@ -234,10 +234,25 @@ namespace AIBeat.Gameplay
             }
 
             // LaneVisualFeedback 자동 생성 (씬에 없으면)
-            if (FindFirstObjectByType<LaneVisualFeedback>() == null)
+            // NanoBanana 배경이 적용된 경우 LaneVisualFeedback 생성 안 함 (Cyan 그리드 충돌 방지)
+            var bgObj = GameObject.Find("LaneBackground");
+            bool hasNanoBananaBackground = bgObj != null
+                && bgObj.GetComponent<MeshRenderer>() != null
+                && bgObj.GetComponent<MeshRenderer>().material.mainTexture != null;
+
+            if (!hasNanoBananaBackground && FindFirstObjectByType<LaneVisualFeedback>() == null)
             {
                 var feedbackGo = new GameObject("LaneVisualFeedback");
                 feedbackGo.AddComponent<LaneVisualFeedback>();
+                Debug.Log("[GameplayController] LaneVisualFeedback created (no NanoBanana background)");
+            }
+            else if (hasNanoBananaBackground)
+            {
+                // 이미 존재하는 LaneVisualFeedback도 비활성화
+                var existingFeedback = FindFirstObjectByType<LaneVisualFeedback>();
+                if (existingFeedback != null)
+                    existingFeedback.gameObject.SetActive(false);
+                Debug.Log("[GameplayController] LaneVisualFeedback skipped (NanoBanana background active)");
             }
 
             // 이벤트 연결
