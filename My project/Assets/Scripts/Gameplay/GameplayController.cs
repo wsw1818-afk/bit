@@ -1082,6 +1082,7 @@ namespace AIBeat.Gameplay
 
         /// <summary>
         /// LaneBackground(3D Quad)에 Cyberpunk 테마 텍스처 적용
+        /// "NanoBanana" 에셋 사용 (Resources/Skins/NanoBanana/Background)
         /// </summary>
         private void ApplyCyberpunkLaneBackground()
         {
@@ -1103,52 +1104,26 @@ namespace AIBeat.Gameplay
             Material instanceMaterial = new Material(meshRenderer.sharedMaterial);
             meshRenderer.material = instanceMaterial;
 
-            // Cyberpunk 텍스처 생성
-            int textureSize = 512;
-            int gridSize = 64;
-            Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
-            // texture.wrapMode = TextureWrapMode.Repeat; // 주석 처리됨 (필요시 활성화)
-
-            // 색상 정의
-            Color topColor = new Color(0.08f, 0.02f, 0.15f, 1f);     // 상단 색 (Deep Purple)
-            Color bottomColor = new Color(0.15f, 0.05f, 0.25f, 1f);  // 하단 색 (Darker Purple)
-            Color gridColor = new Color(1f, 0f, 0.8f, 0.04f);        // 그리드 색 (Magenta, 투명도 4%)
-
-            for (int y = 0; y < textureSize; y++)
-            {
-                float vy = (float)y / textureSize;
-                Color bgColor = Color.Lerp(bottomColor, topColor, vy);
-
-                for (int x = 0; x < textureSize; x++)
-                {
-                    Color finalColor = bgColor;
-
-                    // 세로 그리드 라인 (4레인 기준, 텍스처 전체에서 균등 분할)
-                    if (x % gridSize == 0 || x == textureSize - 1)
-                        finalColor += gridColor;
-
-                    // 가로 그리드 라인
-                    if (y % gridSize == 0 || y == textureSize - 1)
-                        finalColor += gridColor;
-
-                    // 노이즈 추가 (디지털 느낌)
-                    float noise = UnityEngine.Random.Range(-0.01f, 0.01f);
-                    finalColor.r += noise;
-                    finalColor.g += noise;
-                    finalColor.b += noise;
-
-                    texture.SetPixel(x, y, finalColor);
-                }
-            }
-
-            texture.Apply();
-            instanceMaterial.mainTexture = texture;
+            // NanoBanana 에셋 로드 (Background.png)
+            Texture2D texture = Resources.Load<Texture2D>("Skins/NanoBanana/Background");
             
-            // Unlit 셰이더인 경우 _BaseColor 등 설정 필요할 수 있음
-            if (instanceMaterial.HasProperty("_BaseColor"))
-                instanceMaterial.SetColor("_BaseColor", Color.white); // 텍스처 색상 그대로 사용
-
-            Debug.Log("[GameplayController] Cyberpunk texture applied to LaneBackground");
+            if (texture != null)
+            {
+                instanceMaterial.mainTexture = texture;
+                
+                // Unlit 셰이더인 경우 색상 초기화 (텍스처 본연의 색 사용)
+                if (instanceMaterial.HasProperty("_BaseColor"))
+                    instanceMaterial.SetColor("_BaseColor", Color.white);
+                else if (instanceMaterial.HasProperty("_Color"))
+                    instanceMaterial.SetColor("_Color", Color.white);
+                    
+                Debug.Log("[GameplayController] NanoBanana background asset applied");
+            }
+            else
+            {
+                Debug.LogWarning("[GameplayController] Failed to load 'Skins/NanoBanana/Background' asset");
+                // 로드 실패 시 기존 절차적 생성으로 폴백? (일단 경고만)
+            }
         }
     }
 }

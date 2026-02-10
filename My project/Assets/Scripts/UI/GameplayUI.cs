@@ -99,7 +99,9 @@ namespace AIBeat.UI
             CreatePausePanel();
             CreateCountdownPanel();
             CreateLoadingVideoPanel();
-            CreateGameplayBackground(); // Cyberpunk 배경 활성화
+            CreateLoadingVideoPanel();
+            // CreateGameplayBackground(); // Cyberpunk 배경 활성화 (LaneBackground 가리므로 비활성)
+            RepositionHUD();
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기

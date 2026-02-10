@@ -193,16 +193,31 @@ namespace AIBeat.Gameplay
                 // Unlit 셰이더 찾기 (조명 영향 없이 색상만 표시)
                 var shader = Shader.Find("Universal Render Pipeline/Unlit");
                 if (shader == null)
-                    shader = Shader.Find("Unlit/Color");
+                    shader = Shader.Find("Unlit/Texture"); // 텍스처 지원 셰이더 우선
                 if (shader == null)
                     shader = Shader.Find("Sprites/Default");
 
                 var mat = new Material(shader);
-                mat.color = color;
-
-                // URP Unlit의 경우 _BaseColor 사용
-                if (mat.HasProperty("_BaseColor"))
-                    mat.SetColor("_BaseColor", color);
+                
+                // NanoBanana 텍스처 로드
+                string textureName = name;
+                if (name == "LongNote") textureName = "LongNoteBody"; // 롱노트는 Body 사용
+                
+                Texture2D texture = Resources.Load<Texture2D>($"Skins/NanoBanana/{textureName}");
+                
+                if (texture != null)
+                {
+                    mat.mainTexture = texture;
+                    mat.color = Color.white; // 텍스처가 있으면 기본색은 화이트 (NoteVisuals가 틴트)
+                    if (mat.HasProperty("_BaseColor"))
+                        mat.SetColor("_BaseColor", Color.white);
+                }
+                else
+                {
+                    mat.color = color;
+                    if (mat.HasProperty("_BaseColor"))
+                        mat.SetColor("_BaseColor", color);
+                }
 
                 renderer.material = mat;
                 renderer.enabled = true;  // 렌더러 활성화 보장
@@ -277,16 +292,21 @@ namespace AIBeat.Gameplay
 
             var mat = renderer.sharedMaterial;
             // Unlit이 아닌 셰이더를 사용하고 있으면 교체
-            if (mat == null || !mat.shader.name.Contains("Unlit"))
+            if (mat == null || (!mat.shader.name.Contains("Unlit") && !mat.shader.name.Contains("Sprites")))
             {
                 Color color = mat != null ? GetMaterialColor(mat) : Color.cyan;
+                Texture texture = mat != null ? mat.mainTexture : null;
 
                 var shader = Shader.Find("Universal Render Pipeline/Unlit");
-                if (shader == null) shader = Shader.Find("Unlit/Color");
+                if (shader == null) shader = Shader.Find("Unlit/Texture"); // 텍스처 지원 우선
                 if (shader == null) shader = Shader.Find("Sprites/Default");
 
                 var newMat = new Material(shader);
                 newMat.color = color;
+                
+                if (texture != null)
+                    newMat.mainTexture = texture;
+                    
                 if (newMat.HasProperty("_BaseColor"))
                     newMat.SetColor("_BaseColor", color);
 
