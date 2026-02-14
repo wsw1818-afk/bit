@@ -6,12 +6,10 @@ namespace AIBeat.Gameplay
     public class NoteVisuals : MonoBehaviour
     {
         private Renderer _renderer;
-        private MaterialPropertyBlock _propBlock;
 
         private void Awake()
         {
             _renderer = GetComponent<Renderer>();
-            _propBlock = new MaterialPropertyBlock();
         }
 
         public void SetLaneColor(int laneIndex)
@@ -28,6 +26,11 @@ namespace AIBeat.Gameplay
             mat.color = color;
             if (mat.HasProperty("_BaseColor"))
                 mat.SetColor("_BaseColor", color);
+
+            // 글로우 이펙트 색상 동기화
+            var glow = GetComponent<NoteGlowEffect>();
+            if (glow != null)
+                glow.Initialize(color);
         }
 
         private Color GetLaneColor(int lane)

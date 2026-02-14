@@ -240,6 +240,20 @@ namespace AIBeat.Gameplay
                 Debug.Log("[GameplayController] LaneVisualFeedback created");
             }
 
+            // VFX 시스템 자동 생성
+            if (FindFirstObjectByType<BackgroundVFX>() == null)
+            {
+                var vfxGo = new GameObject("BackgroundVFX");
+                vfxGo.AddComponent<BackgroundVFX>();
+                Debug.Log("[GameplayController] BackgroundVFX created");
+            }
+            if (FindFirstObjectByType<HitParticleEffect>() == null)
+            {
+                var particleGo = new GameObject("HitParticleEffect");
+                particleGo.AddComponent<HitParticleEffect>();
+                Debug.Log("[GameplayController] HitParticleEffect created");
+            }
+
             // 이벤트 연결
             if (inputHandler != null)
                 inputHandler.OnLaneInput += HandleInput;
@@ -768,6 +782,12 @@ namespace AIBeat.Gameplay
         private void HandleJudgementDetailed(JudgementResult result, float rawDiff)
         {
             gameplayUI?.ShowJudgementDetailed(result, rawDiff);
+
+            // VFX: Perfect/Great 히트 시 화면 비트 플래시
+            if (result == JudgementResult.Perfect)
+                BackgroundVFX.TriggerBeatFlash(new Color(1f, 0.84f, 0f), 0.1f);  // Gold
+            else if (result == JudgementResult.Great)
+                BackgroundVFX.TriggerBeatFlash(new Color(0f, 0.8f, 0.82f), 0.06f); // Teal
         }
 
         /// <summary>

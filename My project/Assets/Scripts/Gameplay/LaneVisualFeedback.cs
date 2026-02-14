@@ -374,13 +374,24 @@ namespace AIBeat.Gameplay
 
         /// <summary>
         /// 판정 이펙트 (GameplayController에서 호출)
+        /// 파티클 + 레인 플래시 동시 재생
         /// </summary>
         public static void PlayJudgementEffect(int laneIndex, AIBeat.Core.JudgementResult result)
         {
-            // 판정 시 레인 플래시로 대체
             if (instance == null || laneIndex < 0 || laneIndex >= LANE_COUNT) return;
             if (result == AIBeat.Core.JudgementResult.Miss) return;
             instance.FlashLane(laneIndex);
+
+            // 히트 파티클 이펙트 (판정선 위치에서 발생)
+            var judgementLine = GameObject.Find("JudgementLine");
+            if (judgementLine != null)
+            {
+                float laneWidth = 1f;
+                float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
+                float x = startX + laneIndex * laneWidth;
+                float y = judgementLine.transform.position.y;
+                HitParticleEffect.PlayForJudgement(new Vector3(x, y, -0.3f), laneIndex, result);
+            }
         }
 
         private void OnDestroy()
