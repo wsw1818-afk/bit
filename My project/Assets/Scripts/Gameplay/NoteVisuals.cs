@@ -19,12 +19,11 @@ namespace AIBeat.Gameplay
             if (_renderer == null) return;
 
             Color color = GetLaneColor(laneIndex);
-            
-            _renderer.GetPropertyBlock(_propBlock);
-            // Support both URP and Built-in shaders common property names
-            _propBlock.SetColor("_BaseColor", color);
-            _propBlock.SetColor("_Color", color);
-            _renderer.SetPropertyBlock(_propBlock);
+
+            // Material.color를 직접 변경 (Sprites/Default 셰이더 호환)
+            _renderer.material.color = color;
+            if (_renderer.material.HasProperty("_BaseColor"))
+                _renderer.material.SetColor("_BaseColor", color);
         }
 
         private Color GetLaneColor(int lane)
