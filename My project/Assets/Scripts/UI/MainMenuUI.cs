@@ -50,7 +50,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 배경 이미지 생성 (Procedural Cyberpunk)
+        /// 배경 이미지 생성 (Resources/UI/MainMenuBG.jpg 사용, 없으면 Procedural)
         /// </summary>
         private void CreateBackgroundImage()
         {
@@ -70,9 +70,22 @@ namespace AIBeat.UI
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
             
-            // Procedural Generation 호출
-            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
-            img.type = Image.Type.Sliced; // 또는 Simple, 텍스처에 따라
+            // Resources에서 배경 이미지 로드 시도 (BIT.jpg 사용)
+            Sprite bgSprite = Resources.Load<Sprite>("UI/BIT");
+            if (bgSprite != null)
+            {
+                img.sprite = bgSprite;
+                img.type = Image.Type.Simple;
+                img.preserveAspect = false;
+                Debug.Log("[MainMenuUI] Loaded BIT.jpg as background");
+            }
+            else
+            {
+                // Procedural Generation 호출 (fallback)
+                img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+                img.type = Image.Type.Sliced;
+                Debug.Log("[MainMenuUI] Using procedural background (BIT.jpg not found)");
+            }
             
             // 어두운 오버레이 (숨쉬기 효과 대상)
             var overlayGo = new GameObject("DarkOverlay");
