@@ -1,1 +1,1 @@
-🎨 리듬 게임 디자인 음악 테마로 리디자인: MusicVisualGenerator 추가(음표/오선지/파형/스펙트럼), MusicBackgroundVisuals 컴포넌트, GameplayUI 색상 변경(골드/보라/틸)
+🎨 음악 테마 디자인 시스템 추가: MusicVisualGenerator/MusicBackgroundVisuals 컴포넌트, GameplayUI 색상 강제 초기화(골드/보라/틸), 가이드 문서 작성
