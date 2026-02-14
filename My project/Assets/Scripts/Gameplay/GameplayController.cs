@@ -62,8 +62,7 @@ namespace AIBeat.Gameplay
             Screen.orientation = ScreenOrientation.Portrait;
             // 세로 모드에서 레인이 화면 너비를 꽉 채우도록 카메라 조정
             AdjustCameraForPortrait();
-            // LaneBackground Cyberpunk 스타일 적용
-            ApplyCyberpunkLaneBackground();
+            // Music Theme 적용 (Cyberpunk 제거됨)
             Initialize();
             StartCoroutine(InputLoop());
             StartCoroutine(HoldBonusTickLoop());
@@ -234,25 +233,11 @@ namespace AIBeat.Gameplay
             }
 
             // LaneVisualFeedback 자동 생성 (씬에 없으면)
-            // NanoBanana 배경이 적용된 경우 LaneVisualFeedback 생성 안 함 (Cyan 그리드 충돌 방지)
-            var bgObj = GameObject.Find("LaneBackground");
-            bool hasNanoBananaBackground = bgObj != null
-                && bgObj.GetComponent<MeshRenderer>() != null
-                && bgObj.GetComponent<MeshRenderer>().material.mainTexture != null;
-
-            if (!hasNanoBananaBackground && FindFirstObjectByType<LaneVisualFeedback>() == null)
+            if (FindFirstObjectByType<LaneVisualFeedback>() == null)
             {
                 var feedbackGo = new GameObject("LaneVisualFeedback");
                 feedbackGo.AddComponent<LaneVisualFeedback>();
-                Debug.Log("[GameplayController] LaneVisualFeedback created (no NanoBanana background)");
-            }
-            else if (hasNanoBananaBackground)
-            {
-                // 이미 존재하는 LaneVisualFeedback도 비활성화
-                var existingFeedback = FindFirstObjectByType<LaneVisualFeedback>();
-                if (existingFeedback != null)
-                    existingFeedback.gameObject.SetActive(false);
-                Debug.Log("[GameplayController] LaneVisualFeedback skipped (NanoBanana background active)");
+                Debug.Log("[GameplayController] LaneVisualFeedback created");
             }
 
             // 이벤트 연결

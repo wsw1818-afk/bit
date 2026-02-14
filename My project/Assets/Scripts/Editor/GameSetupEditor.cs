@@ -1,4 +1,5 @@
 using UnityEngine;
+using AIBeat.Utils;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

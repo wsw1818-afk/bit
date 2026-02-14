@@ -1,404 +1,277 @@
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-using System.IO;
 
-namespace AIBeat.Editor
+namespace AIBeat.Utils
 {
     /// <summary>
-    /// 프로시저럴 텍스처 생성 (노트, 레인, 배경, UI 등)
-    /// 에디터 전용 - Assets/Textures/Generated/ 에 PNG로 저장
+    /// 런타임 텍스처 생성 유틸리티
+    /// Music/Rhythm 스타일 비주얼을 위한 프로시저럴 텍스처 생성
     /// </summary>
-    public class TextureGenerator : MonoBehaviour
+    public static class TextureGenerator
     {
-#if UNITY_EDITOR
-#pragma warning disable 0414
-        private static readonly string OUTPUT_DIR = "Assets/Textures/Generated";
-#pragma warning restore 0414
-
-        [MenuItem("Tools/A.I. BEAT/Generate Assets")]
-        public static void GenerateAllAssets()
-        {
-            EnsureDirectoryExists();
-
-            // Background & UI
-            GenerateCyberpunkBackground();
-            GeneratePanelBackground();
-            GenerateLaneSeparator();
-            GenerateGlowParticle();
-
-            // Note textures
-            GenerateNoteTexture("TapNote.png", new Color(0f, 0.9f, 1f), false);
-            GenerateNoteTexture("LongNoteBody.png", new Color(0.4f, 0.2f, 1f), true);
-            GenerateNoteTexture("ScratchNote.png", new Color(1f, 0.2f, 0.4f), false);
-            GenerateLongNoteCap("LongNoteCap.png", new Color(0.5f, 0.3f, 1f));
-
-            // Lane backgrounds
-            GenerateLaneBackground("LaneKeyBg.png", new Color(0.1f, 0.1f, 0.2f, 0.5f));
-            GenerateLaneBackground("LaneScratchBg.png", new Color(0.15f, 0.05f, 0.1f, 0.5f));
-
-            // Judgement line
-            GenerateJudgementLine();
-
-            // Hit effect
-            GenerateHitEffect();
-
-            AssetDatabase.Refresh();
-            Debug.Log("[TextureGenerator] All assets generated in Assets/Textures/Generated/");
-        }
-
-        [MenuItem("Tools/A.I. BEAT/Generate Note Textures Only")]
-        public static void GenerateNoteTexturesOnly()
-        {
-            EnsureDirectoryExists();
-            GenerateNoteTexture("TapNote.png", new Color(0f, 0.9f, 1f), false);
-            GenerateNoteTexture("LongNoteBody.png", new Color(0.4f, 0.2f, 1f), true);
-            GenerateNoteTexture("ScratchNote.png", new Color(1f, 0.2f, 0.4f), false);
-            GenerateLongNoteCap("LongNoteCap.png", new Color(0.5f, 0.3f, 1f));
-            AssetDatabase.Refresh();
-            Debug.Log("[TextureGenerator] Note textures generated");
-        }
-
-        private static void EnsureDirectoryExists()
-        {
-            string path = Application.dataPath + "/Textures/Generated";
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-        }
-
-        private static void SaveTexture(Texture2D texture, string fileName)
-        {
-            byte[] bytes = texture.EncodeToPNG();
-            string path = Application.dataPath + "/Textures/Generated/" + fileName;
-            File.WriteAllBytes(path, bytes);
-            Debug.Log($"[TextureGenerator] Saved {fileName}");
-        }
-
-        // ===== Background & UI =====
-
-        private static void GenerateCyberpunkBackground()
-        {
-            int width = 1080;
-            int height = 1920;
-            Texture2D tex = new Texture2D(width, height);
-
-            Color topColor = new Color(0.05f, 0.0f, 0.1f);
-            Color bottomColor = new Color(0.2f, 0.0f, 0.4f);
-            Color gridColor = new Color(0.0f, 1.0f, 1.0f, 0.3f);
-
-            for (int y = 0; y < height; y++)
-            {
-                float v = (float)y / height;
-                Color bgColor = Color.Lerp(bottomColor, topColor, v);
-
-                for (int x = 0; x < width; x++)
-                {
-                    float u = (float)x / width;
-
-                    bool isGridLine = false;
-                    if (Mathf.Abs(x - width / 2) % 180 < 2) isGridLine = true;
-                    if (y % 180 < 2) isGridLine = true;
-
-                    Color finalColor = isGridLine ? Color.Lerp(bgColor, gridColor, 0.5f) : bgColor;
-
-                    // Vignette
-                    float dist = Vector2.Distance(new Vector2(u, v), new Vector2(0.5f, 0.5f));
-                    finalColor *= (1.0f - dist * 0.5f);
-
-                    tex.SetPixel(x, y, finalColor);
-                }
-            }
-
-            tex.Apply();
-            SaveTexture(tex, "Background.png");
-        }
-
-        private static void GeneratePanelBackground()
-        {
-            int size = 512;
-            Texture2D tex = new Texture2D(size, size);
-            Color contentColor = new Color(0f, 0f, 0f, 0.7f);
-            Color borderColor = new Color(0f, 1f, 1f, 1f);
-            int borderSize = 8;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    bool isBorder = (x < borderSize || x > size - borderSize ||
-                                     y < borderSize || y > size - borderSize);
-                    tex.SetPixel(x, y, isBorder ? borderColor : contentColor);
-                }
-            }
-            tex.Apply();
-            SaveTexture(tex, "PanelBackground.png");
-        }
-
-        private static void GenerateLaneSeparator()
-        {
-            int width = 4;
-            int height = 256;
-            Texture2D tex = new Texture2D(width, height);
-
-            for (int y = 0; y < height; y++)
-            {
-                float alpha = 0.3f * Mathf.Sin((float)y / height * Mathf.PI);
-                for (int x = 0; x < width; x++)
-                {
-                    tex.SetPixel(x, y, new Color(1, 1, 1, alpha));
-                }
-            }
-            tex.Apply();
-            SaveTexture(tex, "LaneSeparator.png");
-        }
-
-        private static void GenerateGlowParticle()
-        {
-            int size = 64;
-            Texture2D tex = new Texture2D(size, size);
-            Vector2 center = new Vector2(size / 2f, size / 2f);
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dist = Vector2.Distance(new Vector2(x, y), center);
-                    float normDist = dist / (size / 2f);
-                    float alpha = Mathf.Clamp01(1f - normDist);
-                    alpha = Mathf.Pow(alpha, 2);
-                    tex.SetPixel(x, y, new Color(1, 1, 1, alpha));
-                }
-            }
-            tex.Apply();
-            SaveTexture(tex, "GlowParticle.png");
-        }
-
-        // ===== Note Textures =====
+        // Music Theme 컬러 팔레트
+        public static readonly Color DeepNavy = new Color(0.05f, 0.08f, 0.15f, 1f);      // 짙은 남색 (배경)
+        public static readonly Color MusicGold = new Color(1f, 0.84f, 0f, 1f);           // 골드 (강조)
+        public static readonly Color MusicPurple = new Color(0.58f, 0.29f, 0.98f, 1f);   // 보라 (액센트)
+        public static readonly Color MusicTeal = new Color(0f, 0.8f, 0.82f, 1f);         // 틸 (보조)
+        public static readonly Color MusicOrange = new Color(1f, 0.55f, 0f, 1f);         // 오렌지 (활력)
 
         /// <summary>
-        /// 노트 텍스처 생성 (Tap/Scratch: 128x32, LongBody: 128x128 tiling)
+        /// 배경 텍스처 생성 (Deep Navy Gradient - 음악 테마, 그리드 제거)
         /// </summary>
-        private static void GenerateNoteTexture(string fileName, Color baseColor, bool isTiling)
+        public static Texture2D CreateBackgroundTexture(int width = 512, int height = 1024)
         {
-            int width = 128;
-            int height = isTiling ? 128 : 32;
-            Texture2D tex = new Texture2D(width, height);
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
 
-            Color dark = baseColor * 0.4f;
-            dark.a = 1f;
-            Color bright = baseColor;
-            bright.a = 1f;
-            Color glow = Color.Lerp(baseColor, Color.white, 0.5f);
-            glow.a = 1f;
+            Color[] pixels = new Color[width * height];
 
             for (int y = 0; y < height; y++)
             {
-                float vy = (float)y / height;
+                float normalizedY = (float)y / height;
+
+                // 수직 그라데이션: 아래쪽 어둡게, 위쪽 약간 밝게 (음악 테마)
+                Color darkNavy = new Color(0.03f, 0.05f, 0.1f, 1f);
+                Color baseColor = Color.Lerp(darkNavy, DeepNavy, normalizedY * 0.6f);
+
                 for (int x = 0; x < width; x++)
                 {
-                    float vx = (float)x / width;
+                    float normalizedX = (float)x / width;
+                    Color pixelColor = baseColor;
 
-                    // Edge fade (left/right)
-                    float edgeFade = 1f;
-                    float edgeDist = Mathf.Min(vx, 1f - vx) * 2f; // 0 at edges, 1 at center
-                    if (edgeDist < 0.15f)
-                        edgeFade = edgeDist / 0.15f;
+                    // 중앙 하이라이트 (비네트 역효과) - 골드 색조
+                    float centerDist = Mathf.Abs(normalizedX - 0.5f) * 2f;
+                    Color highlight = Color.Lerp(pixelColor, new Color(0.1f, 0.09f, 0.05f, 1f), (1f - centerDist) * 0.15f);
+                    pixelColor = highlight;
 
-                    Color pixel;
-                    if (isTiling)
+                    pixels[y * width + x] = pixelColor;
+                }
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
+        }
+
+        /// <summary>
+        /// 레인 구분선 텍스처 생성 (Gold Line - 음악 테마)
+        /// </summary>
+        public static Texture2D CreateLaneSeparatorTexture(int width = 4, int height = 512)
+        {
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Repeat;
+
+            Color[] pixels = new Color[width * height];
+
+            for (int y = 0; y < height; y++)
+            {
+                float normalizedY = (float)y / height;
+
+                // 아래쪽 밝고 위쪽 어둡게 (원근감) - 골드 색상
+                float intensity = Mathf.Lerp(1f, 0.3f, normalizedY);
+                Color lineColor = MusicGold * intensity;
+                lineColor.a = Mathf.Lerp(0.6f, 0.15f, normalizedY);
+
+                for (int x = 0; x < width; x++)
+                {
+                    // 중앙이 가장 밝음 (글로우 효과)
+                    float centerDist = Mathf.Abs((float)x / width - 0.5f) * 2f;
+                    float glowIntensity = 1f - (centerDist * centerDist);
+
+                    Color pixelColor = lineColor * glowIntensity;
+                    pixelColor.a = lineColor.a * glowIntensity;
+
+                    pixels[y * width + x] = pixelColor;
+                }
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
+        }
+
+        /// <summary>
+        /// 패널 배경 텍스처 생성 (Glassmorphism - 음악 테마)
+        /// </summary>
+        public static Texture2D CreatePanelBackgroundTexture(int width = 256, int height = 256)
+        {
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+
+            Color[] pixels = new Color[width * height];
+
+            int borderWidth = 2;
+            Color borderColor = MusicGold;
+            borderColor.a = 0.6f;
+
+            Color fillColor = new Color(0.05f, 0.08f, 0.15f, 0.85f); // 반투명 짙은 남색
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    bool isBorder = x < borderWidth || x >= width - borderWidth ||
+                                   y < borderWidth || y >= height - borderWidth;
+
+                    if (isBorder)
                     {
-                        // Long note body: vertical gradient with pulse lines
-                        float grad = Mathf.Lerp(0.5f, 1f, vy);
-                        pixel = Color.Lerp(dark, bright, grad);
-
-                        // Pulse lines every 16px
-                        if (y % 16 < 2)
-                            pixel = Color.Lerp(pixel, glow, 0.4f);
+                        // 테두리: 네온 글로우
+                        pixels[y * width + x] = borderColor;
                     }
                     else
                     {
-                        // Tap/Scratch: horizontal gradient center-bright
-                        float centerDist = Mathf.Abs(vx - 0.5f) * 2f;
-                        pixel = Color.Lerp(glow, bright, centerDist);
+                        // 내부: 그라데이션 + 노이즈
+                        float normalizedY = (float)y / height;
+                        Color innerColor = Color.Lerp(fillColor, fillColor * 0.8f, normalizedY);
 
-                        // Top/bottom edge highlight
-                        if (y < 3 || y > height - 4)
-                            pixel = Color.Lerp(pixel, Color.white, 0.3f);
+                        // 미세한 노이즈 추가
+                        float noise = Random.Range(-0.02f, 0.02f);
+                        innerColor.r += noise;
+                        innerColor.g += noise;
+                        innerColor.b += noise;
+
+                        pixels[y * width + x] = innerColor;
+                    }
+                }
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
+        }
+
+        /// <summary>
+        /// 노트 텍스처 생성 (글로우 효과)
+        /// </summary>
+        public static Texture2D CreateNoteTexture(int width = 64, int height = 32, Color baseColor = default)
+        {
+            if (baseColor == default) baseColor = Color.white;
+
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+
+            Color[] pixels = new Color[width * height];
+
+            for (int y = 0; y < height; y++)
+            {
+                float normalizedY = (float)y / height;
+                float yDist = Mathf.Abs(normalizedY - 0.5f) * 2f;
+
+                for (int x = 0; x < width; x++)
+                {
+                    float normalizedX = (float)x / width;
+                    float xDist = Mathf.Abs(normalizedX - 0.5f) * 2f;
+
+                    // 둥근 모서리 + 글로우
+                    float dist = Mathf.Sqrt(xDist * xDist * 0.3f + yDist * yDist);
+                    float intensity = 1f - Mathf.Clamp01(dist);
+                    intensity = intensity * intensity; // 더 강한 중앙 집중
+
+                    Color pixelColor = baseColor * intensity;
+                    pixelColor.a = intensity;
+
+                    // 상단 하이라이트
+                    if (normalizedY < 0.3f)
+                    {
+                        pixelColor = Color.Lerp(pixelColor, Color.white, (0.3f - normalizedY) * 0.5f);
                     }
 
-                    pixel.a = edgeFade;
-                    tex.SetPixel(x, y, pixel);
+                    pixels[y * width + x] = pixelColor;
                 }
             }
 
-            tex.Apply();
-            SaveTexture(tex, fileName);
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
         }
 
         /// <summary>
-        /// 롱노트 양 끝 캡 (32x16, rounded)
+        /// 판정선 텍스처 생성 (골드 글로우 라인 - 음악 테마)
         /// </summary>
-        private static void GenerateLongNoteCap(string fileName, Color baseColor)
+        public static Texture2D CreateJudgementLineTexture(int width = 512, int height = 16)
         {
-            int width = 128;
-            int height = 16;
-            Texture2D tex = new Texture2D(width, height);
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
 
-            Color glow = Color.Lerp(baseColor, Color.white, 0.6f);
-            glow.a = 1f;
+            Color[] pixels = new Color[width * height];
 
             for (int y = 0; y < height; y++)
             {
-                float vy = (float)y / height;
-                for (int x = 0; x < width; x++)
-                {
-                    float vx = (float)x / width;
-
-                    // Rounded rectangle shape
-                    float edgeX = Mathf.Min(vx, 1f - vx) * width;
-                    float edgeY = Mathf.Min(vy, 1f - vy) * height;
-                    float edge = Mathf.Min(edgeX, edgeY);
-                    float alpha = Mathf.Clamp01(edge / 4f);
-
-                    // Center glow
-                    float centerDist = Mathf.Abs(vx - 0.5f) * 2f;
-                    Color pixel = Color.Lerp(glow, baseColor, centerDist);
-                    pixel.a = alpha;
-
-                    tex.SetPixel(x, y, pixel);
-                }
-            }
-
-            tex.Apply();
-            SaveTexture(tex, fileName);
-        }
-
-        // ===== Lane Textures =====
-
-        /// <summary>
-        /// 레인 배경 텍스처 (세로 그라디언트, 반투명)
-        /// </summary>
-        private static void GenerateLaneBackground(string fileName, Color baseColor)
-        {
-            int width = 64;
-            int height = 512;
-            Texture2D tex = new Texture2D(width, height);
-
-            for (int y = 0; y < height; y++)
-            {
-                float vy = (float)y / height;
-                // Bottom brighter, top darker
-                float brightness = Mathf.Lerp(1.2f, 0.6f, vy);
-                float alpha = baseColor.a * Mathf.Lerp(1f, 0.3f, vy);
+                float normalizedY = (float)y / height;
+                float yDist = Mathf.Abs(normalizedY - 0.5f) * 2f;
+                float glowY = 1f - (yDist * yDist);
 
                 for (int x = 0; x < width; x++)
                 {
-                    float vx = (float)x / width;
-                    // Slight horizontal gradient (center brighter)
-                    float centerBoost = 1f - Mathf.Abs(vx - 0.5f) * 0.4f;
+                    // 수평 그라데이션 (중앙 밝음)
+                    float normalizedX = (float)x / width;
+                    float xDist = Mathf.Abs(normalizedX - 0.5f) * 2f;
+                    float glowX = 1f - (xDist * xDist * 0.5f);
 
-                    Color pixel = new Color(
-                        baseColor.r * brightness * centerBoost,
-                        baseColor.g * brightness * centerBoost,
-                        baseColor.b * brightness * centerBoost,
-                        alpha
-                    );
-                    tex.SetPixel(x, y, pixel);
-                }
-            }
+                    float intensity = glowY * glowX;
 
-            tex.Apply();
-            SaveTexture(tex, fileName);
-        }
-
-        // ===== Judgement Line =====
-
-        /// <summary>
-        /// 판정선 텍스처 (가로 그라디언트, 중앙 밝음)
-        /// </summary>
-        private static void GenerateJudgementLine()
-        {
-            int width = 512;
-            int height = 16;
-            Texture2D tex = new Texture2D(width, height);
-
-            Color lineColor = new Color(1f, 1f, 1f, 0.9f);
-            Color glowColor = new Color(0f, 1f, 1f, 0.6f);
-
-            for (int y = 0; y < height; y++)
-            {
-                float vy = (float)y / height;
-                // Vertical fade from center
-                float vertFade = 1f - Mathf.Abs(vy - 0.5f) * 2f;
-                vertFade = Mathf.Pow(vertFade, 0.5f);
-
-                for (int x = 0; x < width; x++)
-                {
-                    float vx = (float)x / width;
-                    // Horizontal fade at edges
-                    float horzFade = Mathf.Min(vx, 1f - vx) * 2f;
-                    horzFade = Mathf.Clamp01(horzFade * 3f);
-
-                    float fade = vertFade * horzFade;
-
-                    // Core line (bright white) + glow (cyan)
-                    Color pixel;
-                    if (Mathf.Abs(vy - 0.5f) < 0.15f)
-                        pixel = Color.Lerp(glowColor, lineColor, fade);
+                    // 코어 라인 (중앙 2픽셀) - 골드
+                    if (yDist < 0.3f)
+                    {
+                        Color coreColor = Color.Lerp(MusicGold, Color.white, 0.4f);
+                        coreColor.a = intensity;
+                        pixels[y * width + x] = coreColor;
+                    }
                     else
-                        pixel = glowColor;
-
-                    pixel.a *= fade;
-                    tex.SetPixel(x, y, pixel);
+                    {
+                        // 글로우 - 골드
+                        Color glowColor = MusicGold * intensity * 0.6f;
+                        glowColor.a = intensity * 0.5f;
+                        pixels[y * width + x] = glowColor;
+                    }
                 }
             }
 
-            tex.Apply();
-            SaveTexture(tex, "JudgementLine.png");
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
         }
-
-        // ===== Hit Effect =====
 
         /// <summary>
-        /// 히트 이펙트 텍스처 (방사형 그라디언트, 파티클용)
+        /// 레인 플래시 텍스처 생성 (입력 피드백용 - 음악 테마)
         /// </summary>
-        private static void GenerateHitEffect()
+        public static Texture2D CreateLaneFlashTexture(int width = 64, int height = 256)
         {
-            int size = 128;
-            Texture2D tex = new Texture2D(size, size);
-            Vector2 center = new Vector2(size / 2f, size / 2f);
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
 
-            for (int y = 0; y < size; y++)
+            Color[] pixels = new Color[width * height];
+
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 0; x < size; x++)
+                float normalizedY = (float)y / height;
+                // 아래쪽 밝고 위로 갈수록 페이드
+                float fadeY = 1f - (normalizedY * normalizedY);
+
+                for (int x = 0; x < width; x++)
                 {
-                    float dist = Vector2.Distance(new Vector2(x, y), center);
-                    float normDist = dist / (size / 2f);
+                    float normalizedX = (float)x / width;
+                    float xDist = Mathf.Abs(normalizedX - 0.5f) * 2f;
+                    // 중앙 밝고 가장자리 어둡게
+                    float fadeX = 1f - (xDist * xDist);
 
-                    // Ring shape: bright at ~0.6 radius, fade inside and outside
-                    float ring = 1f - Mathf.Abs(normDist - 0.6f) * 4f;
-                    ring = Mathf.Clamp01(ring);
+                    float intensity = fadeY * fadeX;
 
-                    // Inner glow
-                    float inner = Mathf.Clamp01(1f - normDist * 1.5f);
-                    inner = Mathf.Pow(inner, 3);
+                    Color pixelColor = MusicTeal * intensity;
+                    pixelColor.a = intensity * 0.8f;
 
-                    float alpha = Mathf.Max(ring * 0.8f, inner);
-
-                    // Color: white core, cyan edge
-                    Color pixel = Color.Lerp(new Color(0f, 1f, 1f), Color.white, inner);
-                    pixel.a = alpha;
-
-                    tex.SetPixel(x, y, pixel);
+                    pixels[y * width + x] = pixelColor;
                 }
             }
 
-            tex.Apply();
-            SaveTexture(tex, "HitEffect.png");
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
         }
-#endif
     }
 }
