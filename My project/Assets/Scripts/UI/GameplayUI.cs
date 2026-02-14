@@ -56,12 +56,12 @@ namespace AIBeat.UI
         private TMP_Text bonusScoreText;
         private Coroutine bonusScoreCoroutine;
 
-        [Header("Colors (BIT.jpg 네온 팔레트)")]
-        [SerializeField] private Color perfectColor = new Color(1f, 0.85f, 0.1f);    // 골드
-        [SerializeField] private Color greatColor = new Color(0f, 0.85f, 1f);        // 시안
-        [SerializeField] private Color goodColor = new Color(0.2f, 1f, 0.4f);        // 그린
-        [SerializeField] private Color badColor = new Color(1f, 0.15f, 0.65f);       // 마젠타
-        [SerializeField] private Color missColor = new Color(0.9f, 0.15f, 0.15f);     // 빨간색 강조
+        [Header("Colors (Music Theme)")]
+        [SerializeField] private Color perfectColor = new Color(1f, 0.84f, 0f);       // Gold
+        [SerializeField] private Color greatColor = new Color(0f, 0.8f, 0.82f);       // Teal
+        [SerializeField] private Color goodColor = new Color(0.4f, 0.8f, 0.2f);       // Warm Green
+        [SerializeField] private Color badColor = new Color(1f, 0.55f, 0f);            // Orange
+        [SerializeField] private Color missColor = new Color(0.8f, 0.1f, 0.1f);       // Red
 
         private Coroutine judgementCoroutine;
         private TMP_Text earlyLateText; // Early/Late 피드백 표시

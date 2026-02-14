@@ -29,16 +29,18 @@ namespace AIBeat.Gameplay
 
         private Color GetLaneColor(int lane)
         {
-            // Neon / Sensation Style Colors
-            // Using HDR intensity (values > 1) for bloom effect if supported
-            float intensity = 1.2f; 
-            
+            // Music Theme 7-Lane Colors
+            float intensity = 1.2f;
+
             switch (lane)
             {
-                case 0: return new Color(0f, 1f, 1f) * intensity;      // Cyan (Electric Blue)
-                case 1: return new Color(1f, 0f, 0.8f) * intensity;    // Hot Pink (Magenta-ish)
-                case 2: return new Color(1f, 0.9f, 0.1f) * intensity;  // Neon Yellow
-                case 3: return new Color(0.9f, 0.95f, 1f) * intensity; // Cool White
+                case 0: return new Color(1f, 0.55f, 0f) * intensity;      // Orange (Scratch L)
+                case 1: return new Color(0.58f, 0.29f, 0.98f) * intensity; // Purple
+                case 2: return new Color(0f, 0.8f, 0.82f) * intensity;    // Teal
+                case 3: return new Color(1f, 0.84f, 0f) * intensity;      // Gold (Center)
+                case 4: return new Color(0f, 0.8f, 0.82f) * intensity;    // Teal
+                case 5: return new Color(0.58f, 0.29f, 0.98f) * intensity; // Purple
+                case 6: return new Color(1f, 0.55f, 0f) * intensity;      // Orange (Scratch R)
                 default: return Color.white;
             }
         }

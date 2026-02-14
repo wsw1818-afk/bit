@@ -155,13 +155,13 @@ namespace AIBeat.Gameplay
 
         private void InitializePools()
         {
-            // 노트 프리팹이 없으면 동적 생성 (음악 테마 컬러)
+            // 노트 프리팹이 없으면 동적 생성 (Music Theme)
             if (tapNotePrefab == null)
-                tapNotePrefab = CreateNotePrefab("TapNote", new Color(0.2f, 0.7f, 1f));      // 네온 블루 (비트)
+                tapNotePrefab = CreateNotePrefab("TapNote", new Color(1f, 0.84f, 0f));        // Gold (메인 비트)
             if (longNotePrefab == null)
-                longNotePrefab = CreateNotePrefab("LongNote", new Color(0.3f, 1f, 0.7f));     // 민트 그린 (멜로디)
+                longNotePrefab = CreateNotePrefab("LongNote", new Color(0.58f, 0.29f, 0.98f)); // Purple (멜로디)
             if (scratchNotePrefab == null)
-                scratchNotePrefab = CreateNotePrefab("ScratchNote", new Color(0.8f, 0.3f, 1f)); // 바이올렛 (스크래치/DJ)
+                scratchNotePrefab = CreateNotePrefab("ScratchNote", new Color(1f, 0.55f, 0f));  // Orange (스크래치)
 
             // 각 노트 타입별 풀 생성
             notePools[NoteType.Tap] = CreatePool(tapNotePrefab, poolSize);
