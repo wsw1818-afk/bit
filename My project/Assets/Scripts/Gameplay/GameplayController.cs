@@ -253,6 +253,12 @@ namespace AIBeat.Gameplay
                 particleGo.AddComponent<HitParticleEffect>();
                 Debug.Log("[GameplayController] HitParticleEffect created");
             }
+            if (FindFirstObjectByType<HitImpactEffect>() == null)
+            {
+                var impactGo = new GameObject("HitImpactEffect");
+                impactGo.AddComponent<HitImpactEffect>();
+                Debug.Log("[GameplayController] HitImpactEffect created");
+            }
 
             // 이벤트 연결
             if (inputHandler != null)

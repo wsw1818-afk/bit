@@ -390,7 +390,12 @@ namespace AIBeat.Gameplay
                 float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
                 float x = startX + laneIndex * laneWidth;
                 float y = judgementLine.transform.position.y;
-                HitParticleEffect.PlayForJudgement(new Vector3(x, y, -0.3f), laneIndex, result);
+                Vector3 hitPos = new Vector3(x, y, -0.3f);
+                HitParticleEffect.PlayForJudgement(hitPos, laneIndex, result);
+
+                // 충격파 링 + 라이트빔 이펙트
+                Color laneColor = laneColors[laneIndex];
+                HitImpactEffect.Play(hitPos, laneColor, result);
             }
         }
 
