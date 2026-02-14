@@ -1,1 +1,1 @@
-🎨 음악 테마 디자인 시스템 추가: MusicVisualGenerator/MusicBackgroundVisuals 컴포넌트, GameplayUI 색상 강제 초기화(골드/보라/틸), 가이드 문서 작성
+🎨 Cyberpunk → Music 테마 전환 완료: TextureGenerator(배경 보라→남색, 그리드 제거), LaneVisualFeedback(Cyan→Gold 글로우, 레인 색상 음악 테마), 판정선/키 라벨/플래시 모두 골드 계열로 변경
