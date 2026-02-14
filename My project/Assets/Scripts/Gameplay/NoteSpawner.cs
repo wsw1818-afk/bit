@@ -135,22 +135,11 @@ namespace AIBeat.Gameplay
                 }
             }
 
-            // Note Prefabs 자동 찾기 (Resources 폴더에서)
-            if (tapNotePrefab == null)
-            {
-                var normalNote = GameObject.Find("NormalNote");
-                if (normalNote != null) tapNotePrefab = normalNote;
-            }
-            if (longNotePrefab == null)
-            {
-                var longNote = GameObject.Find("LongNote");
-                if (longNote != null) longNotePrefab = longNote;
-            }
-            if (scratchNotePrefab == null)
-            {
-                var scratchNote = GameObject.Find("ScratchNote");
-                if (scratchNote != null) scratchNotePrefab = scratchNote;
-            }
+            // Music Theme: 씬 프리팹 사용하지 않고 항상 동적 생성
+            // (기존 NormalNote/LongNote/ScratchNote 프리팹은 NoteVisuals 미포함)
+            tapNotePrefab = null;
+            longNotePrefab = null;
+            scratchNotePrefab = null;
         }
 
         private void InitializePools()

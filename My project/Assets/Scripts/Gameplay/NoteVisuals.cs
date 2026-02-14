@@ -16,14 +16,18 @@ namespace AIBeat.Gameplay
 
         public void SetLaneColor(int laneIndex)
         {
+            // Lazy 초기화 (Awake 전에 호출될 수 있음)
+            if (_renderer == null)
+                _renderer = GetComponent<Renderer>();
             if (_renderer == null) return;
 
             Color color = GetLaneColor(laneIndex);
+            var mat = _renderer.material;
 
             // Material.color를 직접 변경 (Sprites/Default 셰이더 호환)
-            _renderer.material.color = color;
-            if (_renderer.material.HasProperty("_BaseColor"))
-                _renderer.material.SetColor("_BaseColor", color);
+            mat.color = color;
+            if (mat.HasProperty("_BaseColor"))
+                mat.SetColor("_BaseColor", color);
         }
 
         private Color GetLaneColor(int lane)

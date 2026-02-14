@@ -1,1 +1,1 @@
-🎨 Music Theme 전체 적용: NanoBanana 텍스처 제거 + 노트 순수 색상(Gold/Purple/Teal/Orange) + UI팔레트 변경
+🎨 노트 색상 Music Theme 적용: 씬 프리팹→동적 생성 전환 + NoteVisuals lazy 초기화 + Material.color 직접 변경
