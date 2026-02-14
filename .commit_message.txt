@@ -1,1 +1,1 @@
-🎨 Music Theme 완전 적용: CyberpunkBackground 삭제 + NanoBanana 코드 제거 + My project에 Music Theme LaneVisualFeedback/TextureGenerator 반영
+🐛 Play 모드 진입 불가 수정: GameSetupEditor의 TextureGenerator.GenerateAllAssets() 컴파일 에러 해결

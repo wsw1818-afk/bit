@@ -288,8 +288,7 @@ namespace AIBeat.Editor
         [MenuItem("Tools/A.I. BEAT/Setup Visuals (Overhaul)")]
         public static void SetupOverhaulVisuals()
         {
-            // 1. Ensure Textures Exist
-            TextureGenerator.GenerateAllAssets();
+            // 1. Textures are generated at runtime (Music Theme)
             
             var canvas = GameObject.Find("GameplayCanvas");
             if (canvas == null)
