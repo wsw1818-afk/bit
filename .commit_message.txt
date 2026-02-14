@@ -1,1 +1,1 @@
-🎨 Music Theme 전체 적용: 노트(7레인 Gold/Purple/Teal/Orange) + UI팔레트 + 판정바 색상 Cyberpunk→Music 변경
+🎨 Music Theme 전체 적용: NanoBanana 텍스처 제거 + 노트 순수 색상(Gold/Purple/Teal/Orange) + UI팔레트 변경

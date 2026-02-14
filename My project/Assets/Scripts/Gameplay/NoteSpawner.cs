@@ -186,41 +186,21 @@ namespace AIBeat.Gameplay
             var collider = noteObj.GetComponent<Collider>();
             if (collider != null) Destroy(collider);
 
-            // 머티리얼 설정 (Unlit 셰이더 사용 - 조명 없이도 색상 표시)
+            // 머티리얼 설정 (Music Theme - 순수 색상, 텍스처 없음)
             var renderer = noteObj.GetComponent<MeshRenderer>();
             if (renderer != null)
             {
-                // Unlit 셰이더 찾기 (조명 영향 없이 색상만 표시)
-                var shader = Shader.Find("Universal Render Pipeline/Unlit");
+                var shader = Shader.Find("Sprites/Default");
                 if (shader == null)
-                    shader = Shader.Find("Unlit/Texture"); // 텍스처 지원 셰이더 우선
-                if (shader == null)
-                    shader = Shader.Find("Sprites/Default");
+                    shader = Shader.Find("Unlit/Color");
 
                 var mat = new Material(shader);
-                
-                // NanoBanana 텍스처 로드
-                string textureName = name;
-                if (name == "LongNote") textureName = "LongNoteBody"; // 롱노트는 Body 사용
-                
-                Texture2D texture = Resources.Load<Texture2D>($"Skins/NanoBanana/{textureName}");
-                
-                if (texture != null)
-                {
-                    mat.mainTexture = texture;
-                    mat.color = Color.white; // 텍스처가 있으면 기본색은 화이트 (NoteVisuals가 틴트)
-                    if (mat.HasProperty("_BaseColor"))
-                        mat.SetColor("_BaseColor", Color.white);
-                }
-                else
-                {
-                    mat.color = color;
-                    if (mat.HasProperty("_BaseColor"))
-                        mat.SetColor("_BaseColor", color);
-                }
+                mat.color = color;
+                if (mat.HasProperty("_BaseColor"))
+                    mat.SetColor("_BaseColor", color);
 
                 renderer.material = mat;
-                renderer.enabled = true;  // 렌더러 활성화 보장
+                renderer.enabled = true;
                 managedMaterials.Add(mat);
             }
 
