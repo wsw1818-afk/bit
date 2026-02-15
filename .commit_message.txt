@@ -1,1 +1,1 @@
-🐛 씬 이름 불일치 수정: SongSelect/MainMenu → SongSelectScene/MainMenuScene
+🔧 씬 이름 수정 + 중복 메뉴 정리: Screenshot/PlayMode 통합

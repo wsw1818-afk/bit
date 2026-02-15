@@ -5,6 +5,13 @@ namespace AIBeat.Editor
 {
     public static class PlayModeController
     {
+        [MenuItem("Tools/A.I. BEAT/Toggle Play Mode _F5")]
+        public static void TogglePlayMode()
+        {
+            EditorApplication.isPlaying = !EditorApplication.isPlaying;
+            Debug.Log($"[PlayModeController] Play Mode: {(EditorApplication.isPlaying ? "Started" : "Stopped")}");
+        }
+
         [MenuItem("Tools/A.I. BEAT/Start Play Mode")]
         public static void StartPlayMode()
         {

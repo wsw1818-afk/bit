@@ -270,20 +270,7 @@ namespace AIBeat.Editor
             Debug.Log("[GameSetupEditor] 메시 및 노트 설정 완료");
         }
 
-        [MenuItem("Tools/A.I. BEAT/Play Game _F5")]
-        public static void PlayGame()
-        {
-            if (EditorApplication.isPlaying)
-            {
-                EditorApplication.isPlaying = false;
-                Debug.Log("[GameSetupEditor] 게임 정지");
-            }
-            else
-            {
-                EditorApplication.isPlaying = true;
-                Debug.Log("[GameSetupEditor] 게임 시작");
-            }
-        }
+        // Play Mode 기능은 PlayModeController.cs로 통합됨 (Start/Stop 분리)
 
         [MenuItem("Tools/A.I. BEAT/Go to SongSelect")]
         public static void GoToSongSelect()
