@@ -71,12 +71,13 @@ namespace AIBeat.UI
                 return;
             }
 
+            // 새 고품질 AI 생성 이미지 사용 (Illustrations 폴더)
             var spriteMap = new (string childName, string spritePath)[]
             {
-                ("Drummer", "AIBeat_Design/UI/Decorations/Drummer_Perform"),
-                ("Pianist", "AIBeat_Design/UI/Decorations/Pianist_Perform"),
-                ("Guitarist", "AIBeat_Design/UI/Decorations/Guitarist_Perform"),
-                ("DJ", "AIBeat_Design/UI/Decorations/DJ_Perform")
+                ("Drummer", "AIBeat_Design/Illustrations/Cyberpunk_guitarist_female_4k_202602151641"),  // 역동적 점프 포즈
+                ("Pianist", "AIBeat_Design/Illustrations/Cyberpunk_keyboardist_anime_4k_202602151645"), // 키보디스트
+                ("Guitarist", "AIBeat_Design/Illustrations/Cyberpunk_guitarist_female_4k_202602151642"), // 남성 기타리스트
+                ("DJ", "AIBeat_Design/Illustrations/Cyberpunk_dj_male_4k_202602151643")                 // DJ
             };
 
             musicianTransforms.Clear();
