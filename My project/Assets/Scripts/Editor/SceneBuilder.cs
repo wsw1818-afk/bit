@@ -142,14 +142,14 @@ namespace AIBeat.Editor
             vlg.childControlWidth = false;
 
             // Buttons
-            var startBtn = CreateMenuButton(panel, "Start", "시작하기");
+            var startBtn = CreateMenuButton(panel, "Start", "START");
             startBtn.GetComponent<Button>().onClick.AddListener(() => {
                  GameObject.FindObjectOfType<SceneLoader>()?.LoadSongSelect();
             });
 
-            CreateMenuButton(panel, "Settings", "설정");
-            
-            var quitBtn = CreateMenuButton(panel, "Quit", "종료");
+            CreateMenuButton(panel, "Settings", "SETTINGS");
+
+            var quitBtn = CreateMenuButton(panel, "Quit", "QUIT");
             quitBtn.GetComponent<Button>().onClick.AddListener(() => {
                  GameObject.FindObjectOfType<SceneLoader>()?.QuitGame();
             });
@@ -187,7 +187,7 @@ namespace AIBeat.Editor
             CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, 800), new Vector2(800, 100));
 
             // Back Button
-            var backBtn = CreateMenuButton(canvas.gameObject, "BackBtn", "Back");
+            var backBtn = CreateMenuButton(canvas.gameObject, "BackBtn", "BACK");
             var backRt = backBtn.GetComponent<RectTransform>();
             backRt.anchorMin = new Vector2(0, 1);
             backRt.anchorMax = new Vector2(0, 1);

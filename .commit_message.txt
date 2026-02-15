@@ -1,1 +1,1 @@
-✨ UI 씬 시스템 완성: Build Settings 설정 + 씬 전환 준비 + Splash 화면 렌더링 성공
+✨ UI 씬 영문 버튼 적용 완료: START/SETTINGS/QUIT (MainMenu) + BACK/PLAY (SongSelect)
