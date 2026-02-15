@@ -398,3 +398,5 @@ namespace AIBeat.UI
             Debug.Log($"[ProceduralGen] Saved to {fullPath}");
 #endif
         }
+    }
+}
