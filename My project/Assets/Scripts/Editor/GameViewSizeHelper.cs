@@ -26,13 +26,15 @@ namespace AIBeat.Editor
 
         public static void SetGameViewSize(int width, int height, string displayName)
         {
-            // Get GameView type
-            var gameViewType = Type.GetType("UnityEditor.GameView,UnityEditor");
-            if (gameViewType == null)
+            try
             {
-                Debug.LogError("GameView type not found");
-                return;
-            }
+                // Get GameView type
+                var gameViewType = Type.GetType("UnityEditor.GameView,UnityEditor");
+                if (gameViewType == null)
+                {
+                    Debug.LogWarning("[GameViewSizeHelper] GameView type not found (Unity version compatibility issue)");
+                    return;
+                }
 
             // Get EditorWindow
             var gameView = EditorWindow.GetWindow(gameViewType);
@@ -134,6 +136,12 @@ namespace AIBeat.Editor
             selectedSizeIndexProperty.SetValue(gameView, existingIndex, null);
 
             Debug.Log($"[GameViewSizeHelper] Game View set to {displayName} ({width}x{height})");
+            }
+            catch (Exception ex)
+            {
+                // Silently ignore errors related to Unity internal API changes
+                Debug.LogWarning($"[GameViewSizeHelper] Could not set Game View size (Unity version compatibility): {ex.Message}");
+            }
         }
     }
 }
