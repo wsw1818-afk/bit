@@ -199,6 +199,19 @@ Unity의 `Color(r, g, b, a)`는 **0~1 범위**를 사용합니다:
 - [x] **에셋 패키징** (`PackageDesignAssets.ps1`)
   - 생성된 디자인 에셋을 1초 만에 zip으로 압축하는 PowerShell 스크립트 작성
 
+### UI 디자인 및 에셋 생성 (2026-02-15) - 재미나이 요청
+- [x] **UI 에셋 절차적 생성 구현** (`ProceduralImageGenerator.cs` 확장)
+  - **배경**: 스플래시(Purple/Black), 메인메뉴(Blue/Cyber), 곡선택(Dark/Contrast) 화면용 그라데이션 배경 자동 생성
+  - **버튼**: Normal(Dark Blue), Hover(Glow Cyan), Pressed(Teal) 상태별 텍스처 생성
+  - **로고**: "A.I. BEAT" 분위기의 절차적 웨이브폼 로고 생성
+
+- [x] **디자인 명세서 작성** (`UI_DESIGN_SPEC.md`)
+  - [UI_DESIGN_SPEC.md](file:///C:/Users/wsw18/.gemini/antigravity/brain/fd660b48-2deb-4486-bab0-2b263b036f69/UI_DESIGN_SPEC.md) 생성
+  - 색상 팔레트 (Neon Cyan #00FFFF, Magenta #FF00FF 등) 정의
+  - 화면별(스플래시, 메뉴, 곡선택) 레이아웃 및 에셋 사용 가이드 정리
+  - 생성된 에셋 파일 경로: `Assets/Resources/AIBeat_Design/UI/`
+
+
 
 ---
 
