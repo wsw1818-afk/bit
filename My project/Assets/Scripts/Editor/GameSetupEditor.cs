@@ -285,6 +285,75 @@ namespace AIBeat.Editor
             }
         }
 
+        [MenuItem("Tools/A.I. BEAT/Go to SongSelect")]
+        public static void GoToSongSelect()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[GameSetupEditor] Play 모드에서만 사용 가능합니다.");
+                return;
+            }
+
+            UnityEngine.SceneManagement.SceneManager.LoadScene("SongSelectScene");
+            Debug.Log("[GameSetupEditor] SongSelectScene 씬으로 이동");
+        }
+
+        [MenuItem("Tools/A.I. BEAT/Go to MainMenu")]
+        public static void GoToMainMenu()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[GameSetupEditor] Play 모드에서만 사용 가능합니다.");
+                return;
+            }
+
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenuScene");
+            Debug.Log("[GameSetupEditor] MainMenuScene 씬으로 이동");
+        }
+
+        [MenuItem("Tools/A.I. BEAT/Go to Gameplay")]
+        public static void GoToGameplay()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[GameSetupEditor] Play 모드에서만 사용 가능합니다.");
+                return;
+            }
+
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
+            Debug.Log("[GameSetupEditor] Gameplay 씬으로 이동");
+        }
+
+        [MenuItem("Tools/A.I. BEAT/Add Scenes to Build Settings")]
+        public static void AddScenesToBuildSettings()
+        {
+            string[] scenePaths = new string[]
+            {
+                "Assets/Scenes/SplashScene.unity",
+                "Assets/Scenes/MainMenuScene.unity",
+                "Assets/Scenes/SongSelectScene.unity",
+                "Assets/Scenes/Gameplay.unity"
+            };
+
+            var editorBuildSettingsScenes = new System.Collections.Generic.List<EditorBuildSettingsScene>();
+
+            foreach (var path in scenePaths)
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    editorBuildSettingsScenes.Add(new EditorBuildSettingsScene(path, true));
+                    Debug.Log($"[GameSetupEditor] 씬 추가됨: {path}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[GameSetupEditor] 씬을 찾을 수 없음: {path}");
+                }
+            }
+
+            EditorBuildSettings.scenes = editorBuildSettingsScenes.ToArray();
+            Debug.Log("[GameSetupEditor] Build Settings에 모든 씬 추가 완료!");
+        }
+
         [MenuItem("Tools/A.I. BEAT/Setup Visuals (Overhaul)")]
         public static void SetupOverhaulVisuals()
         {
