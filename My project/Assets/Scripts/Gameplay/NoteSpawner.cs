@@ -139,14 +139,9 @@ namespace AIBeat.Gameplay
 
             // Music Theme: 씬 프리팹 사용하지 않고 항상 동적 생성 또는 리소스 로드
             // (기존 NormalNote/LongNote/ScratchNote 프리팹은 NoteVisuals 미포함)
-            
-            // Check if assets exist, if not generate them
-            var assetTrigger = new AssetGenTrigger();
-            // Since AssetGenTrigger is MonoBehaviour but we just want the logic, we can make the method static or just instantiate the class if it wasn't Mono.
-            // But for now let's just use the static methods in ProceduralImageGenerator directly if we implemented them?
-            // Actually AssetGenTrigger has the path logic. Let's replicate simple check here.
-            
-            // Assuming Generation happens in a Loading Scene or Preload. 
+
+            // AssetGenTrigger는 static 클래스이므로 별도 인스턴스 생성 불필요
+            // 에셋 생성은 RuntimeInitializeOnLoadMethod로 자동 실행됨 
             // For now, let's just try to load sprites.
             tapNotePrefab = null;
             longNotePrefab = null;

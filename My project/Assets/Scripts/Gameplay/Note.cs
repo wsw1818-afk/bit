@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using AIBeat.Core;
 using AIBeat.Data;
+using AIBeat.UI;
 
 namespace AIBeat.Gameplay
 {
@@ -51,6 +52,7 @@ namespace AIBeat.Gameplay
             }
         }
         public bool HasBeenJudged => hasBeenJudged;
+        public bool IsHolding => isHolding;
 
         public void MarkAsJudged() { hasBeenJudged = true; }
 
