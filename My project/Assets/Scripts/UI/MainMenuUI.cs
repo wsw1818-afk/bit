@@ -94,6 +94,7 @@ namespace AIBeat.UI
                 {
                     image.sprite = sprite;
                     image.preserveAspect = true;
+                    image.raycastTarget = false;  // 버튼 클릭 방해 방지
                     Debug.Log($"[MainMenuUI] Loaded sprite for '{childName}'");
                 }
 
