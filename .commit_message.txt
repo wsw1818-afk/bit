@@ -1,1 +1,1 @@
-🔧 SongSelect Header 위치 수정: 상단 앵커로 고정 (화면 밖 잘림 해결)
+🎨 SongSelect 레이아웃 재조정: 버튼 간격 균형있게 배치 (PLAY -200, Header -500, SETTINGS +350, BACK +200)

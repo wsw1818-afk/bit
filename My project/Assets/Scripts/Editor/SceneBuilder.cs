@@ -188,7 +188,7 @@ namespace AIBeat.Editor
             var playRt = playBtn.GetComponent<RectTransform>();
             playRt.anchorMin = new Vector2(0.5f, 1);
             playRt.anchorMax = new Vector2(0.5f, 1);
-            playRt.anchoredPosition = new Vector2(0, -100);
+            playRt.anchoredPosition = new Vector2(0, -200);
             playBtn.GetComponent<Button>().onClick.AddListener(() => {
                  GameObject.FindObjectOfType<SceneLoader>()?.LoadGame();
             });
@@ -197,22 +197,23 @@ namespace AIBeat.Editor
             // Header as placeholder
             var header = CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, 0), new Vector2(800, 100));
             var headerRt = header.GetComponent<RectTransform>();
-            headerRt.anchorMin = new Vector2(0.5f, 0.5f);
-            headerRt.anchorMax = new Vector2(0.5f, 0.5f);
+            headerRt.anchorMin = new Vector2(0.5f, 1);
+            headerRt.anchorMax = new Vector2(0.5f, 1);
+            headerRt.anchoredPosition = new Vector2(0, -500);
 
             // Settings Button (하단 위)
             var settingsBtn = CreateMenuButton(canvas.gameObject, "SettingsBtn", "SETTINGS");
             var settingsRt = settingsBtn.GetComponent<RectTransform>();
             settingsRt.anchorMin = new Vector2(0.5f, 0);
             settingsRt.anchorMax = new Vector2(0.5f, 0);
-            settingsRt.anchoredPosition = new Vector2(0, 250);
+            settingsRt.anchoredPosition = new Vector2(0, 350);
 
             // Back Button (맨 아래)
             var backBtn = CreateMenuButton(canvas.gameObject, "BackBtn", "BACK");
             var backRt = backBtn.GetComponent<RectTransform>();
             backRt.anchorMin = new Vector2(0.5f, 0);
             backRt.anchorMax = new Vector2(0.5f, 0);
-            backRt.anchoredPosition = new Vector2(0, 100);
+            backRt.anchoredPosition = new Vector2(0, 200);
             backBtn.GetComponent<Button>().onClick.AddListener(() => {
                  GameObject.FindObjectOfType<SceneLoader>()?.LoadMainMenu();
             });
