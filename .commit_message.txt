@@ -1,1 +1,1 @@
-🐛 MainMenu 연주자 스프라이트 로딩 수정: Resources 경로 및 .meta textureType 설정 수정
+✨ MainMenu 연주자 개별 애니메이션 추가: 드러머(위아래), 피아니스트(좌우), 기타리스트(회전), DJ(펄스)

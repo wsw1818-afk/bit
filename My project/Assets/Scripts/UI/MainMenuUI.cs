@@ -36,6 +36,10 @@ namespace AIBeat.UI
         private TextMeshProUGUI subtitleText;
         private TextMeshProUGUI catchphraseText;
 
+        // 연주자 애니메이션 참조
+        private Dictionary<string, RectTransform> musicianTransforms = new Dictionary<string, RectTransform>();
+        private Coroutine musicianAnimCoroutine;
+
         private void Start()
         {
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
@@ -75,6 +79,7 @@ namespace AIBeat.UI
                 ("DJ", "AIBeat_Design/UI/Decorations/DJ_Perform")
             };
 
+            musicianTransforms.Clear();
             foreach (var (childName, spritePath) in spriteMap)
             {
                 var child = musicianBg.Find(childName);
@@ -90,6 +95,77 @@ namespace AIBeat.UI
                     image.preserveAspect = true;
                     Debug.Log($"[MainMenuUI] Loaded sprite for '{childName}'");
                 }
+
+                // 애니메이션을 위해 RectTransform 저장
+                var rectTransform = child.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    musicianTransforms[childName] = rectTransform;
+                }
+            }
+
+            // 연주자 애니메이션 코루틴 시작
+            if (musicianTransforms.Count > 0)
+            {
+                musicianAnimCoroutine = StartCoroutine(AnimateMusicians());
+            }
+        }
+
+        /// <summary>
+        /// 각 연주자별 개별 애니메이션
+        /// - 드러머: 빠른 위아래 진동 (드럼 치는 느낌)
+        /// - 피아니스트: 부드러운 좌우 흔들림
+        /// - 기타리스트: 기울어지는 회전
+        /// - DJ: 펄스 (크기 변화)
+        /// </summary>
+        private IEnumerator AnimateMusicians()
+        {
+            // 각 연주자의 초기 위치/회전/크기 저장
+            var initialPositions = new Dictionary<string, Vector2>();
+            var initialRotations = new Dictionary<string, float>();
+            var initialScales = new Dictionary<string, Vector3>();
+
+            foreach (var kvp in musicianTransforms)
+            {
+                initialPositions[kvp.Key] = kvp.Value.anchoredPosition;
+                initialRotations[kvp.Key] = kvp.Value.localEulerAngles.z;
+                initialScales[kvp.Key] = kvp.Value.localScale;
+            }
+
+            float time = 0f;
+            while (true)
+            {
+                time += Time.unscaledDeltaTime;
+
+                // === 드러머: 빠른 위아래 진동 (8Hz, ±8px) ===
+                if (musicianTransforms.TryGetValue("Drummer", out var drummer))
+                {
+                    float bobY = Mathf.Sin(time * 16f) * 8f;
+                    drummer.anchoredPosition = initialPositions["Drummer"] + new Vector2(0, bobY);
+                }
+
+                // === 피아니스트: 부드러운 좌우 흔들림 (1Hz, ±12px) ===
+                if (musicianTransforms.TryGetValue("Pianist", out var pianist))
+                {
+                    float swayX = Mathf.Sin(time * 2f) * 12f;
+                    pianist.anchoredPosition = initialPositions["Pianist"] + new Vector2(swayX, 0);
+                }
+
+                // === 기타리스트: 기울어지는 회전 (0.8Hz, ±8도) ===
+                if (musicianTransforms.TryGetValue("Guitarist", out var guitarist))
+                {
+                    float rotZ = Mathf.Sin(time * 1.6f) * 8f;
+                    guitarist.localEulerAngles = new Vector3(0, 0, initialRotations["Guitarist"] + rotZ);
+                }
+
+                // === DJ: 펄스 크기 변화 (2Hz, 0.95~1.05) ===
+                if (musicianTransforms.TryGetValue("DJ", out var dj))
+                {
+                    float scale = 1f + Mathf.Sin(time * 4f) * 0.05f;
+                    dj.localScale = initialScales["DJ"] * scale;
+                }
+
+                yield return null;
             }
         }
 
@@ -644,6 +720,7 @@ namespace AIBeat.UI
         {
             if (eqAnimCoroutine != null) StopCoroutine(eqAnimCoroutine);
             if (breatheCoroutine != null) StopCoroutine(breatheCoroutine);
+            if (musicianAnimCoroutine != null) StopCoroutine(musicianAnimCoroutine);
             if (playButton != null) playButton.onClick.RemoveAllListeners();
             if (libraryButton != null) libraryButton.onClick.RemoveAllListeners();
             if (settingsButton != null) settingsButton.onClick.RemoveAllListeners();
