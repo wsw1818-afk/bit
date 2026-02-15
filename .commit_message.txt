@@ -1,1 +1,1 @@
-✨ MainMenu UI/UX 개선: 한국어 버튼 + TitleText 자동 생성 + runInBackground 수정
+✨ MainMenu 레이아웃 최적화: 버튼 중앙 정렬 + 크기/간격 증가 + 타이틀 위치 조정

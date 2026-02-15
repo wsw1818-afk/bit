@@ -533,7 +533,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 센세이셔널 버튼 리디자인 — 아이콘 + 서브텍스트 + 네온 글래스모피즘
+        /// 센세이셔널 버튼 리디자인 v2 — 글래스모피즘 카드 + 네온 아이콘 배지 + 그라데이션 글로우
         /// </summary>
         private void EnsureButtonMobileSize()
         {
@@ -545,32 +545,32 @@ namespace AIBeat.UI
                 return;
             }
 
-            var buttonConfigs = new (Button btn, string icon, string text, Color glowColor)[]
+            var buttonConfigs = new (Button btn, string icon, string text, string subText, Color glowColor)[]
             {
-                (playButton, ">", "플레이", UIColorPalette.NEON_MAGENTA),
-                (libraryButton, "#", "라이브러리", UIColorPalette.NEON_CYAN),
-                (settingsButton, "@", "설정", UIColorPalette.NEON_PURPLE),
-                (exitButton, "X", "종료", UIColorPalette.NEON_ORANGE)
+                (playButton, ">", "플레이", "PLAY", UIColorPalette.NEON_MAGENTA),
+                (libraryButton, "#", "라이브러리", "LIBRARY", UIColorPalette.NEON_CYAN),
+                (settingsButton, "*", "설정", "SETTINGS", UIColorPalette.NEON_PURPLE),
+                (exitButton, "X", "종료", "EXIT", new Color(1f, 0.3f, 0.3f, 1f))
             };
 
-            // 버튼 컨테이너: 화면 중앙-하단 배치 (개선된 UI/UX)
+            // 버튼 컨테이너: 화면 정중앙 하단 배치 (좌우 넉넉한 패딩)
             var btnContainer = new GameObject("ButtonContainer");
             btnContainer.transform.SetParent(transform, false);
-            btnContainer.transform.SetAsLastSibling();  // 맨 위에 배치 (클릭 우선)
+            btnContainer.transform.SetAsLastSibling();
             var btnContainerRect = btnContainer.AddComponent<RectTransform>();
-            btnContainerRect.anchorMin = new Vector2(0.1f, 0.08f);
-            btnContainerRect.anchorMax = new Vector2(0.9f, 0.48f);
+            btnContainerRect.anchorMin = new Vector2(0.12f, 0.08f);  // 좌우 12% 여백
+            btnContainerRect.anchorMax = new Vector2(0.88f, 0.52f);  // 화면 하단 52%까지
             btnContainerRect.offsetMin = Vector2.zero;
             btnContainerRect.offsetMax = Vector2.zero;
 
             var vLayout = btnContainer.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 18;  // 버튼 간격 증가
+            vLayout.spacing = 20;  // 버튼 간격 증가
             vLayout.childAlignment = TextAnchor.MiddleCenter;
             vLayout.childControlWidth = true;
             vLayout.childControlHeight = false;
             vLayout.childForceExpandWidth = true;
             vLayout.childForceExpandHeight = false;
-            vLayout.padding = new RectOffset(10, 10, 10, 10);
+            vLayout.padding = new RectOffset(0, 0, 12, 12);
 
             foreach (var cfg in buttonConfigs)
             {
@@ -580,73 +580,241 @@ namespace AIBeat.UI
 
                 var rect = cfg.btn.GetComponent<RectTransform>();
                 if (rect != null)
-                    rect.sizeDelta = new Vector2(0, 70f);  // 버튼 높이 조정
+                    rect.sizeDelta = new Vector2(0, 90f);  // 버튼 높이 증가
 
                 var le = cfg.btn.gameObject.GetComponent<LayoutElement>();
                 if (le == null) le = cfg.btn.gameObject.AddComponent<LayoutElement>();
-                le.preferredHeight = 70f;  // 버튼 높이 조정
+                le.preferredHeight = 90f;
 
-                // 어두운 반투명 배경
+                // 글래스모피즘 배경 (어두운 반투명 + 미세 밝기)
                 var img = cfg.btn.GetComponent<Image>();
                 if (img != null)
-                    img.color = UIColorPalette.BG_BUTTON;
+                {
+                    img.color = new Color(0.08f, 0.06f, 0.15f, 0.92f);
+                    img.sprite = CreateRoundedRectSprite(20);
+                    img.type = Image.Type.Sliced;
+                }
 
-                // 네온 테두리
+                // 외곽 글로우 Outline 제거 (Shadow로 대체)
                 var outline = cfg.btn.GetComponent<Outline>();
-                if (outline == null)
-                    outline = cfg.btn.gameObject.AddComponent<Outline>();
-                outline.effectColor = cfg.glowColor.WithAlpha(0.6f);
-                outline.effectDistance = new Vector2(2, -2);
+                if (outline != null) Destroy(outline);
 
-                // 버튼 색상 전환
+                // 네온 글로우 Shadow 효과 (다중 레이어)
+                var shadow1 = cfg.btn.gameObject.AddComponent<Shadow>();
+                shadow1.effectColor = cfg.glowColor.WithAlpha(0.5f);
+                shadow1.effectDistance = new Vector2(0, -3);
+
+                var shadow2 = cfg.btn.gameObject.AddComponent<Shadow>();
+                shadow2.effectColor = cfg.glowColor.WithAlpha(0.3f);
+                shadow2.effectDistance = new Vector2(0, 3);
+
+                // 버튼 상태 색상
                 var colors = cfg.btn.colors;
-                colors.normalColor = UIColorPalette.BG_BUTTON;
-                colors.highlightedColor = UIColorPalette.STATE_HOVER;
-                colors.pressedColor = cfg.glowColor.WithAlpha(0.6f);
-                colors.disabledColor = UIColorPalette.STATE_DISABLED;
+                colors.normalColor = new Color(0.08f, 0.06f, 0.15f, 0.92f);
+                colors.highlightedColor = new Color(0.15f, 0.12f, 0.25f, 0.95f);
+                colors.pressedColor = cfg.glowColor.WithAlpha(0.4f);
+                colors.selectedColor = colors.highlightedColor;
+                colors.disabledColor = new Color(0.1f, 0.1f, 0.1f, 0.5f);
                 cfg.btn.colors = colors;
 
-                // 기존 자식 모두 제거 후 새로 구성
+                // 기존 자식 모두 제거
                 foreach (Transform child in cfg.btn.transform)
                 {
                     Destroy(child.gameObject);
                 }
 
+                // === 내부 레이아웃 ===
                 var hLayout = cfg.btn.gameObject.AddComponent<HorizontalLayoutGroup>();
-                hLayout.padding = new RectOffset(24, 24, 0, 0);
-                hLayout.spacing = 20;
+                hLayout.padding = new RectOffset(16, 24, 10, 10);  // 패딩 증가
+                hLayout.spacing = 20;  // 간격 증가
                 hLayout.childAlignment = TextAnchor.MiddleLeft;
                 hLayout.childControlWidth = false;
                 hLayout.childControlHeight = true;
                 hLayout.childForceExpandWidth = false;
-                hLayout.childForceExpandHeight = true;
+                hLayout.childForceExpandHeight = false;
 
-                // 아이콘 텍스트
-                var iconGo = new GameObject("Icon");
-                iconGo.transform.SetParent(cfg.btn.transform, false);
-                var iconLE = iconGo.AddComponent<LayoutElement>();
-                iconLE.preferredWidth = 45;
-                var iconTmp = iconGo.AddComponent<TextMeshProUGUI>();
+                // === 아이콘 배지 (네온 원형 배경) ===
+                var iconBadge = new GameObject("IconBadge");
+                iconBadge.transform.SetParent(cfg.btn.transform, false);
+                var badgeLE = iconBadge.AddComponent<LayoutElement>();
+                badgeLE.preferredWidth = 65;   // 아이콘 크기 증가
+                badgeLE.preferredHeight = 65;
+
+                // 배지 배경 (원형) - Image 전용 자식
+                var badgeBgGo = new GameObject("BadgeBg");
+                badgeBgGo.transform.SetParent(iconBadge.transform, false);
+                var badgeBgRect = badgeBgGo.AddComponent<RectTransform>();
+                badgeBgRect.anchorMin = Vector2.zero;
+                badgeBgRect.anchorMax = Vector2.one;
+                badgeBgRect.offsetMin = Vector2.zero;
+                badgeBgRect.offsetMax = Vector2.zero;
+                var badgeImg = badgeBgGo.AddComponent<Image>();
+                badgeImg.sprite = CreateCircleSprite();
+                badgeImg.color = cfg.glowColor.WithAlpha(0.2f);
+                badgeImg.raycastTarget = false;
+
+                // 배지 테두리 글로우
+                var badgeOutline = badgeBgGo.AddComponent<Outline>();
+                badgeOutline.effectColor = cfg.glowColor.WithAlpha(0.8f);
+                badgeOutline.effectDistance = new Vector2(2, -2);
+
+                // 아이콘 텍스트 (배지 안) - Text 전용 자식
+                var iconTextGo = new GameObject("IconText");
+                iconTextGo.transform.SetParent(iconBadge.transform, false);
+                var iconTextRect = iconTextGo.AddComponent<RectTransform>();
+                iconTextRect.anchorMin = Vector2.zero;
+                iconTextRect.anchorMax = Vector2.one;
+                iconTextRect.offsetMin = Vector2.zero;
+                iconTextRect.offsetMax = Vector2.zero;
+                var iconTmp = iconTextGo.AddComponent<TextMeshProUGUI>();
                 iconTmp.text = cfg.icon;
-                iconTmp.fontSize = 28;
+                iconTmp.fontSize = 30;
                 iconTmp.color = cfg.glowColor;
                 iconTmp.alignment = TextAlignmentOptions.Center;
                 iconTmp.fontStyle = FontStyles.Bold;
                 iconTmp.raycastTarget = false;
 
-                // 메인 텍스트 (단일 행)
+                // === 텍스트 영역 (세로 스택) ===
+                var textContainer = new GameObject("TextContainer");
+                textContainer.transform.SetParent(cfg.btn.transform, false);
+                var textLE = textContainer.AddComponent<LayoutElement>();
+                textLE.flexibleWidth = 1;
+                textLE.preferredHeight = 65;
+
+                var textVLayout = textContainer.AddComponent<VerticalLayoutGroup>();
+                textVLayout.spacing = 4;  // 텍스트 간격 증가
+                textVLayout.childAlignment = TextAnchor.MiddleLeft;
+                textVLayout.childControlWidth = true;
+                textVLayout.childControlHeight = true;
+                textVLayout.childForceExpandWidth = true;
+                textVLayout.childForceExpandHeight = false;
+
+                // 메인 텍스트 (한국어)
                 var mainTextGo = new GameObject("MainText");
-                mainTextGo.transform.SetParent(cfg.btn.transform, false);
-                var mainLE = mainTextGo.AddComponent<LayoutElement>();
-                mainLE.flexibleWidth = 1;
+                mainTextGo.transform.SetParent(textContainer.transform, false);
                 var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
                 mainTmp.text = cfg.text;
-                mainTmp.fontSize = 28;
+                mainTmp.fontSize = 36;  // 폰트 크기 증가
                 mainTmp.fontStyle = FontStyles.Bold;
-                mainTmp.color = cfg.glowColor;
+                mainTmp.color = Color.white;
                 mainTmp.alignment = TextAlignmentOptions.MidlineLeft;
                 mainTmp.raycastTarget = false;
+
+                // 서브 텍스트 (영어, 작게)
+                var subTextGo = new GameObject("SubText");
+                subTextGo.transform.SetParent(textContainer.transform, false);
+                var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
+                subTmp.text = cfg.subText;
+                subTmp.fontSize = 16;  // 폰트 크기 증가
+                subTmp.fontStyle = FontStyles.Normal;
+                subTmp.color = cfg.glowColor.WithAlpha(0.7f);
+                subTmp.characterSpacing = 5f;  // 자간 증가
+                subTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                subTmp.raycastTarget = false;
+
+                // === 우측 화살표 (> 표시) ===
+                var arrowGo = new GameObject("Arrow");
+                arrowGo.transform.SetParent(cfg.btn.transform, false);
+                var arrowLE = arrowGo.AddComponent<LayoutElement>();
+                arrowLE.preferredWidth = 36;  // 화살표 영역 증가
+                var arrowTmp = arrowGo.AddComponent<TextMeshProUGUI>();
+                arrowTmp.text = "›";
+                arrowTmp.fontSize = 48;  // 화살표 크기 증가
+                arrowTmp.color = cfg.glowColor.WithAlpha(0.6f);
+                arrowTmp.alignment = TextAlignmentOptions.Center;
+                arrowTmp.raycastTarget = false;
             }
+
+            Debug.Log("[MainMenuUI] 버튼 UI 리디자인 완료 (v2 - 글래스모피즘 카드)");
+        }
+
+        /// <summary>
+        /// 라운드 사각형 스프라이트 생성 (런타임)
+        /// </summary>
+        private Sprite CreateRoundedRectSprite(int cornerRadius)
+        {
+            int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+
+            Color fill = Color.white;
+            Color clear = Color.clear;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    // 코너 체크
+                    bool inCorner = false;
+                    float dist = 0;
+
+                    // 좌하단
+                    if (x < cornerRadius && y < cornerRadius)
+                    {
+                        dist = Vector2.Distance(new Vector2(x, y), new Vector2(cornerRadius, cornerRadius));
+                        inCorner = true;
+                    }
+                    // 우하단
+                    else if (x >= size - cornerRadius && y < cornerRadius)
+                    {
+                        dist = Vector2.Distance(new Vector2(x, y), new Vector2(size - cornerRadius - 1, cornerRadius));
+                        inCorner = true;
+                    }
+                    // 좌상단
+                    else if (x < cornerRadius && y >= size - cornerRadius)
+                    {
+                        dist = Vector2.Distance(new Vector2(x, y), new Vector2(cornerRadius, size - cornerRadius - 1));
+                        inCorner = true;
+                    }
+                    // 우상단
+                    else if (x >= size - cornerRadius && y >= size - cornerRadius)
+                    {
+                        dist = Vector2.Distance(new Vector2(x, y), new Vector2(size - cornerRadius - 1, size - cornerRadius - 1));
+                        inCorner = true;
+                    }
+
+                    if (inCorner)
+                    {
+                        float alpha = Mathf.Clamp01(1f - (dist - cornerRadius + 1f));
+                        tex.SetPixel(x, y, new Color(1, 1, 1, alpha));
+                    }
+                    else
+                    {
+                        tex.SetPixel(x, y, fill);
+                    }
+                }
+            }
+
+            tex.Apply();
+            int border = cornerRadius + 2;
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100, 0,
+                SpriteMeshType.FullRect, new Vector4(border, border, border, border));
+        }
+
+        /// <summary>
+        /// 원형 스프라이트 생성 (아이콘 배지용)
+        /// </summary>
+        private Sprite CreateCircleSprite()
+        {
+            int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+
+            Vector2 center = new Vector2(size / 2f, size / 2f);
+            float radius = size / 2f - 1;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), center);
+                    float alpha = Mathf.Clamp01(1f - (dist - radius + 1.5f));
+                    tex.SetPixel(x, y, new Color(1, 1, 1, alpha));
+                }
+            }
+
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
         }
 
         /// <summary>
@@ -656,17 +824,17 @@ namespace AIBeat.UI
         {
             if (titleText == null) return;
 
-            // 타이틀 위치 조정 (화면 상단 65~78% 영역)
+            // 타이틀 위치 조정 (화면 중앙 상단, 캐릭터 아래)
             var titleRect = titleText.GetComponent<RectTransform>();
             if (titleRect != null)
             {
-                titleRect.anchorMin = new Vector2(0, 0.65f);
-                titleRect.anchorMax = new Vector2(1, 0.78f);
+                titleRect.anchorMin = new Vector2(0, 0.58f);  // 조금 더 아래로
+                titleRect.anchorMax = new Vector2(1, 0.72f);
                 titleRect.offsetMin = new Vector2(10, 0);
                 titleRect.offsetMax = new Vector2(-10, 0);
             }
 
-            titleText.fontSize = 72;
+            titleText.fontSize = 68;  // 약간 작게 (균형)
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = UIColorPalette.NEON_CYAN_BRIGHT;
             titleText.alignment = TextAlignmentOptions.Center;
@@ -691,18 +859,18 @@ namespace AIBeat.UI
             var subGo = new GameObject("SubtitleText");
             subGo.transform.SetParent(transform, false);
             var subRect = subGo.AddComponent<RectTransform>();
-            subRect.anchorMin = new Vector2(0, 0.59f);
-            subRect.anchorMax = new Vector2(1, 0.65f);
+            subRect.anchorMin = new Vector2(0, 0.53f);  // 타이틀 바로 아래
+            subRect.anchorMax = new Vector2(1, 0.58f);
             subRect.offsetMin = new Vector2(20, 0);
             subRect.offsetMax = new Vector2(-20, 0);
 
             subtitleText = subGo.AddComponent<TextMeshProUGUI>();
             subtitleText.text = "- I N F I N I T E   M I X -";
-            subtitleText.fontSize = 28;
+            subtitleText.fontSize = 26;  // 약간 작게
             subtitleText.color = UIColorPalette.NEON_MAGENTA;
             subtitleText.alignment = TextAlignmentOptions.Center;
             subtitleText.fontStyle = FontStyles.Bold;
-            subtitleText.characterSpacing = 6f;
+            subtitleText.characterSpacing = 8f;  // 자간 증가
             subtitleText.raycastTarget = false;
 
             // 서브타이틀 글로우 - 폰트가 있어야 outlineWidth 설정 가능
@@ -718,8 +886,8 @@ namespace AIBeat.UI
             var catchGo = new GameObject("CatchphraseText");
             catchGo.transform.SetParent(transform, false);
             var catchRect = catchGo.AddComponent<RectTransform>();
-            catchRect.anchorMin = new Vector2(0, 0.54f);
-            catchRect.anchorMax = new Vector2(1, 0.59f);
+            catchRect.anchorMin = new Vector2(0, 0.485f);  // 서브타이틀 바로 아래
+            catchRect.anchorMax = new Vector2(1, 0.53f);
             catchRect.offsetMin = new Vector2(20, 0);
             catchRect.offsetMax = new Vector2(-20, 0);
 
