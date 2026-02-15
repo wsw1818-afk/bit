@@ -709,6 +709,43 @@ namespace AIBeat.Editor
             EditorUtility.SetDirty(existing.gameObject);
         }
 
+        private static string pendingScreenshotPath;
+
+        [MenuItem("Tools/A.I. BEAT/Capture Screenshot")]
+        public static void CaptureScreenshot()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[GameSetupEditor] Play 모드에서만 스크린샷을 캡처할 수 있습니다.");
+                return;
+            }
+
+            string path = System.IO.Path.Combine(Application.dataPath, "../Screenshots");
+            if (!System.IO.Directory.Exists(path))
+            {
+                System.IO.Directory.CreateDirectory(path);
+            }
+
+            string filename = $"Screenshot_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
+            pendingScreenshotPath = System.IO.Path.Combine(path, filename);
+
+            // 다음 프레임에 캡처 실행
+            EditorApplication.update += CaptureOnNextFrame;
+            Debug.Log($"[GameSetupEditor] 스크린샷 대기 중: {pendingScreenshotPath}");
+        }
+
+        private static void CaptureOnNextFrame()
+        {
+            EditorApplication.update -= CaptureOnNextFrame;
+
+            if (!string.IsNullOrEmpty(pendingScreenshotPath))
+            {
+                ScreenCapture.CaptureScreenshot(pendingScreenshotPath);
+                Debug.Log($"[GameSetupEditor] 스크린샷 저장됨: {pendingScreenshotPath}");
+                pendingScreenshotPath = null;
+            }
+        }
+
         [MenuItem("Tools/A.I. BEAT/Import TMP Essential Resources")]
         public static void ImportTMPEssentialResources()
         {
