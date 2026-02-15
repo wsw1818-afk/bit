@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using System;
+using System.Collections;
 using AIBeat.Data;
 using AIBeat.Network;
 
@@ -21,6 +23,10 @@ namespace AIBeat.Core
         public event Action<GameState> OnStateChanged;
 
         private bool isLoadingScene = false;
+
+        // 씬 전환 페이드 효과
+        private CanvasGroup fadeOverlay;
+        private const float FADE_DURATION = 0.3f;
 
         public enum GameState
         {
@@ -148,11 +154,92 @@ namespace AIBeat.Core
             isLoadingScene = true;
 
             ChangeState(GameState.Loading);
+            StartCoroutine(LoadSceneWithFade(sceneName));
+        }
+
+        /// <summary>
+        /// 페이드 효과와 함께 씬 로드
+        /// </summary>
+        private IEnumerator LoadSceneWithFade(string sceneName)
+        {
+            // 페이드 오버레이 생성/가져오기
+            EnsureFadeOverlay();
+
+            // 페이드 아웃 (화면 어두워짐)
+            yield return StartCoroutine(FadeCoroutine(0f, 1f, FADE_DURATION));
+
+            // 씬 로드
             var op = SceneManager.LoadSceneAsync(sceneName);
             if (op != null)
-                op.completed += (asyncOp) => isLoadingScene = false;
-            else
-                isLoadingScene = false;
+            {
+                while (!op.isDone)
+                    yield return null;
+            }
+
+            // 새 씬에서 페이드 오버레이 재생성
+            EnsureFadeOverlay();
+            fadeOverlay.alpha = 1f;
+
+            // 페이드 인 (화면 밝아짐)
+            yield return StartCoroutine(FadeCoroutine(1f, 0f, FADE_DURATION));
+
+            isLoadingScene = false;
+        }
+
+        /// <summary>
+        /// 페이드 오버레이 Canvas 생성
+        /// </summary>
+        private void EnsureFadeOverlay()
+        {
+            if (fadeOverlay != null) return;
+
+            // 페이드용 Canvas 생성
+            var fadeCanvasGo = new GameObject("FadeOverlay");
+            DontDestroyOnLoad(fadeCanvasGo);
+
+            var canvas = fadeCanvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 9999; // 최상위
+
+            fadeCanvasGo.AddComponent<CanvasScaler>();
+            fadeCanvasGo.AddComponent<GraphicRaycaster>();
+
+            // 검정 이미지
+            var imgGo = new GameObject("FadeImage");
+            imgGo.transform.SetParent(fadeCanvasGo.transform, false);
+
+            var rect = imgGo.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var img = imgGo.AddComponent<Image>();
+            img.color = Color.black;
+            img.raycastTarget = false;
+
+            fadeOverlay = fadeCanvasGo.AddComponent<CanvasGroup>();
+            fadeOverlay.alpha = 0f;
+            fadeOverlay.blocksRaycasts = false;
+            fadeOverlay.interactable = false;
+        }
+
+        /// <summary>
+        /// 페이드 코루틴
+        /// </summary>
+        private IEnumerator FadeCoroutine(float from, float to, float duration)
+        {
+            if (fadeOverlay == null) yield break;
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                fadeOverlay.alpha = Mathf.Lerp(from, to, t);
+                yield return null;
+            }
+            fadeOverlay.alpha = to;
         }
 
         public void StartGame(SongData songData)

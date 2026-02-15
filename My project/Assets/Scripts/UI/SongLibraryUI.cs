@@ -209,11 +209,14 @@ namespace AIBeat.UI
             // 빈 목록 처리
             UpdateEmptyState(songs.Count == 0);
 
-            // 곡 카드 생성
+            // 곡 카드 생성 (등장 애니메이션 포함)
             for (int i = 0; i < songs.Count; i++)
             {
                 CreateSongCard(songs[i], i);
             }
+
+            // 카드 등장 애니메이션 시작
+            StartCoroutine(AnimateCardsEntrance());
 
             // 한국어 폰트 적용 (동적 생성된 카드에도 적용)
             KoreanFontManager.ApplyFontToAll(rootPanel);
@@ -534,6 +537,62 @@ namespace AIBeat.UI
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 곡 카드 등장 애니메이션 (스케일 + 페이드인, 순차적)
+        /// </summary>
+        private IEnumerator AnimateCardsEntrance()
+        {
+            for (int i = 0; i < songItems.Count; i++)
+            {
+                var card = songItems[i];
+                if (card == null) continue;
+
+                var rectTransform = card.GetComponent<RectTransform>();
+                var canvasGroup = card.GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                    canvasGroup = card.AddComponent<CanvasGroup>();
+
+                // 초기 상태: 작고 투명
+                rectTransform.localScale = new Vector3(0.8f, 0.8f, 1f);
+                canvasGroup.alpha = 0f;
+
+                // 순차적 등장 (각 카드 0.05초 딜레이)
+                float delay = i * 0.05f;
+                StartCoroutine(AnimateSingleCard(rectTransform, canvasGroup, delay));
+            }
+            yield return null;
+        }
+
+        /// <summary>
+        /// 개별 카드 애니메이션
+        /// </summary>
+        private IEnumerator AnimateSingleCard(RectTransform rect, CanvasGroup cg, float delay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+
+            float duration = 0.25f;
+            float elapsed = 0f;
+
+            Vector3 startScale = new Vector3(0.8f, 0.8f, 1f);
+            Vector3 endScale = Vector3.one;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                // EaseOutBack 효과
+                float overshoot = 1.5f;
+                float eased = 1f + (overshoot + 1f) * Mathf.Pow(t - 1f, 3f) + overshoot * Mathf.Pow(t - 1f, 2f);
+
+                rect.localScale = Vector3.LerpUnclamped(startScale, endScale, eased);
+                cg.alpha = Mathf.Clamp01(t * 2f); // 빠르게 페이드인
+                yield return null;
+            }
+
+            rect.localScale = endScale;
+            cg.alpha = 1f;
         }
 
         /// <summary>

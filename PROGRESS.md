@@ -249,6 +249,32 @@ mcp__mcp-unity__execute_menu_item("Assets/Refresh")
 
 ---
 
-## Archive Rule
-- 완료 항목이 20개를 넘거나 파일이 5KB를 넘으면,
-  완료된 내용을 `ARCHIVE_YYYY_MM.md`로 옮기고 PROGRESS는 "현재 이슈"만 남긴다.
+
+## UI/UX Overhaul: Neon Live Stage (2026-02-15)
+
+사용자가 직접 AI 도구(Midjourney, Gemini 등)를 사용해 에셋을 생성하고 적용하는 단계입니다.
+
+### 🎨 이미지 생성 가이드 (Prompts & Paths)
+
+생성된 이미지는 아래 경로에 **정확한 파일명**으로 저장해주세요.
+**저장 위치**: `Assets/Resources/AIBeat_Design/Illustrations/`
+
+| 자산 이름 (파일명) | 권장 프롬프트 (영어) | 설명 |
+| :--- | :--- | :--- |
+| **Bg_NeonCity.png** | `High quality anime style illustration of a futuristic cyberpunk concert stage during a night performance. Neon purple and cyan lights, skyscrapers in the background, ecstatic atmosphere. Wide angle shot, detailed, 4k. Suitable for a rhythm game background.` | 게임 배경 (메인, 곡 선택 화면) |
+| **Char_Drummer.png** | `Cyberpunk drummer character, anime style, playing futuristic drums, neon accents, energetic pose, full body, transparent background, white background` | 드러머 캐릭터 |
+| **Char_Guitarist.png** | `Cyberpunk guitarist, female, anime style, holding neon electric guitar, dynamic pose, cool fashion, transparent background, white background` | 기타리스트 캐릭터 |
+| **Char_DJ.png** | `Cyberpunk DJ, male, wearing visor, mixing on holographic decks, anime style, transparent background, white background` | DJ 캐릭터 |
+| **Char_Keyboard.png** | `Cyberpunk keyboardist, anime style, playing futuristic synthesizer, neon cables, cool pose, transparent background, white background` | 키보디스트 캐릭터 |
+| **UI_Frame_Cyber.png** | `Futuristic game UI frame, hud element, cyan glowing border, glassmorphism, transparent center, simple and clean, white background` | 버튼 및 패널 배경 프레임 |
+
+> **Tip**: 캐릭터와 UI는 **배경이 투명(Transparent)**해야 합니다. 만약 투명 배경 생성이 어렵다면 흰색/검은색 배경으로 생성 후 포토샵이나 온라인 툴(remove.bg 등)로 배경을 제거해주세요.
+
+### 🛠️ 개발 진행 계획
+1. **에셋 준비 (User)**: 위 프롬프트로 이미지 생성 후 해당 폴더에 저장.
+2. **코드 업데이트 (Claude)**: 
+   - `SceneBuilder.cs` 수정: 절차적 도형 대신 위 이미지(Sprite)를 로드하도록 변경.
+   - `MainMenuController.cs`: 캐릭터 배치 레이아웃 조정 (카드 형태 또는 무대 배치).
+   - `GameplayController.cs`: 배경 이미지 교체 로직 적용.
+
+---
