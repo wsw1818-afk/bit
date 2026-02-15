@@ -55,7 +55,12 @@ namespace AIBeat.UI
         /// </summary>
         private void SetupMusicianSprites()
         {
+            // MusicianBackground는 SafeAreaPanel 아래에 있을 수 있음
             var musicianBg = transform.Find("MusicianBackground");
+            if (musicianBg == null)
+                musicianBg = transform.Find("SafeAreaPanel/MusicianBackground");
+            if (musicianBg == null)
+                musicianBg = FindDeepChild(transform, "MusicianBackground");
             if (musicianBg == null)
             {
                 Debug.Log("[MainMenuUI] MusicianBackground not found, skipping sprite setup");
@@ -617,6 +622,22 @@ namespace AIBeat.UI
             var canvas = GetComponentInParent<Canvas>();
             if (canvas != null && canvas.GetComponent<SafeAreaApplier>() == null)
                 canvas.gameObject.AddComponent<SafeAreaApplier>();
+        }
+
+        /// <summary>
+        /// 재귀적으로 자식 Transform을 검색
+        /// </summary>
+        private Transform FindDeepChild(Transform parent, string name)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name == name)
+                    return child;
+                var result = FindDeepChild(child, name);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
 
         private void OnDestroy()
