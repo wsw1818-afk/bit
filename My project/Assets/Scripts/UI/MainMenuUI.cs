@@ -366,14 +366,12 @@ namespace AIBeat.UI
 
         private void AutoSetupReferences()
         {
-            if (playButton == null)
-                playButton = transform.Find("PlayButton")?.GetComponent<Button>();
-            if (libraryButton == null)
-                libraryButton = transform.Find("LibraryButton")?.GetComponent<Button>();
-            if (settingsButton == null)
-                settingsButton = transform.Find("SettingsButton")?.GetComponent<Button>();
-            if (exitButton == null)
-                exitButton = transform.Find("ExitButton")?.GetComponent<Button>();
+            // 버튼이 없으면 자동 생성
+            playButton = EnsureButton("PlayButton");
+            libraryButton = EnsureButton("LibraryButton");
+            settingsButton = EnsureButton("SettingsButton");
+            exitButton = EnsureButton("ExitButton");
+
             if (titleText == null)
                 titleText = transform.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
             if (versionText == null)
@@ -395,8 +393,34 @@ namespace AIBeat.UI
                     rect.anchorMax = Vector2.one;
                     rect.offsetMin = Vector2.zero;
                     rect.offsetMax = Vector2.zero;
+                    settingsPanel.SetActive(false);
                 }
             }
+        }
+
+        /// <summary>
+        /// 버튼이 없으면 자동 생성
+        /// </summary>
+        private Button EnsureButton(string name)
+        {
+            var existing = transform.Find(name);
+            if (existing != null)
+                return existing.GetComponent<Button>();
+
+            // 새 버튼 생성
+            var btnGO = new GameObject(name, typeof(RectTransform));
+            btnGO.transform.SetParent(transform, false);
+            btnGO.layer = LayerMask.NameToLayer("UI");
+
+            var img = btnGO.AddComponent<Image>();
+            img.color = new Color(0.1f, 0.05f, 0.2f, 0.85f);
+            img.raycastTarget = true;
+
+            var btn = btnGO.AddComponent<Button>();
+            btn.targetGraphic = img;
+
+            Debug.Log($"[MainMenuUI] 버튼 자동 생성: {name}");
+            return btn;
         }
 
         private void Initialize()
