@@ -1,1 +1,1 @@
-🎨 SongSelect 레이아웃 최종 조정: 균형잡힌 세로 배치 (PLAY -150, Header -450, SETTINGS +220, BACK +90)
+🎨 MainMenu 디자인 개선: 4명의 연주자 이미지 추가 (드럼/피아노/기타/DJ) + 네온 색상 배치
