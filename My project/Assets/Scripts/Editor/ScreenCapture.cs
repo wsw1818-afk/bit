@@ -48,8 +48,41 @@ namespace AIBeat.Editor
             string fileName = $"AIBeat_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
             string fullPath = Path.Combine(dir, fileName);
 
-            UnityEngine.ScreenCapture.CaptureScreenshot(fullPath, 1);
-            Debug.Log($"[ScreenCapture] Screenshot saved: {fullPath}");
+            // Camera.Render 방식으로 즉시 저장 (포커스 상관없이 동작)
+            Camera cam = Camera.main;
+            if (cam != null)
+            {
+                int width = cam.pixelWidth;
+                int height = cam.pixelHeight;
+
+                var rt = new RenderTexture(width, height, 24);
+                var tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+
+                RenderTexture prevRT = cam.targetTexture;
+                cam.targetTexture = rt;
+                cam.Render();
+
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                tex.Apply();
+
+                cam.targetTexture = prevRT;
+                RenderTexture.active = null;
+
+                byte[] pngData = tex.EncodeToPNG();
+                File.WriteAllBytes(fullPath, pngData);
+
+                Object.DestroyImmediate(rt);
+                Object.DestroyImmediate(tex);
+
+                Debug.Log($"[ScreenCapture] Screenshot saved: {fullPath}");
+            }
+            else
+            {
+                // Fallback to ScreenCapture API
+                UnityEngine.ScreenCapture.CaptureScreenshot(fullPath, 1);
+                Debug.Log($"[ScreenCapture] Screenshot saved (async): {fullPath}");
+            }
         }
 
         private void OnGUI()

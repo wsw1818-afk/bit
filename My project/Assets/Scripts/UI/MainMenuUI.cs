@@ -43,8 +43,13 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            Debug.Log("[MainMenuUI] Start() 호출됨");
+
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             var _ = KoreanFontManager.KoreanFont;
+
+            // 오래된 레거시 UI 요소 정리 (씬에 남아있는 기존 버튼들)
+            CleanupLegacyUI();
 
             EnsureEventSystem(); // 터치/클릭 입력을 위한 EventSystem 보장
             EnsureCanvasScaler();
@@ -54,6 +59,28 @@ namespace AIBeat.UI
             CreateEqualizerBars();
             EnsureSafeArea();
             SetupMusicianSprites();
+        }
+
+        /// <summary>
+        /// 씬에 남아있는 오래된 레거시 UI 요소 제거
+        /// </summary>
+        private void CleanupLegacyUI()
+        {
+            // 오래된 ButtonPanel 제거 (SELECT SONG, QUIT 버튼 포함)
+            var legacyNames = new string[] { "ButtonPanel", "SongSelect", "Quit", "Logo" };
+            foreach (var name in legacyNames)
+            {
+                var legacy = transform.Find(name);
+                if (legacy != null)
+                {
+                    Debug.Log($"[MainMenuUI] Removing legacy UI element: {name}");
+                    Destroy(legacy.gameObject);
+                }
+                else
+                {
+                    Debug.Log($"[MainMenuUI] Legacy element not found: {name}");
+                }
+            }
         }
 
         /// <summary>
@@ -468,6 +495,14 @@ namespace AIBeat.UI
         /// </summary>
         private void EnsureButtonMobileSize()
         {
+            // 기존 ButtonContainer가 있으면 중복 생성 방지
+            var existingContainer = transform.Find("ButtonContainer");
+            if (existingContainer != null)
+            {
+                Debug.Log("[MainMenuUI] ButtonContainer already exists, skipping recreation");
+                return;
+            }
+
             var buttonConfigs = new (Button btn, string icon, string text, Color glowColor)[]
             {
                 (playButton, ">", "플레이", UIColorPalette.NEON_MAGENTA),
