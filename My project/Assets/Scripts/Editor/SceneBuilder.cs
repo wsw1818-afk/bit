@@ -183,8 +183,11 @@ namespace AIBeat.Editor
             var canvas = CreateCanvas();
             CreateBackground(canvas, "Backgrounds/SongSelect_BG");
 
-            // Header
-            CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, 800), new Vector2(800, 100));
+            // Header (anchored to top)
+            var header = CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, -150), new Vector2(800, 100));
+            var headerRt = header.GetComponent<RectTransform>();
+            headerRt.anchorMin = new Vector2(0.5f, 1);
+            headerRt.anchorMax = new Vector2(0.5f, 1);
 
             // Back Button
             var backBtn = CreateMenuButton(canvas.gameObject, "BackBtn", "BACK");

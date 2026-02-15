@@ -1,1 +1,1 @@
-✅ UI 씬 3개 완성 (Splash/MainMenu/SongSelect): 영문 버튼 + 1080x1920 CanvasScaler + Main Camera
+🔧 SongSelect Header 위치 수정: 상단 앵커로 고정 (화면 밖 잘림 해결)
