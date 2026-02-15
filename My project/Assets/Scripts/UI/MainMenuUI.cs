@@ -643,39 +643,40 @@ namespace AIBeat.UI
                 accentImg.sprite = CreateRoundedRectSprite(5);
                 accentImg.type = Image.Type.Sliced;
 
-                // === 메인 텍스트 (한국어) - 32pt, 버튼 상단 ===
+                // === 메인 텍스트 (한국어) - 28pt, 버튼 상단 ===
                 var mainTextGo = new GameObject("MainText");
                 mainTextGo.transform.SetParent(cfg.btn.transform, false);
                 var mainRect = mainTextGo.AddComponent<RectTransform>();
-                mainRect.anchorMin = new Vector2(0, 0.5f);
-                mainRect.anchorMax = new Vector2(0.85f, 1);
+                mainRect.anchorMin = new Vector2(0, 0.45f);
+                mainRect.anchorMax = new Vector2(0.82f, 1);
                 mainRect.pivot = new Vector2(0, 0.5f);
-                mainRect.offsetMin = new Vector2(28, 0);
-                mainRect.offsetMax = new Vector2(0, -8);
+                mainRect.offsetMin = new Vector2(26, 0);
+                mainRect.offsetMax = new Vector2(0, 0);
                 var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
                 mainTmp.text = cfg.text;
-                mainTmp.fontSize = 32;
+                mainTmp.fontSize = 28;
                 mainTmp.fontStyle = FontStyles.Bold;
                 mainTmp.color = Color.white;
-                mainTmp.alignment = TextAlignmentOptions.Left;
-                mainTmp.overflowMode = TextOverflowModes.Ellipsis;
+                mainTmp.alignment = TextAlignmentOptions.BottomLeft;
+                mainTmp.overflowMode = TextOverflowModes.Overflow;
                 mainTmp.raycastTarget = false;
 
-                // === 서브 텍스트 (영어) - 13pt, 버튼 하단 ===
+                // === 서브 텍스트 (영어) - 12pt, 버튼 하단 ===
                 var subTextGo = new GameObject("SubText");
                 subTextGo.transform.SetParent(cfg.btn.transform, false);
                 var subRect = subTextGo.AddComponent<RectTransform>();
                 subRect.anchorMin = new Vector2(0, 0);
-                subRect.anchorMax = new Vector2(0.85f, 0.5f);
+                subRect.anchorMax = new Vector2(0.82f, 0.45f);
                 subRect.pivot = new Vector2(0, 0.5f);
-                subRect.offsetMin = new Vector2(28, 6);
+                subRect.offsetMin = new Vector2(26, 0);
                 subRect.offsetMax = new Vector2(0, 0);
                 var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
                 subTmp.text = cfg.subText;
-                subTmp.fontSize = 13;
+                subTmp.fontSize = 12;
                 subTmp.color = cfg.accentColor;
-                subTmp.characterSpacing = 4f;
-                subTmp.alignment = TextAlignmentOptions.Left;
+                subTmp.characterSpacing = 3f;
+                subTmp.alignment = TextAlignmentOptions.TopLeft;
+                subTmp.overflowMode = TextOverflowModes.Overflow;
                 subTmp.raycastTarget = false;
 
                 // === 우측 화살표 (▶ 아이콘, 32pt) ===
