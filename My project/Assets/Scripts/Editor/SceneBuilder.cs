@@ -106,7 +106,7 @@ namespace AIBeat.Editor
         private static void BuildMainMenuScene()
         {
             // Update existing scene if possible, or create new
-            string path = "Assets/Scenes/MainMenu.unity"; // User has this
+            string path = "Assets/Scenes/MainMenuScene.unity";
             var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
             
             // Clear old UI if we want fresh start, or try to find existing
@@ -161,7 +161,7 @@ namespace AIBeat.Editor
 
         private static void BuildSongSelectScene()
         {
-            string path = "Assets/Scenes/SongSelect.unity"; // User has this
+            string path = "Assets/Scenes/SongSelectScene.unity";
             var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
              
             // Clear old UI
