@@ -209,6 +209,14 @@ namespace AIBeat.Editor
              // Ensure path directory
              string dir = Path.GetDirectoryName(path);
              if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+             // Add Main Camera for UI rendering
+             var camObj = new GameObject("Main Camera");
+             var cam = camObj.AddComponent<Camera>();
+             cam.clearFlags = CameraClearFlags.SolidColor;
+             cam.backgroundColor = Color.black;
+             cam.orthographic = true;
+             camObj.tag = "MainCamera";
         }
 
         private static void SaveScene(string path)
