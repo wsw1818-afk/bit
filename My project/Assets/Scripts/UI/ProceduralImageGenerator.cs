@@ -699,71 +699,427 @@ namespace AIBeat.UI
 
         private static void DrawDrummerSilhouette(Color[] pixels, int w, int h, Color color)
         {
-            // Abstract figure behind drums
-            // Head
-            DrawCircleOutline(pixels, w, w/2, h - 150, 40, color);
-            // Body
-            DrawLine(pixels, w, w/2, h - 190, w/2, h - 300, color);
-            // Arms (Flailing)
-            DrawLine(pixels, w, w/2, h - 220, w/2 - 80, h - 180, color); // Left Stick raised
-            DrawLine(pixels, w, w/2, h - 220, w/2 + 80, h - 200, color); // Right Stick
-            // Sticks
-            DrawLine(pixels, w, w/2 - 80, h - 180, w/2 - 120, h - 120, color);
-            DrawLine(pixels, w, w/2 + 80, h - 200, w/2 + 120, h - 150, color);
-            
-            // Reuse Drum Kit drawing but lower/smaller? 
-            // Let's just draw some circles indicating drums around
-             DrawCircleOutline(pixels, w, w/2 - 100, h - 350, 50, color);
-             DrawCircleOutline(pixels, w, w/2 + 100, h - 350, 50, color);
+            // Detailed drummer silhouette - energetic pose behind drum kit
+            int cx = w / 2;
+            int baseY = 50; // Ground level from bottom
+
+            // === DRUMMER FIGURE (Upper portion) ===
+            // Head - filled circle
+            DrawFilledCircle(pixels, w, cx, h - 100, 28, color);
+            // Hair/spiky top
+            for (int i = -3; i <= 3; i++)
+            {
+                int spikeX = cx + i * 8;
+                DrawThickLine(pixels, w, spikeX, h - 125, spikeX + i * 2, h - 140, color, 2);
+            }
+
+            // Neck
+            DrawThickLine(pixels, w, cx, h - 128, cx, h - 145, color, 8);
+
+            // Torso - trapezoid shape (shoulders wider)
+            DrawFilledTrapezoid(pixels, w, cx - 45, h - 145, cx + 45, h - 145, cx - 35, h - 220, cx + 35, h - 220, color);
+
+            // Left arm - raised with drumstick
+            DrawThickLine(pixels, w, cx - 40, h - 150, cx - 75, h - 120, color, 6); // Upper arm
+            DrawThickLine(pixels, w, cx - 75, h - 120, cx - 100, h - 80, color, 5); // Forearm
+            DrawThickLine(pixels, w, cx - 100, h - 80, cx - 130, h - 50, color, 3); // Drumstick
+
+            // Right arm - hitting pose
+            DrawThickLine(pixels, w, cx + 40, h - 150, cx + 80, h - 130, color, 6); // Upper arm
+            DrawThickLine(pixels, w, cx + 80, h - 130, cx + 110, h - 100, color, 5); // Forearm
+            DrawThickLine(pixels, w, cx + 110, h - 100, cx + 140, h - 70, color, 3); // Drumstick
+
+            // Stool/seat hint
+            DrawFilledCircle(pixels, w, cx, h - 235, 25, color);
+
+            // Legs (sitting)
+            DrawThickLine(pixels, w, cx - 15, h - 235, cx - 50, h - 300, color, 8);
+            DrawThickLine(pixels, w, cx + 15, h - 235, cx + 50, h - 300, color, 8);
+            // Feet on pedals
+            DrawFilledCircle(pixels, w, cx - 55, h - 305, 12, color);
+            DrawFilledCircle(pixels, w, cx + 55, h - 305, 12, color);
+
+            // === DRUM KIT ===
+            // Bass drum (center, large)
+            DrawFilledCircle(pixels, w, cx, h - 360, 55, color);
+            DrawCircleOutline(pixels, w, cx, h - 360, 55, color, 3);
+            DrawCircleOutline(pixels, w, cx, h - 360, 45, color, 2);
+
+            // Snare drum (left front)
+            DrawFilledEllipse(pixels, w, cx - 90, h - 320, 35, 15, color);
+            DrawThickLine(pixels, w, cx - 90, h - 320, cx - 90, h - 280, color, 3); // Stand
+
+            // Hi-hat (far left)
+            DrawFilledEllipse(pixels, w, cx - 140, h - 280, 30, 10, color);
+            DrawThickLine(pixels, w, cx - 140, h - 290, cx - 140, h - 330, color, 2);
+
+            // Tom drums (above bass)
+            DrawFilledEllipse(pixels, w, cx - 40, h - 410, 28, 12, color);
+            DrawFilledEllipse(pixels, w, cx + 40, h - 410, 28, 12, color);
+
+            // Floor tom (right)
+            DrawFilledEllipse(pixels, w, cx + 100, h - 340, 38, 15, color);
+
+            // Crash cymbal (right, high)
+            DrawFilledEllipse(pixels, w, cx + 130, h - 440, 40, 8, color);
+            DrawThickLine(pixels, w, cx + 130, h - 432, cx + 130, h - 360, color, 2);
+
+            // Ride cymbal (far right)
+            DrawFilledEllipse(pixels, w, cx + 160, h - 380, 35, 7, color);
         }
 
         private static void DrawPianistSilhouette(Color[] pixels, int w, int h, Color color)
         {
-             // Side view
-             // Head
-             DrawCircleOutline(pixels, w, w/2 - 50, h - 150, 35, color);
-             // Body (leaning forward)
-             DrawLine(pixels, w, w/2 - 50, h - 185, w/2 - 20, h - 300, color);
-             // Arms
-             DrawLine(pixels, w, w/2 - 40, h - 220, w/2 + 40, h - 240, color); // Hands on keys
-             
-             // Piano keys hint
-             DrawLine(pixels, w, w/2 + 20, h - 250, w/2 + 150, h - 250, color);
+            // Detailed pianist - elegant pose at grand piano (side view)
+            int cx = w / 2;
+
+            // === PIANIST FIGURE ===
+            // Head
+            DrawFilledCircle(pixels, w, cx - 60, h - 110, 26, color);
+            // Hair (slicked back)
+            DrawFilledEllipse(pixels, w, cx - 65, h - 100, 30, 20, color);
+
+            // Neck (tilted forward, focused)
+            DrawThickLine(pixels, w, cx - 55, h - 136, cx - 40, h - 155, color, 7);
+
+            // Torso (seated, leaning slightly forward)
+            DrawFilledTrapezoid(pixels, w, cx - 65, h - 155, cx - 15, h - 155, cx - 55, h - 240, cx - 5, h - 240, color);
+
+            // Left arm (reaching for bass keys)
+            DrawThickLine(pixels, w, cx - 55, h - 165, cx - 100, h - 185, color, 6);
+            DrawThickLine(pixels, w, cx - 100, h - 185, cx - 130, h - 220, color, 5);
+            // Left hand
+            DrawFilledCircle(pixels, w, cx - 135, h - 225, 10, color);
+
+            // Right arm (treble keys)
+            DrawThickLine(pixels, w, cx - 25, h - 165, cx + 30, h - 180, color, 6);
+            DrawThickLine(pixels, w, cx + 30, h - 180, cx + 70, h - 220, color, 5);
+            // Right hand
+            DrawFilledCircle(pixels, w, cx + 75, h - 225, 10, color);
+
+            // Fingers detail (both hands)
+            for (int i = 0; i < 5; i++)
+            {
+                DrawThickLine(pixels, w, cx - 135 + i * 4, h - 225, cx - 140 + i * 5, h - 240, color, 2);
+                DrawThickLine(pixels, w, cx + 70 + i * 4, h - 225, cx + 65 + i * 5, h - 240, color, 2);
+            }
+
+            // Bench
+            DrawFilledRect(pixels, w, cx - 80, h - 260, cx + 10, h - 250, color);
+            // Bench legs
+            DrawThickLine(pixels, w, cx - 75, h - 260, cx - 75, h - 290, color, 4);
+            DrawThickLine(pixels, w, cx + 5, h - 260, cx + 5, h - 290, color, 4);
+
+            // Legs
+            DrawThickLine(pixels, w, cx - 45, h - 250, cx - 60, h - 320, color, 7);
+            DrawThickLine(pixels, w, cx - 15, h - 250, cx, h - 320, color, 7);
+            // Feet
+            DrawFilledEllipse(pixels, w, cx - 65, h - 325, 15, 8, color);
+            DrawFilledEllipse(pixels, w, cx + 5, h - 325, 15, 8, color);
+
+            // === GRAND PIANO ===
+            // Piano body (curved top)
+            for (int x = cx - 150; x <= cx + 150; x++)
+            {
+                float normalX = (float)(x - (cx - 150)) / 300f;
+                int topY = h - 350 + (int)(Mathf.Sin(normalX * Mathf.PI * 0.5f) * 60);
+                DrawThickLine(pixels, w, x, h - 240, x, topY, color, 2);
+            }
+
+            // Piano lid (propped open)
+            DrawThickLine(pixels, w, cx + 140, h - 350, cx + 180, h - 450, color, 4);
+            DrawThickLine(pixels, w, cx + 180, h - 450, cx - 50, h - 420, color, 3);
+
+            // Keyboard (white keys)
+            DrawFilledRect(pixels, w, cx - 140, h - 250, cx + 90, h - 240, color);
+            // Black keys hint
+            for (int i = 0; i < 12; i++)
+            {
+                int keyX = cx - 130 + i * 18;
+                if (i % 7 != 2 && i % 7 != 6) // Skip E-F and B-C
+                    DrawFilledRect(pixels, w, keyX, h - 250, keyX + 8, h - 242, color);
+            }
+
+            // Piano legs
+            DrawThickLine(pixels, w, cx - 120, h - 240, cx - 130, h - 300, color, 6);
+            DrawThickLine(pixels, w, cx + 100, h - 240, cx + 110, h - 300, color, 6);
+            // Pedals
+            DrawFilledRect(pixels, w, cx - 80, h - 310, cx - 40, h - 305, color);
         }
 
         private static void DrawGuitaristSilhouette(Color[] pixels, int w, int h, Color color)
         {
-             // Action pose
-             // Head
-             DrawCircleOutline(pixels, w, w/2, h - 120, 35, color);
-             // Body
-             DrawLine(pixels, w, w/2, h - 155, w/2 - 20, h - 300, color);
-             // Legs (Wide stance)
-             DrawLine(pixels, w, w/2 - 20, h - 300, w/2 - 60, h - 450, color);
-             DrawLine(pixels, w, w/2 - 20, h - 300, w/2 + 60, h - 450, color);
-             
-             // Guitar body
-             DrawCircleOutline(pixels, w, w/2 + 10, h - 280, 50, color);
-             // Neck
-             DrawLine(pixels, w, w/2 + 10, h - 280, w/2 - 80, h - 200, color);
+            // Detailed guitarist - rock star power stance
+            int cx = w / 2;
+
+            // === GUITARIST FIGURE ===
+            // Head (tilted back, intense)
+            DrawFilledCircle(pixels, w, cx + 20, h - 85, 26, color);
+            // Long hair flowing
+            for (int i = -4; i <= 4; i++)
+            {
+                int hairX = cx + 20 + i * 6;
+                DrawThickLine(pixels, w, hairX, h - 100, hairX + i * 3, h - 140 - Mathf.Abs(i) * 5, color, 3);
+            }
+
+            // Neck
+            DrawThickLine(pixels, w, cx + 15, h - 111, cx + 5, h - 130, color, 7);
+
+            // Torso (angled, dynamic pose)
+            DrawFilledTrapezoid(pixels, w, cx - 25, h - 130, cx + 35, h - 130, cx - 40, h - 220, cx + 20, h - 220, color);
+
+            // Left arm (fretting hand on neck)
+            DrawThickLine(pixels, w, cx - 20, h - 140, cx - 70, h - 160, color, 6);
+            DrawThickLine(pixels, w, cx - 70, h - 160, cx - 100, h - 200, color, 5);
+            // Fretting hand
+            DrawFilledCircle(pixels, w, cx - 105, h - 205, 10, color);
+            // Fingers on fretboard
+            for (int i = 0; i < 4; i++)
+                DrawThickLine(pixels, w, cx - 105, h - 200 + i * 5, cx - 115, h - 195 + i * 5, color, 2);
+
+            // Right arm (strumming)
+            DrawThickLine(pixels, w, cx + 25, h - 145, cx + 70, h - 180, color, 6);
+            DrawThickLine(pixels, w, cx + 70, h - 180, cx + 50, h - 230, color, 5);
+            // Strumming hand
+            DrawFilledCircle(pixels, w, cx + 45, h - 235, 10, color);
+
+            // Hips
+            DrawFilledEllipse(pixels, w, cx - 10, h - 230, 35, 15, color);
+
+            // Left leg (wide stance, bent)
+            DrawThickLine(pixels, w, cx - 25, h - 235, cx - 70, h - 320, color, 9);
+            DrawThickLine(pixels, w, cx - 70, h - 320, cx - 80, h - 410, color, 8);
+            // Boot
+            DrawFilledEllipse(pixels, w, cx - 85, h - 420, 20, 12, color);
+
+            // Right leg (straight, power stance)
+            DrawThickLine(pixels, w, cx + 10, h - 235, cx + 60, h - 330, color, 9);
+            DrawThickLine(pixels, w, cx + 60, h - 330, cx + 70, h - 420, color, 8);
+            // Boot
+            DrawFilledEllipse(pixels, w, cx + 75, h - 428, 20, 12, color);
+
+            // === ELECTRIC GUITAR ===
+            // Guitar body (Les Paul style - two cutaways)
+            DrawFilledCircle(pixels, w, cx + 30, h - 250, 45, color);
+            DrawFilledCircle(pixels, w, cx + 20, h - 290, 35, color);
+            // Cutaway
+            DrawFilledCircle(pixels, w, cx + 50, h - 275, 20, Color.clear); // Negative space
+
+            // Pickups
+            DrawFilledRect(pixels, w, cx + 10, h - 260, cx + 50, h - 255, color);
+            DrawFilledRect(pixels, w, cx + 10, h - 245, cx + 50, h - 240, color);
+
+            // Bridge
+            DrawFilledRect(pixels, w, cx + 15, h - 225, cx + 45, h - 220, color);
+
+            // Guitar neck
+            DrawThickLine(pixels, w, cx + 20, h - 295, cx - 90, h - 200, color, 8);
+            // Frets
+            for (int i = 0; i < 6; i++)
+            {
+                float t = i / 6f;
+                int fretX = (int)Mathf.Lerp(cx + 15, cx - 80, t);
+                int fretY = (int)Mathf.Lerp(h - 290, h - 205, t);
+                DrawThickLine(pixels, w, fretX - 5, fretY - 3, fretX + 5, fretY + 3, color, 1);
+            }
+
+            // Headstock
+            DrawFilledRect(pixels, w, cx - 105, h - 190, cx - 85, h - 160, color);
+            // Tuning pegs
+            for (int i = 0; i < 3; i++)
+            {
+                DrawFilledCircle(pixels, w, cx - 110, h - 170 + i * 10, 4, color);
+                DrawFilledCircle(pixels, w, cx - 80, h - 170 + i * 10, 4, color);
+            }
+
+            // Strap
+            DrawThickLine(pixels, w, cx - 5, h - 130, cx + 60, h - 210, color, 3);
+            DrawThickLine(pixels, w, cx + 10, h - 310, cx - 30, h - 235, color, 3);
         }
 
         private static void DrawDJSilhouette(Color[] pixels, int w, int h, Color color)
         {
-            // Head with Phones
-             DrawCircleOutline(pixels, w, w/2, h - 150, 40, color);
-             // Headphones arc
-             for(int x = w/2 - 45; x <= w/2 + 45; x++) SetPixelSafe(pixels, w, x, h - 150 + 20, color);
+            // Detailed DJ - behind decks with headphones
+            int cx = w / 2;
 
-             // Body
-             DrawLine(pixels, w, w/2, h - 190, w/2, h - 300, color);
-             // Arms (One up, one down)
-             DrawLine(pixels, w, w/2, h - 220, w/2 - 80, h - 150, color); // Hand up
-             DrawLine(pixels, w, w/2, h - 220, w/2 + 60, h - 280, color); // Hand on table
-             
-             // Table/Decks
-             DrawLine(pixels, w, w/2 - 150, h - 300, w/2 + 150, h - 300, color);
-             DrawCircleOutline(pixels, w, w/2 + 80, h - 280, 40, color); // Deck
+            // === DJ FIGURE ===
+            // Head
+            DrawFilledCircle(pixels, w, cx, h - 95, 28, color);
+
+            // Headphones
+            // Band over head
+            for (int x = cx - 35; x <= cx + 35; x++)
+            {
+                float t = (float)(x - (cx - 35)) / 70f;
+                int bandY = h - 70 - (int)(Mathf.Sin(t * Mathf.PI) * 25);
+                DrawThickLine(pixels, w, x, bandY, x, bandY + 3, color, 3);
+            }
+            // Ear cups
+            DrawFilledCircle(pixels, w, cx - 35, h - 95, 14, color);
+            DrawFilledCircle(pixels, w, cx + 35, h - 95, 14, color);
+
+            // Sunglasses/visor hint
+            DrawThickLine(pixels, w, cx - 20, h - 90, cx + 20, h - 90, color, 4);
+
+            // Neck
+            DrawThickLine(pixels, w, cx, h - 123, cx, h - 145, color, 8);
+
+            // Torso (leaning forward over decks)
+            DrawFilledTrapezoid(pixels, w, cx - 40, h - 145, cx + 40, h - 145, cx - 35, h - 220, cx + 35, h - 220, color);
+
+            // Left arm (raised, fist pump)
+            DrawThickLine(pixels, w, cx - 35, h - 155, cx - 80, h - 120, color, 6);
+            DrawThickLine(pixels, w, cx - 80, h - 120, cx - 100, h - 70, color, 5);
+            // Fist
+            DrawFilledCircle(pixels, w, cx - 100, h - 65, 12, color);
+
+            // Right arm (on mixer/crossfader)
+            DrawThickLine(pixels, w, cx + 35, h - 160, cx + 70, h - 200, color, 6);
+            DrawThickLine(pixels, w, cx + 70, h - 200, cx + 50, h - 250, color, 5);
+            // Hand on controls
+            DrawFilledCircle(pixels, w, cx + 48, h - 255, 10, color);
+
+            // === DJ BOOTH/DECKS ===
+            // Main table surface
+            DrawFilledRect(pixels, w, cx - 160, h - 275, cx + 160, h - 265, color);
+
+            // Left turntable/CDJ
+            DrawFilledCircle(pixels, w, cx - 90, h - 320, 50, color);
+            DrawCircleOutline(pixels, w, cx - 90, h - 320, 50, color, 3);
+            DrawCircleOutline(pixels, w, cx - 90, h - 320, 35, color, 2);
+            DrawCircleOutline(pixels, w, cx - 90, h - 320, 15, color, 2);
+            // Spindle
+            DrawFilledCircle(pixels, w, cx - 90, h - 320, 5, color);
+            // Tonearm
+            DrawThickLine(pixels, w, cx - 50, h - 360, cx - 70, h - 340, color, 3);
+            DrawThickLine(pixels, w, cx - 70, h - 340, cx - 85, h - 330, color, 2);
+
+            // Right turntable/CDJ
+            DrawFilledCircle(pixels, w, cx + 90, h - 320, 50, color);
+            DrawCircleOutline(pixels, w, cx + 90, h - 320, 50, color, 3);
+            DrawCircleOutline(pixels, w, cx + 90, h - 320, 35, color, 2);
+            DrawCircleOutline(pixels, w, cx + 90, h - 320, 15, color, 2);
+            // Spindle
+            DrawFilledCircle(pixels, w, cx + 90, h - 320, 5, color);
+            // Tonearm
+            DrawThickLine(pixels, w, cx + 130, h - 360, cx + 110, h - 340, color, 3);
+            DrawThickLine(pixels, w, cx + 110, h - 340, cx + 95, h - 330, color, 2);
+
+            // Center mixer
+            DrawFilledRect(pixels, w, cx - 35, h - 350, cx + 35, h - 280, color);
+            // Mixer knobs (3x3 grid)
+            for (int row = 0; row < 3; row++)
+            {
+                for (int col = 0; col < 3; col++)
+                {
+                    int knobX = cx - 20 + col * 20;
+                    int knobY = h - 340 + row * 20;
+                    DrawFilledCircle(pixels, w, knobX, knobY, 5, color);
+                }
+            }
+            // Crossfader
+            DrawFilledRect(pixels, w, cx - 25, h - 285, cx + 25, h - 280, color);
+
+            // Laptop/controller behind
+            DrawFilledRect(pixels, w, cx - 50, h - 400, cx + 50, h - 360, color);
+            // Screen glow
+            DrawFilledRect(pixels, w, cx - 45, h - 395, cx + 45, h - 365, color);
+
+            // === BOOTH FRONT ===
+            // Front panel
+            DrawFilledRect(pixels, w, cx - 165, h - 265, cx + 165, h - 430, color);
+            // LED strip decoration
+            for (int i = 0; i < 10; i++)
+            {
+                int ledX = cx - 140 + i * 30;
+                DrawFilledCircle(pixels, w, ledX, h - 420, 4, color);
+            }
+        }
+
+        // ==================================================================================
+        // NEW: Advanced Drawing Helpers for Detailed Silhouettes
+        // ==================================================================================
+
+        private static void DrawFilledCircle(Color[] pixels, int w, int cx, int cy, int radius, Color color)
+        {
+            for (int y = cy - radius; y <= cy + radius; y++)
+            {
+                for (int x = cx - radius; x <= cx + radius; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), new Vector2(cx, cy));
+                    if (dist <= radius)
+                        SetPixelSafe(pixels, w, x, y, color);
+                }
+            }
+        }
+
+        private static void DrawFilledEllipse(Color[] pixels, int w, int cx, int cy, int radiusX, int radiusY, Color color)
+        {
+            for (int y = cy - radiusY; y <= cy + radiusY; y++)
+            {
+                for (int x = cx - radiusX; x <= cx + radiusX; x++)
+                {
+                    float dx = (float)(x - cx) / radiusX;
+                    float dy = (float)(y - cy) / radiusY;
+                    if (dx * dx + dy * dy <= 1f)
+                        SetPixelSafe(pixels, w, x, y, color);
+                }
+            }
+        }
+
+        private static void DrawThickLine(Color[] pixels, int w, int x0, int y0, int x1, int y1, Color color, int thickness)
+        {
+            float steps = Mathf.Max(Mathf.Abs(x1 - x0), Mathf.Abs(y1 - y0));
+            if (steps < 1) steps = 1;
+
+            for (float t = 0; t <= 1; t += 1f / steps)
+            {
+                int x = (int)Mathf.Lerp(x0, x1, t);
+                int y = (int)Mathf.Lerp(y0, y1, t);
+                // Draw a filled circle at each point for thickness
+                for (int dy = -thickness / 2; dy <= thickness / 2; dy++)
+                {
+                    for (int dx = -thickness / 2; dx <= thickness / 2; dx++)
+                    {
+                        if (dx * dx + dy * dy <= (thickness / 2) * (thickness / 2) + 1)
+                            SetPixelSafe(pixels, w, x + dx, y + dy, color);
+                    }
+                }
+            }
+        }
+
+        private static void DrawFilledRect(Color[] pixels, int w, int x0, int y0, int x1, int y1, Color color)
+        {
+            int minX = Mathf.Min(x0, x1);
+            int maxX = Mathf.Max(x0, x1);
+            int minY = Mathf.Min(y0, y1);
+            int maxY = Mathf.Max(y0, y1);
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    SetPixelSafe(pixels, w, x, y, color);
+                }
+            }
+        }
+
+        private static void DrawFilledTrapezoid(Color[] pixels, int w, int topLeft, int topY, int topRight, int topY2, int botLeft, int botY, int botRight, int botY2, Color color)
+        {
+            int minY = Mathf.Min(topY, botY);
+            int maxY = Mathf.Max(topY, botY);
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                float t = (float)(y - topY) / (botY - topY);
+                int leftX = (int)Mathf.Lerp(topLeft, botLeft, t);
+                int rightX = (int)Mathf.Lerp(topRight, botRight, t);
+
+                for (int x = leftX; x <= rightX; x++)
+                {
+                    SetPixelSafe(pixels, w, x, y, color);
+                }
+            }
         }
     }
 }
