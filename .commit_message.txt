@@ -1,1 +1,1 @@
-✨ UI 씬 영문 버튼 적용 완료: START/SETTINGS/QUIT (MainMenu) + BACK/PLAY (SongSelect)
+✅ UI 씬 3개 완성 (Splash/MainMenu/SongSelect): 영문 버튼 + 1080x1920 CanvasScaler + Main Camera
