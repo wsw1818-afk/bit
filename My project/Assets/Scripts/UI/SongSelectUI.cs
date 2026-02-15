@@ -31,6 +31,8 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            Debug.Log("[SongSelectUI] Start() 호출됨");
+
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             var _ = KoreanFontManager.KoreanFont;
 

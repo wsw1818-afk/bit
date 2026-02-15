@@ -698,7 +698,7 @@ namespace AIBeat.UI
 
         private void OnPlayClicked()
         {
-            GameManager.Instance?.LoadScene("SongSelect");
+            GameManager.Instance?.LoadScene("SongSelectScene");
         }
 
         private void OnLibraryClicked()
@@ -706,7 +706,7 @@ namespace AIBeat.UI
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.OpenLibraryOnSongSelect = true;
-                GameManager.Instance.LoadScene("SongSelect");
+                GameManager.Instance.LoadScene("SongSelectScene");
             }
         }
 

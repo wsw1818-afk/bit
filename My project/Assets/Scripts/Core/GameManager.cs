@@ -90,7 +90,7 @@ namespace AIBeat.Core
         private void CheckTutorial()
         {
             // 튜토리얼은 MainMenu 씬에서만 시작
-            if (SceneManager.GetActiveScene().name != "MainMenu")
+            if (SceneManager.GetActiveScene().name != "MainMenuScene")
                 return;
 
             if (TutorialManager.IsTutorialCompleted()) return;
@@ -278,7 +278,7 @@ namespace AIBeat.Core
         public void ReturnToMenu()
         {
             Time.timeScale = 1f;
-            LoadScene("MainMenu");
+            LoadScene("MainMenuScene");
             ChangeState(GameState.MainMenu);
         }
 
