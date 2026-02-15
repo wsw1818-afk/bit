@@ -1,1 +1,1 @@
-✨ Cyberpunk UI Scene 생성 완료: Splash/MainMenu/SongSelect Scene + SceneBuilder 스크립트 + UI 에셋 자동 적용
+✨ SceneBuilder 폰트 할당 완료: TMP 폰트 자동 로드 + Main Camera 생성 + Splash/MainMenu/SongSelect 씬 완성

@@ -13,6 +13,7 @@ namespace AIBeat.Editor
     public class SceneBuilder
     {
         private const string RESOURCE_PATH = "Assets/Resources/AIBeat_Design/UI";
+        private static TMPro.TMP_FontAsset defaultFont = null;
 
         [MenuItem("AIBeat/Build All Scenes")]
         public static void BuildAll()
@@ -23,6 +24,9 @@ namespace AIBeat.Editor
                 EditorUtility.DisplayDialog("Error", "UI Assets not found. Please run 'AIBeat/Generate Design Assets' first.", "OK");
                 return;
             }
+
+            // Load default font once at the start
+            LoadDefaultFont();
 
             BuildSplashScene();
             BuildMainMenuScene();
@@ -35,6 +39,9 @@ namespace AIBeat.Editor
         [MenuItem("AIBeat/Build SongListItem Prefab")]
         public static void BuildSongListItemPrefab()
         {
+            // Ensure font is loaded
+            if (defaultFont == null) LoadDefaultFont();
+
             GameObject go = new GameObject("SongListItem");
             var rt = go.AddComponent<RectTransform>();
             rt.sizeDelta = new Vector2(800, 150);
@@ -203,6 +210,19 @@ namespace AIBeat.Editor
 
 
         // Helpers
+        private static void LoadDefaultFont()
+        {
+            defaultFont = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
+            if (defaultFont == null)
+            {
+                Debug.LogError("[SceneBuilder] Failed to load default TMP font. Make sure TMP Essential Resources are imported.");
+            }
+            else
+            {
+                Debug.Log($"[SceneBuilder] Loaded default font: {defaultFont.name}");
+            }
+        }
+
         private static void NewScene(string path)
         {
              var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -286,11 +306,23 @@ namespace AIBeat.Editor
             var go = new GameObject(name);
             go.transform.SetParent(parent.transform, false);
             var txt = go.AddComponent<TextMeshProUGUI>();
+
+            // Assign font BEFORE setting text to avoid warning
+            if (defaultFont != null)
+            {
+                txt.font = defaultFont;
+                Debug.Log($"[SceneBuilder] Assigned font to {name}");
+            }
+            else
+            {
+                Debug.LogWarning($"[SceneBuilder] defaultFont is null when creating {name}");
+            }
+
             txt.text = content;
             txt.fontSize = fontSize;
             txt.color = Color.white;
             txt.alignment = TextAlignmentOptions.Left;
-            
+
             var rt = go.GetComponent<RectTransform>();
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
