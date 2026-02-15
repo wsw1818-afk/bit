@@ -215,6 +215,75 @@ Unity의 `Color(r, g, b, a)`는 **0~1 범위**를 사용합니다:
 
 ---
 
+## MainMenu UI/UX 개선 및 버그 수정 (2026-02-15)
+
+### ✅ 게임 루프 멈춤 현상 수정
+- **문제**: Unity 에디터에서 VSCode 등 다른 앱으로 전환 시 게임이 멈춤
+- **원인**: Unity 에디터가 포커스를 잃으면 Update() 및 코루틴이 중단됨
+- **해결**: `SplashController.cs`에 `Application.runInBackground = true` 추가
+```csharp
+private void Start()
+{
+    Application.runInBackground = true;
+    Debug.Log("[SplashController] Start() - 자동 전환 대기 중");
+}
+```
+
+### ✅ 버튼 텍스트 한국어화
+- **변경 전**: SELECT SONG, SETTINGS, QUIT (영어)
+- **변경 후**: 플레이, 라이브러리, 설정, 종료 (한국어)
+- **파일**: `MainMenuUI.cs` - `SetupButtonLayout()` 메서드
+```csharp
+var buttonConfigs = new (Button btn, string icon, string text, Color glowColor)[]
+{
+    (playButton, ">", "플레이", UIColorPalette.NEON_MAGENTA),
+    (libraryButton, "#", "라이브러리", UIColorPalette.NEON_CYAN),
+    (settingsButton, "@", "설정", UIColorPalette.NEON_PURPLE),
+    (exitButton, "X", "종료", UIColorPalette.NEON_ORANGE)
+};
+```
+
+### ✅ 버튼 레이아웃 개선
+- **버튼 컨테이너 위치**: anchorMin (0.1f, 0.08f), anchorMax (0.9f, 0.48f)
+- **버튼 간격**: 18px (기존 10px에서 증가)
+- **버튼 높이**: 70f
+- **폰트 크기**: 28
+
+### ✅ 타이틀 "A.I. BEAT" 자동 생성 수정
+- **문제**: `titleText`가 null이어서 타이틀이 화면에 표시되지 않음
+- **해결**: `AutoSetupReferences()`에서 TitleText와 VersionText 자동 생성 로직 추가
+```csharp
+// TitleText 자동 생성
+if (titleText == null)
+{
+    var existingTitle = transform.Find("TitleText");
+    if (existingTitle != null)
+    {
+        titleText = existingTitle.GetComponent<TextMeshProUGUI>();
+    }
+    else
+    {
+        var titleGo = new GameObject("TitleText");
+        titleGo.transform.SetParent(transform, false);
+        var titleRect = titleGo.AddComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0, 0.65f);
+        titleRect.anchorMax = new Vector2(1, 0.78f);
+        titleText = titleGo.AddComponent<TextMeshProUGUI>();
+        titleText.text = "A.I. BEAT";
+        titleText.raycastTarget = false;
+    }
+}
+```
+
+### 테스트 결과
+- ✅ 4개 씬 전환 정상 (Splash → MainMenu → SongSelect → Gameplay)
+- ✅ 모든 버튼 클릭 정상 작동
+- ✅ 한국어 버튼 텍스트 표시 확인
+- ✅ "A.I. BEAT" 타이틀 표시 (수정 후 확인 필요)
+- ⚠️ 스크린샷 캡처: Unity 에디터 백그라운드 시 검은 화면 (제한사항)
+
+---
+
 ## 재미나이 작업 흐름
 1. ✅ 디자인 컨셉 결정 (Cyberpunk Neon 스타일) → **완료**
 2. ✅ 기본 색상 코드 적용 (Deep Purple + Magenta) → **완료**

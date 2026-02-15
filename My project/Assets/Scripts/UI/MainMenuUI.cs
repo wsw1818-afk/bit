@@ -399,10 +399,52 @@ namespace AIBeat.UI
             settingsButton = EnsureButton("SettingsButton");
             exitButton = EnsureButton("ExitButton");
 
+            // 타이틀 텍스트 자동 생성
             if (titleText == null)
-                titleText = transform.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
+            {
+                var existingTitle = transform.Find("TitleText");
+                if (existingTitle != null)
+                {
+                    titleText = existingTitle.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    var titleGo = new GameObject("TitleText");
+                    titleGo.transform.SetParent(transform, false);
+                    var titleRect = titleGo.AddComponent<RectTransform>();
+                    titleRect.anchorMin = new Vector2(0, 0.65f);
+                    titleRect.anchorMax = new Vector2(1, 0.78f);
+                    titleRect.offsetMin = Vector2.zero;
+                    titleRect.offsetMax = Vector2.zero;
+                    titleText = titleGo.AddComponent<TextMeshProUGUI>();
+                    titleText.text = "A.I. BEAT";
+                    titleText.raycastTarget = false;
+                    Debug.Log("[MainMenuUI] TitleText 자동 생성됨");
+                }
+            }
+
+            // 버전 텍스트 자동 생성
             if (versionText == null)
-                versionText = transform.Find("VersionText")?.GetComponent<TextMeshProUGUI>();
+            {
+                var existingVersion = transform.Find("VersionText");
+                if (existingVersion != null)
+                {
+                    versionText = existingVersion.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    var versionGo = new GameObject("VersionText");
+                    versionGo.transform.SetParent(transform, false);
+                    var versionRect = versionGo.AddComponent<RectTransform>();
+                    versionRect.anchorMin = new Vector2(0, 0);
+                    versionRect.anchorMax = new Vector2(1, 0.04f);
+                    versionRect.offsetMin = Vector2.zero;
+                    versionRect.offsetMax = Vector2.zero;
+                    versionText = versionGo.AddComponent<TextMeshProUGUI>();
+                    versionText.raycastTarget = false;
+                    Debug.Log("[MainMenuUI] VersionText 자동 생성됨");
+                }
+            }
 
             if (settingsPanel == null)
             {
