@@ -1,1 +1,1 @@
-🐛 SplashController에 Application.runInBackground 추가 - 자동 전환 정상 동작
+✨ MainMenu UI/UX 개선: 한국어 버튼(플레이/라이브러리/설정/종료) + 레이아웃 조정

@@ -505,29 +505,30 @@ namespace AIBeat.UI
 
             var buttonConfigs = new (Button btn, string icon, string text, Color glowColor)[]
             {
-                (playButton, ">", "SELECT SONG", UIColorPalette.NEON_MAGENTA),
-                (settingsButton, "@", "SETTINGS", UIColorPalette.NEON_PURPLE),
-                (exitButton, "X", "QUIT", UIColorPalette.NEON_ORANGE)
+                (playButton, ">", "플레이", UIColorPalette.NEON_MAGENTA),
+                (libraryButton, "#", "라이브러리", UIColorPalette.NEON_CYAN),
+                (settingsButton, "@", "설정", UIColorPalette.NEON_PURPLE),
+                (exitButton, "X", "종료", UIColorPalette.NEON_ORANGE)
             };
 
-            // 버튼 컨테이너: 세로 중앙 배치
+            // 버튼 컨테이너: 화면 중앙-하단 배치 (개선된 UI/UX)
             var btnContainer = new GameObject("ButtonContainer");
             btnContainer.transform.SetParent(transform, false);
             btnContainer.transform.SetAsLastSibling();  // 맨 위에 배치 (클릭 우선)
             var btnContainerRect = btnContainer.AddComponent<RectTransform>();
-            btnContainerRect.anchorMin = new Vector2(0.075f, 0.12f);
-            btnContainerRect.anchorMax = new Vector2(0.925f, 0.52f);
+            btnContainerRect.anchorMin = new Vector2(0.1f, 0.08f);
+            btnContainerRect.anchorMax = new Vector2(0.9f, 0.48f);
             btnContainerRect.offsetMin = Vector2.zero;
             btnContainerRect.offsetMax = Vector2.zero;
 
             var vLayout = btnContainer.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 14;
+            vLayout.spacing = 18;  // 버튼 간격 증가
             vLayout.childAlignment = TextAnchor.MiddleCenter;
             vLayout.childControlWidth = true;
             vLayout.childControlHeight = false;
             vLayout.childForceExpandWidth = true;
             vLayout.childForceExpandHeight = false;
-            vLayout.padding = new RectOffset(0, 0, 0, 0);
+            vLayout.padding = new RectOffset(10, 10, 10, 10);
 
             foreach (var cfg in buttonConfigs)
             {
@@ -537,11 +538,11 @@ namespace AIBeat.UI
 
                 var rect = cfg.btn.GetComponent<RectTransform>();
                 if (rect != null)
-                    rect.sizeDelta = new Vector2(0, 80f);
+                    rect.sizeDelta = new Vector2(0, 70f);  // 버튼 높이 조정
 
                 var le = cfg.btn.gameObject.GetComponent<LayoutElement>();
                 if (le == null) le = cfg.btn.gameObject.AddComponent<LayoutElement>();
-                le.preferredHeight = 80f;
+                le.preferredHeight = 70f;  // 버튼 높이 조정
 
                 // 어두운 반투명 배경
                 var img = cfg.btn.GetComponent<Image>();
@@ -570,8 +571,8 @@ namespace AIBeat.UI
                 }
 
                 var hLayout = cfg.btn.gameObject.AddComponent<HorizontalLayoutGroup>();
-                hLayout.padding = new RectOffset(20, 20, 0, 0);
-                hLayout.spacing = 16;
+                hLayout.padding = new RectOffset(24, 24, 0, 0);
+                hLayout.spacing = 20;
                 hLayout.childAlignment = TextAnchor.MiddleLeft;
                 hLayout.childControlWidth = false;
                 hLayout.childControlHeight = true;
@@ -582,10 +583,10 @@ namespace AIBeat.UI
                 var iconGo = new GameObject("Icon");
                 iconGo.transform.SetParent(cfg.btn.transform, false);
                 var iconLE = iconGo.AddComponent<LayoutElement>();
-                iconLE.preferredWidth = 50;
+                iconLE.preferredWidth = 45;
                 var iconTmp = iconGo.AddComponent<TextMeshProUGUI>();
                 iconTmp.text = cfg.icon;
-                iconTmp.fontSize = 32;
+                iconTmp.fontSize = 28;
                 iconTmp.color = cfg.glowColor;
                 iconTmp.alignment = TextAlignmentOptions.Center;
                 iconTmp.fontStyle = FontStyles.Bold;
@@ -598,7 +599,7 @@ namespace AIBeat.UI
                 mainLE.flexibleWidth = 1;
                 var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
                 mainTmp.text = cfg.text;
-                mainTmp.fontSize = 32;
+                mainTmp.fontSize = 28;
                 mainTmp.fontStyle = FontStyles.Bold;
                 mainTmp.color = cfg.glowColor;
                 mainTmp.alignment = TextAlignmentOptions.MidlineLeft;
