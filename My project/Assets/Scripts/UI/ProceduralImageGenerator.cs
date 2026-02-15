@@ -391,6 +391,120 @@ namespace AIBeat.UI
         // File Saving I/O
         // ==================================================================================
         
+        // ==================================================================================
+        // NEW: UI Asset Generation (Cyberpunk Style)
+        // ==================================================================================
+
+        public static Texture2D CreateGradientBackground(int width, int height, Color top, Color bottom, Color gridCol, float gridAlpha = 0.05f)
+        {
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            for (int y = 0; y < height; y++)
+            {
+                float vy = (float)y / height;
+                Color bgColor = Color.Lerp(bottom, top, vy);
+                for (int x = 0; x < width; x++)
+                {
+                    Color c = bgColor;
+                    // Grid
+                    if (x % 64 == 0 || y % 64 == 0)
+                    {
+                        Color g = gridCol;
+                        g.a = gridAlpha;
+                        c = c + g * g.a; // Simple additive
+                    }
+                    // Vignette
+                    float u = (float)x / width - 0.5f;
+                    float v = (float)y / height - 0.5f;
+                    float dist = Mathf.Sqrt(u*u + v*v);
+                    c *= (1f - dist * 0.8f);
+
+                    tex.SetPixel(x, y, c);
+                }
+            }
+            tex.Apply();
+            return tex;
+        }
+
+        public static Texture2D CreateRoundedButton(int width, int height, Color baseColor, Color borderColor, bool isHover = false)
+        {
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            Color[] colors = new Color[width * height];
+            
+            float radius = 10f;
+            Color glowColor = isHover ? new Color(1f, 1f, 1f, 0.3f) : Color.clear;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    // Rounded Rect Logic
+                    // Check corners
+                    bool inside = true;
+                    if (x < radius && y < radius) inside = Vector2.Distance(new Vector2(x, y), new Vector2(radius, radius)) <= radius;
+                    else if (x > width-radius && y < radius) inside = Vector2.Distance(new Vector2(x, y), new Vector2(width-radius, radius)) <= radius;
+                    else if (x < radius && y > height-radius) inside = Vector2.Distance(new Vector2(x, y), new Vector2(radius, height-radius)) <= radius;
+                    else if (x > width-radius && y > height-radius) inside = Vector2.Distance(new Vector2(x, y), new Vector2(width-radius, height-radius)) <= radius;
+
+                    if (!inside) { colors[y*width+x] = Color.clear; continue; }
+
+                    // Border
+                    bool border = false;
+                    float borderThick = 2f;
+                    if (x < borderThick || x > width-borderThick || y < borderThick || y > height-borderThick) border = true;
+                    // Corner borders... simplified
+                    
+                    Color c = baseColor;
+                    if (border) c = borderColor;
+                    else 
+                    {
+                        // Gradient fill
+                        c = Color.Lerp(baseColor, baseColor * 0.7f, (float)y/height);
+                        c += glowColor;
+                    }
+                    colors[y*width+x] = c;
+                }
+            }
+            tex.SetPixels(colors);
+            tex.Apply();
+            return tex;
+        }
+
+        public static Texture2D CreateSimpleLogo()
+        {
+            int w = 512;
+            int h = 128;
+            Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            // Clear
+             Color[] colors = new Color[w * h];
+             for(int i=0; i<colors.Length; i++) colors[i] = Color.clear;
+             tex.SetPixels(colors);
+
+            // Draw "A.I. BEAT" roughly with boxes/lines
+            // Just drawing a big Neon Box with text "AI BEAT" might be hard.
+            // Let's create a cool "Waveform" pattern instead.
+            
+            Color neon = new Color(0f, 1f, 1f); // Cyan
+            for(int x=0; x<w; x++)
+            {
+                float normalizedX = (float)x/w;
+                // Wave function
+                float waveY = Mathf.Sin(normalizedX * 20f) * 30f * Mathf.Sin(normalizedX*3f);
+                int centerY = h/2;
+                int yPos = centerY + (int)waveY;
+                
+                // Draw vertical bar at x
+                int barHeight = (int)(Mathf.Abs(waveY) * 1.5f) + 5;
+                for(int y=centerY - barHeight; y <= centerY + barHeight; y++)
+                {
+                    if (y >=0 && y < h)
+                        tex.SetPixel(x, y, neon);
+                }
+            }
+            
+            tex.Apply();
+            return tex;
+        }
+
         public static void SaveTextureAsPNG(Texture2D tex, string fullPath)
         {
             byte[] bytes = tex.EncodeToPNG();
@@ -401,3 +515,4 @@ namespace AIBeat.UI
         }
     }
 }
+
