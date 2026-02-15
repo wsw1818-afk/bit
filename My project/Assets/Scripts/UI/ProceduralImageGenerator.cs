@@ -533,14 +533,25 @@ namespace AIBeat.UI
                 case "Piano": neonColor = new Color(1f, 0f, 0.8f); break; // Magenta
                 case "Guitar": neonColor = new Color(1f, 1f, 0f); break;  // Yellow
                 case "Notes": neonColor = Color.white; break;             // Mixed later
+                // Performers
+                case "Drummer": neonColor = new Color(0f, 1f, 1f); break;
+                case "Pianist": neonColor = new Color(1f, 0f, 0.8f); break;
+                case "Guitarist": neonColor = new Color(1f, 1f, 0f); break;
+                case "DJ": neonColor = new Color(0.6f, 0f, 1f); break; // Purple
             }
 
             if (type == "Drum") DrawDrumSilhouette(colors, w, h, neonColor);
             else if (type == "Piano") DrawPianoSilhouette(colors, w, h, neonColor);
             else if (type == "Guitar") DrawGuitarSilhouette(colors, w, h, neonColor);
             else if (type == "Notes") DrawMusicNotes(colors, w, h);
+            // Performers
+            else if (type == "Drummer") DrawDrummerSilhouette(colors, w, h, neonColor);
+            else if (type == "Pianist") DrawPianistSilhouette(colors, w, h, neonColor);
+            else if (type == "Guitarist") DrawGuitaristSilhouette(colors, w, h, neonColor);
+            else if (type == "DJ") DrawDJSilhouette(colors, w, h, neonColor);
 
             tex.SetPixels(colors);
+
             tex.Apply();
             return tex;
         }
@@ -678,6 +689,79 @@ namespace AIBeat.UI
         {
             if (x >= 0 && x < w && y >= 0 && y < pixels.Length / w)
                 pixels[y * w + x] = c;
+        }
+
+        // ==================================================================================
+        // NEW: Performer Silhouettes (Abstract/Geometric)
+        // ==================================================================================
+
+        private static void DrawDrummerSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+            // Abstract figure behind drums
+            // Head
+            DrawCircleOutline(pixels, w, w/2, h - 150, 40, color);
+            // Body
+            DrawLine(pixels, w, w/2, h - 190, w/2, h - 300, color);
+            // Arms (Flailing)
+            DrawLine(pixels, w, w/2, h - 220, w/2 - 80, h - 180, color); // Left Stick raised
+            DrawLine(pixels, w, w/2, h - 220, w/2 + 80, h - 200, color); // Right Stick
+            // Sticks
+            DrawLine(pixels, w, w/2 - 80, h - 180, w/2 - 120, h - 120, color);
+            DrawLine(pixels, w, w/2 + 80, h - 200, w/2 + 120, h - 150, color);
+            
+            // Reuse Drum Kit drawing but lower/smaller? 
+            // Let's just draw some circles indicating drums around
+             DrawCircleOutline(pixels, w, w/2 - 100, h - 350, 50, color);
+             DrawCircleOutline(pixels, w, w/2 + 100, h - 350, 50, color);
+        }
+
+        private static void DrawPianistSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+             // Side view
+             // Head
+             DrawCircleOutline(pixels, w, w/2 - 50, h - 150, 35, color);
+             // Body (leaning forward)
+             DrawLine(pixels, w, w/2 - 50, h - 185, w/2 - 20, h - 300, color);
+             // Arms
+             DrawLine(pixels, w, w/2 - 40, h - 220, w/2 + 40, h - 240, color); // Hands on keys
+             
+             // Piano keys hint
+             DrawLine(pixels, w, w/2 + 20, h - 250, w/2 + 150, h - 250, color);
+        }
+
+        private static void DrawGuitaristSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+             // Action pose
+             // Head
+             DrawCircleOutline(pixels, w, w/2, h - 120, 35, color);
+             // Body
+             DrawLine(pixels, w, w/2, h - 155, w/2 - 20, h - 300, color);
+             // Legs (Wide stance)
+             DrawLine(pixels, w, w/2 - 20, h - 300, w/2 - 60, h - 450, color);
+             DrawLine(pixels, w, w/2 - 20, h - 300, w/2 + 60, h - 450, color);
+             
+             // Guitar body
+             DrawCircleOutline(pixels, w, w/2 + 10, h - 280, 50, color);
+             // Neck
+             DrawLine(pixels, w, w/2 + 10, h - 280, w/2 - 80, h - 200, color);
+        }
+
+        private static void DrawDJSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+            // Head with Phones
+             DrawCircleOutline(pixels, w, w/2, h - 150, 40, color);
+             // Headphones arc
+             for(int x = w/2 - 45; x <= w/2 + 45; x++) SetPixelSafe(pixels, w, x, h - 150 + 20, color);
+
+             // Body
+             DrawLine(pixels, w, w/2, h - 190, w/2, h - 300, color);
+             // Arms (One up, one down)
+             DrawLine(pixels, w, w/2, h - 220, w/2 - 80, h - 150, color); // Hand up
+             DrawLine(pixels, w, w/2, h - 220, w/2 + 60, h - 280, color); // Hand on table
+             
+             // Table/Decks
+             DrawLine(pixels, w, w/2 - 150, h - 300, w/2 + 150, h - 300, color);
+             DrawCircleOutline(pixels, w, w/2 + 80, h - 280, 40, color); // Deck
         }
     }
 }

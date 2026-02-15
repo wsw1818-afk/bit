@@ -125,7 +125,25 @@ namespace AIBeat.Core
             ProceduralImageGenerator.SaveTextureAsPNG(guitar, Path.Combine(spritePath, "guitar_silhouette.png"));
             ProceduralImageGenerator.SaveTextureAsPNG(notes, Path.Combine(spritePath, "music_notes.png"));
 
+            // Performers (New Request)
+            var drummer = ProceduralImageGenerator.CreateInstrumentTexture("Drummer");
+            ProceduralImageGenerator.SaveTextureAsPNG(drummer, Path.Combine(uiDecoPath, "Drummer_Perform.png"));
+            ProceduralImageGenerator.SaveTextureAsPNG(drummer, Path.Combine(spritePath, "drum_perform.png")); // Export
+
+            var pianist = ProceduralImageGenerator.CreateInstrumentTexture("Pianist");
+            ProceduralImageGenerator.SaveTextureAsPNG(pianist, Path.Combine(uiDecoPath, "Pianist_Perform.png"));
+            ProceduralImageGenerator.SaveTextureAsPNG(pianist, Path.Combine(spritePath, "piano_perform.png")); // Export
+
+            var guitarist = ProceduralImageGenerator.CreateInstrumentTexture("Guitarist");
+            ProceduralImageGenerator.SaveTextureAsPNG(guitarist, Path.Combine(uiDecoPath, "Guitarist_Perform.png"));
+            ProceduralImageGenerator.SaveTextureAsPNG(guitarist, Path.Combine(spritePath, "guitar_perform.png")); // Export
+
+             var dj = ProceduralImageGenerator.CreateInstrumentTexture("DJ");
+            ProceduralImageGenerator.SaveTextureAsPNG(dj, Path.Combine(uiDecoPath, "DJ_Perform.png"));
+            ProceduralImageGenerator.SaveTextureAsPNG(dj, Path.Combine(spritePath, "dj_perform.png")); // Export
+
             // Create README
+
 
 
 
