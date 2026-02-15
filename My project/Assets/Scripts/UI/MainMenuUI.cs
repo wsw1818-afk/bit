@@ -557,13 +557,13 @@ namespace AIBeat.UI
                 (exitButton, "종료", "EXIT", new Color(1f, 0.35f, 0.35f, 1f))
             };
 
-            // 버튼 컨테이너: 화면 중앙 하단 (좌우 여백 10%)
+            // 버튼 컨테이너: 화면 중앙 (타이틀 아래 ~ 이퀄라이저 위)
             var btnContainer = new GameObject("ButtonContainer");
             btnContainer.transform.SetParent(transform, false);
             btnContainer.transform.SetAsLastSibling();
             var btnContainerRect = btnContainer.AddComponent<RectTransform>();
-            btnContainerRect.anchorMin = new Vector2(0.10f, 0.06f);
-            btnContainerRect.anchorMax = new Vector2(0.90f, 0.50f);
+            btnContainerRect.anchorMin = new Vector2(0.08f, 0.14f);  // 하단 이퀄라이저 위
+            btnContainerRect.anchorMax = new Vector2(0.92f, 0.44f);  // 캐치프레이즈 아래
             btnContainerRect.offsetMin = Vector2.zero;
             btnContainerRect.offsetMax = Vector2.zero;
 
