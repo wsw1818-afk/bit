@@ -1,1 +1,1 @@
-🔧 MCP 자동화 테스트 메뉴 추가: 씬 전환 (MainMenu/SongSelect/Gameplay) + Build Settings 자동 등록
+🐛 터치/클릭 버그 수정: EventSystem 자동 생성 + MCP 씬 전환 메뉴 추가

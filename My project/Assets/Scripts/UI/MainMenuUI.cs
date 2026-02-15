@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using AIBeat.Core;
 using System.Collections;
@@ -45,6 +46,7 @@ namespace AIBeat.UI
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             var _ = KoreanFontManager.KoreanFont;
 
+            EnsureEventSystem(); // 터치/클릭 입력을 위한 EventSystem 보장
             EnsureCanvasScaler();
             CreateBackgroundImage();
             AutoSetupReferences();
@@ -52,6 +54,28 @@ namespace AIBeat.UI
             CreateEqualizerBars();
             EnsureSafeArea();
             SetupMusicianSprites();
+        }
+
+        /// <summary>
+        /// EventSystem이 씬에 없으면 자동 생성 (터치/클릭 입력 필수)
+        /// </summary>
+        private void EnsureEventSystem()
+        {
+            if (FindFirstObjectByType<EventSystem>() == null)
+            {
+                var eventSystemGO = new GameObject("EventSystem");
+                eventSystemGO.AddComponent<EventSystem>();
+                eventSystemGO.AddComponent<StandaloneInputModule>();
+                Debug.Log("[MainMenuUI] EventSystem 자동 생성됨");
+            }
+
+            // Canvas에 GraphicRaycaster 확인
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.GetComponent<GraphicRaycaster>() == null)
+            {
+                canvas.gameObject.AddComponent<GraphicRaycaster>();
+                Debug.Log("[MainMenuUI] GraphicRaycaster 자동 추가됨");
+            }
         }
 
         /// <summary>
