@@ -1,1 +1,1 @@
-🎨 SongSelect 레이아웃 재조정: 버튼 간격 균형있게 배치 (PLAY -200, Header -500, SETTINGS +350, BACK +200)
+🎨 SongSelect 레이아웃 최종 조정: 균형잡힌 세로 배치 (PLAY -150, Header -450, SETTINGS +220, BACK +90)
