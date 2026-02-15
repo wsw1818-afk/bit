@@ -557,13 +557,13 @@ namespace AIBeat.UI
                 (exitButton, "종료", "EXIT", new Color(1f, 0.35f, 0.35f, 1f))
             };
 
-            // 버튼 컨테이너: 화면 중앙 (타이틀 아래 ~ 이퀄라이저 위)
+            // 버튼 컨테이너: 화면 중앙 (캐릭터와 겹치지 않게)
             var btnContainer = new GameObject("ButtonContainer");
             btnContainer.transform.SetParent(transform, false);
             btnContainer.transform.SetAsLastSibling();
             var btnContainerRect = btnContainer.AddComponent<RectTransform>();
-            btnContainerRect.anchorMin = new Vector2(0.08f, 0.14f);  // 하단 이퀄라이저 위
-            btnContainerRect.anchorMax = new Vector2(0.92f, 0.44f);  // 캐치프레이즈 아래
+            btnContainerRect.anchorMin = new Vector2(0.12f, 0.12f);  // 좌우 12% 여백
+            btnContainerRect.anchorMax = new Vector2(0.88f, 0.44f);  // 캐치프레이즈 아래
             btnContainerRect.offsetMin = Vector2.zero;
             btnContainerRect.offsetMax = Vector2.zero;
 
@@ -643,39 +643,39 @@ namespace AIBeat.UI
                 accentImg.sprite = CreateRoundedRectSprite(5);
                 accentImg.type = Image.Type.Sliced;
 
-                // === 메인 텍스트 (한국어) - 36pt ===
+                // === 메인 텍스트 (한국어) - 32pt, 버튼 상단 ===
                 var mainTextGo = new GameObject("MainText");
                 mainTextGo.transform.SetParent(cfg.btn.transform, false);
                 var mainRect = mainTextGo.AddComponent<RectTransform>();
-                mainRect.anchorMin = new Vector2(0, 0);
-                mainRect.anchorMax = new Vector2(0.8f, 1);
+                mainRect.anchorMin = new Vector2(0, 0.5f);
+                mainRect.anchorMax = new Vector2(0.85f, 1);
                 mainRect.pivot = new Vector2(0, 0.5f);
-                mainRect.offsetMin = new Vector2(30, 22);
+                mainRect.offsetMin = new Vector2(28, 0);
                 mainRect.offsetMax = new Vector2(0, -8);
                 var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
                 mainTmp.text = cfg.text;
-                mainTmp.fontSize = 36;
+                mainTmp.fontSize = 32;
                 mainTmp.fontStyle = FontStyles.Bold;
                 mainTmp.color = Color.white;
-                mainTmp.alignment = TextAlignmentOptions.BottomLeft;
+                mainTmp.alignment = TextAlignmentOptions.Left;
                 mainTmp.overflowMode = TextOverflowModes.Ellipsis;
                 mainTmp.raycastTarget = false;
 
-                // === 서브 텍스트 (영어) - 14pt ===
+                // === 서브 텍스트 (영어) - 13pt, 버튼 하단 ===
                 var subTextGo = new GameObject("SubText");
                 subTextGo.transform.SetParent(cfg.btn.transform, false);
                 var subRect = subTextGo.AddComponent<RectTransform>();
                 subRect.anchorMin = new Vector2(0, 0);
-                subRect.anchorMax = new Vector2(0.8f, 1);
+                subRect.anchorMax = new Vector2(0.85f, 0.5f);
                 subRect.pivot = new Vector2(0, 0.5f);
-                subRect.offsetMin = new Vector2(30, 8);
-                subRect.offsetMax = new Vector2(0, -50);
+                subRect.offsetMin = new Vector2(28, 6);
+                subRect.offsetMax = new Vector2(0, 0);
                 var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
                 subTmp.text = cfg.subText;
-                subTmp.fontSize = 14;
+                subTmp.fontSize = 13;
                 subTmp.color = cfg.accentColor;
-                subTmp.characterSpacing = 6f;
-                subTmp.alignment = TextAlignmentOptions.TopLeft;
+                subTmp.characterSpacing = 4f;
+                subTmp.alignment = TextAlignmentOptions.Left;
                 subTmp.raycastTarget = false;
 
                 // === 우측 화살표 (▶ 아이콘, 32pt) ===
