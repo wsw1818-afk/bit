@@ -22,7 +22,7 @@ namespace AIBeat.UI
 
         public void LoadGame()
         {
-            SceneManager.LoadScene("GameScene"); // Assuming main game scene is named GameScene or similar
+            SceneManager.LoadScene("Gameplay");
         }
 
         public void QuitGame()

@@ -1,1 +1,1 @@
-✨ SceneBuilder 폰트 할당 완료: TMP 폰트 자동 로드 + Main Camera 생성 + Splash/MainMenu/SongSelect 씬 완성
+✨ UI 씬 시스템 완성: Build Settings 설정 + 씬 전환 준비 + Splash 화면 렌더링 성공
