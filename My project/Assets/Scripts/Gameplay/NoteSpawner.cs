@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using AIBeat.Core;
+using AIBeat.Core; // For AssetGenTrigger
 using AIBeat.Data;
+using AIBeat.UI;
+
 
 namespace AIBeat.Gameplay
 {
@@ -135,11 +137,21 @@ namespace AIBeat.Gameplay
                 }
             }
 
-            // Music Theme: 씬 프리팹 사용하지 않고 항상 동적 생성
+            // Music Theme: 씬 프리팹 사용하지 않고 항상 동적 생성 또는 리소스 로드
             // (기존 NormalNote/LongNote/ScratchNote 프리팹은 NoteVisuals 미포함)
+            
+            // Check if assets exist, if not generate them
+            var assetTrigger = new AssetGenTrigger();
+            // Since AssetGenTrigger is MonoBehaviour but we just want the logic, we can make the method static or just instantiate the class if it wasn't Mono.
+            // But for now let's just use the static methods in ProceduralImageGenerator directly if we implemented them?
+            // Actually AssetGenTrigger has the path logic. Let's replicate simple check here.
+            
+            // Assuming Generation happens in a Loading Scene or Preload. 
+            // For now, let's just try to load sprites.
             tapNotePrefab = null;
             longNotePrefab = null;
             scratchNotePrefab = null;
+
         }
 
         private void InitializePools()
@@ -163,48 +175,77 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 노트 프리팹 동적 생성
+        /// 노트 프리팹 동적 생성 (Sprite-based)
         /// </summary>
         private GameObject CreateNotePrefab(string name, Color color)
         {
-            var noteObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            noteObj.name = name;
-            noteObj.transform.localScale = new Vector3(0.82f, 0.22f, 1f);
-
-            // Collider 제거 (불필요)
-            var collider = noteObj.GetComponent<Collider>();
-            if (collider != null) Destroy(collider);
-
-            // 머티리얼 설정 (Music Theme - 순수 색상, 텍스처 없음)
-            var renderer = noteObj.GetComponent<MeshRenderer>();
-            if (renderer != null)
+            var noteObj = new GameObject(name);
+            // noteObj.transform.localScale = new Vector3(0.82f, 0.22f, 1f); // Sprite handles size better usually but let's keep scale for now or adjust
+            // Original Quad was 1x1 scale transformed. 
+            // Let's use SpriteRenderer.
+            
+            // Try load sprite from Resources
+            string resourcePath = $"AIBeat_Design/Notes/{name}"; 
+            // Name mapping: "TapNote" -> "NormalNote", "LongNote" -> "LongNote", "ScratchNote" -> "ScratchNote"
+            string fileName = name == "TapNote" ? "NormalNote" : name;
+            
+            Sprite sprite = Resources.Load<Sprite>($"AIBeat_Design/Notes/{fileName}");
+            
+            if (sprite == null)
             {
-                var shader = Shader.Find("Sprites/Default");
-                if (shader == null)
-                    shader = Shader.Find("Unlit/Color");
+                // Fallback: Generate runtime texture
+                Texture2D tex = null;
+                if (name == "TapNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Tap);
+                else if (name == "LongNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Long);
+                else if (name == "ScratchNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Scratch);
+                
+                if (tex != null)
+                {
+                    sprite = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f, 0.5f));
+                    sprite.name = name + "_Procedural";
+                }
+            }
 
-                var mat = new Material(shader);
-                mat.color = color;
-                if (mat.HasProperty("_BaseColor"))
-                    mat.SetColor("_BaseColor", color);
-
-                renderer.material = mat;
-                renderer.enabled = true;
-                managedMaterials.Add(mat);
+            var sr = noteObj.AddComponent<SpriteRenderer>();
+            if (sprite != null)
+            {
+                sr.sprite = sprite;
+                // Scale adjustment: Note needs to fill lane width (approx 1.0 unit).
+                // If texture is 128px and PPU is 100, size is 1.28 units.
+                // We want width ~ 0.9 units.
+                float targetWidth = 0.9f;
+                float currentWidth = sr.bounds.size.x;
+                if (currentWidth > 0)
+                {
+                    float ratio = targetWidth / currentWidth;
+                    noteObj.transform.localScale = new Vector3(ratio, ratio, 1f);
+                }
+            }
+            else
+            {
+                // Absolute fallback (Quad)
+                 var filter = noteObj.AddComponent<MeshFilter>();
+                 var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                 filter.sharedMesh = tempQuad.GetComponent<MeshFilter>().sharedMesh;
+                 Destroy(tempQuad);
+                 
+                 var renderer = noteObj.AddComponent<MeshRenderer>();
+                 var mat = new Material(Shader.Find("Sprites/Default"));
+                 mat.color = color;
+                 renderer.material = mat;
+                 noteObj.transform.localScale = new Vector3(0.82f, 0.22f, 1f);
             }
 
             // Note 컴포넌트 추가
             noteObj.AddComponent<Note>();
-            // NoteVisuals 컴포넌트 추가 (Lane별 색상 처리)
+            // NoteVisuals 컴포넌트 추가
             noteObj.AddComponent<NoteVisuals>();
-            // 글로우 이펙트 추가
+            // 글로우 이펙트 (Sprite Glow handled by Shader often, but keep script for logic)
             noteObj.AddComponent<NoteGlowEffect>();
 
             noteObj.SetActive(false);
             dynamicPrefabs.Add(noteObj);
-#if UNITY_EDITOR
-            Debug.Log($"[NoteSpawner] Created note prefab: {name}");
-#endif
+
             return noteObj;
         }
 

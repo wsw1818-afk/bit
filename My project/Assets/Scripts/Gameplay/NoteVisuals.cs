@@ -14,18 +14,17 @@ namespace AIBeat.Gameplay
 
         public void SetLaneColor(int laneIndex)
         {
-            // Lazy 초기화 (Awake 전에 호출될 수 있음)
-            if (_renderer == null)
-                _renderer = GetComponent<Renderer>();
-            if (_renderer == null) return;
-
             Color color = GetLaneColor(laneIndex);
-            var mat = _renderer.material;
-
-            // Material.color를 직접 변경 (Sprites/Default 셰이더 호환)
-            mat.color = color;
-            if (mat.HasProperty("_BaseColor"))
-                mat.SetColor("_BaseColor", color);
+            
+            // Apply to all renderers (Head + Body)
+            var renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                var mat = r.material;
+                mat.color = color;
+                if (mat.HasProperty("_BaseColor"))
+                    mat.SetColor("_BaseColor", color);
+            }
 
             // 글로우 이펙트 색상 동기화
             var glow = GetComponent<NoteGlowEffect>();
@@ -52,3 +51,4 @@ namespace AIBeat.Gameplay
         }
     }
 }
+

@@ -13,6 +13,8 @@ namespace AIBeat.Gameplay
         [Header("Visual")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private MeshRenderer meshRenderer;
+        private SpriteRenderer bodyRenderer; // 롱노트 바디용
+
 
         private NoteData noteData;
         private float speed;
@@ -30,6 +32,7 @@ namespace AIBeat.Gameplay
             {
                 if (hasBeenJudged) return true;
                 // 롱노트가 홀드 중이면 만료되지 않음
+
                 if (isHolding) return false;
 
                 // AudioManager null 체크
@@ -104,16 +107,21 @@ namespace AIBeat.Gameplay
             if (transform.localScale.sqrMagnitude < 0.01f)
                 transform.localScale = originalScale;
 
-            // 롱노트는 길이 조절
+            // 롱노트는 길이 조절 (Head + Body 구조)
             if (data.Type == NoteType.Long)
             {
-                float length = data.Duration * speed;
-                transform.localScale = new Vector3(originalScale.x, length, originalScale.z);
+                // 1. Main Renderer is Head (don't stretch)
+                transform.localScale = originalScale;
+                
+                // 2. Setup Body
+                SetupLongNoteBody(data.Duration * speed);
             }
             else
             {
                 transform.localScale = originalScale;
+                if (bodyRenderer != null) bodyRenderer.gameObject.SetActive(false);
             }
+
 
             // Lane Color 적용 (NoteVisuals 컴포넌트 사용)
             var visuals = GetComponent<NoteVisuals>();
@@ -189,6 +197,61 @@ namespace AIBeat.Gameplay
             return holdDuration >= targetDuration * 0.8f;
         }
 
-        public bool IsHolding => isHolding;
+        private void SetupLongNoteBody(float length)
+        {
+            if (bodyRenderer == null)
+            {
+                var bodyGo = new GameObject("BodyVisual");
+                bodyGo.transform.SetParent(transform, false);
+                bodyRenderer = bodyGo.AddComponent<SpriteRenderer>();
+                
+                // Load Body Sprite
+                var bodySprite = Resources.Load<Sprite>("AIBeat_Design/Notes/LongNoteBody");
+                if (bodySprite == null)
+                {
+                    // Fallback runtime generation if missing
+                    var tex = ProceduralImageGenerator.CreateLongNoteBodyTexture();
+                    bodySprite = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f, 0.5f));
+                }
+                bodyRenderer.sprite = bodySprite;
+                bodyRenderer.drawMode = SpriteDrawMode.Sliced; // Or Tiled if configured 
+            }
+
+            bodyRenderer.gameObject.SetActive(true);
+            
+            // Transform settings
+            // Body should start from center (Head) and go UP.
+            // Adjust Y position to be length/2
+            // Length is in World Units.
+            // Note scale (originalScale) affects child? Yes.
+            // If Note scale is (0.8, 0.3, 1), child (1, 1, 1) is (0.8, 0.3, 1).
+            // We want Body to be long.
+            
+            // Reset local scale of body to counteract parent Y scale if needed, 
+            // OR just set Y scale to length / parent.y
+            
+            float parentY = transform.localScale.y;
+            float targetBodyScaleY = length / (parentY > 0 ? parentY : 1f);
+            
+            // bodyRenderer.size = new Vector2(1f, targetBodyScaleY); // If Sliced/Tiled
+            // Or just simple scale
+            bodyRenderer.transform.localScale = new Vector3(1f, targetBodyScaleY, 1f);
+            
+            // Position: Center of body is at length/2
+            // We want bottom of body at 0.
+            // Sprite pivot is Center (0.5).
+            // So shift Y by targetBodyScaleY / 2 ?
+            // Wait, scaling is from center.
+            // If we simply move it up:
+            bodyRenderer.transform.localPosition = new Vector3(0f, targetBodyScaleY * 0.5f, 0f);
+            
+            // Sorting Order: Body behind Head
+            if (spriteRenderer != null)
+            {
+                bodyRenderer.sortingOrder = spriteRenderer.sortingOrder - 1;
+                bodyRenderer.color = spriteRenderer.color; // Match color (Purple)
+            }
+        }
     }
 }
+

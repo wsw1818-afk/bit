@@ -84,6 +84,11 @@ namespace AIBeat.UI
         private RawImage videoDisplay;
         private RenderTexture videoRenderTexture;
 
+        // Visual Effects
+        private JudgementEffectController effectControllerPrefab;
+        private List<JudgementEffectController> effectPool = new List<JudgementEffectController>();
+
+
         private void Awake()
         {
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
@@ -196,7 +201,18 @@ namespace AIBeat.UI
 #if UNITY_EDITOR
             Debug.Log($"[GameplayUI] AutoSetup - Score:{scoreText != null}, Combo:{comboText != null}, Judgement:{judgementText != null}, ResultPanel:{resultPanel != null}");
 #endif
+            
+            // Setup Effect Controller Prefab
+            if (effectControllerPrefab == null)
+            {
+                var go = new GameObject("JudgementEffect_Prefab");
+                go.AddComponent<SpriteRenderer>();
+                effectControllerPrefab = go.AddComponent<JudgementEffectController>();
+                go.SetActive(false);
+                go.transform.SetParent(transform.parent); // Put in scene root or NoteArea logic
+            }
         }
+
 
         /// <summary>
         /// 배경 이미지 — 현재 비활성 (노트 레인과 겹침 문제로 제거)
@@ -1058,6 +1074,14 @@ namespace AIBeat.UI
 
             // 판정 통계 HUD 업데이트
             UpdateStatsHUD();
+
+            // Spawn Visual Effect
+            if (result != JudgementResult.Miss)
+            {
+                string assetName = result.ToString(); // "Perfect", "Great", ...
+                SpawnEffect(assetName);
+            }
+
         }
 
         private System.Collections.IEnumerator HideJudgement()
@@ -1357,7 +1381,47 @@ namespace AIBeat.UI
                 canvas.gameObject.AddComponent<SafeAreaApplier>();
         }
 
+        // ==================================================================================
+        // Public API for Judgement Display
+        // ==================================================================================
+        
+        private void SpawnEffect(string type)
+        {
+            // Find free effect controller
+            JudgementEffectController available = null;
+            foreach(var eff in effectPool)
+            {
+                if (!eff.gameObject.activeSelf)
+                {
+                    available = eff;
+                    break;
+                }
+            }
+            
+            if (available == null)
+            {
+                if (effectControllerPrefab != null) 
+                {
+                    var obj = Instantiate(effectControllerPrefab.gameObject, transform.parent);
+                    available = obj.GetComponent<JudgementEffectController>();
+                    effectPool.Add(available);
+                }
+            }
+
+            if (available != null)
+            {
+                // Position: Center Center (or adjust based on lane if passed)
+                // For now, center of screen/judgement line
+                // JudgementLine is usually at Y ~ -something.
+                // Let's spawn it at (0, -2.5, -2) to be above the notes/judgement line but visible.
+                available.Play(type, new Vector3(0, -2.5f, -2f)); 
+            }
+        }
+
         private void OnDestroy()
+
+
+
         {
             if (resumeButton != null) resumeButton.onClick.RemoveAllListeners();
             if (restartButton != null) restartButton.onClick.RemoveAllListeners();
