@@ -386,6 +386,7 @@ namespace AIBeat.Gameplay
             // 노트 스폰 시작
             if (noteSpawner != null)
             {
+                noteSpawner.enabled = true; // 컴포넌트 활성화
                 noteSpawner.StartSpawning();
 #if UNITY_EDITOR
                 Debug.Log("[GameplayController] NoteSpawner started");

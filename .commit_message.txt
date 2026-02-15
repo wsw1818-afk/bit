@@ -1,1 +1,1 @@
-🐛 4레인 구조 수정: LaneVisualFeedback 7레인→4레인 변경 + 판정 윈도우 완화(Perfect 50ms→80ms)
+🐛 NoteSpawner 풀 초기화 NullReferenceException 수정: SpriteRenderer 지원 추가 (MeshFilter/MeshRenderer 체크 건너뛰기)

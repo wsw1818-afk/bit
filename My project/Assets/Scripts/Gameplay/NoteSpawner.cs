@@ -266,24 +266,29 @@ namespace AIBeat.Gameplay
                     note = obj.AddComponent<Note>();
                 }
 
-                // MeshFilter에 Quad 메시 보장
-                var mf = obj.GetComponent<MeshFilter>();
-                if (mf == null) mf = obj.AddComponent<MeshFilter>();
-                if (mf.sharedMesh == null)
+                // SpriteRenderer가 있으면 MeshFilter/MeshRenderer 추가하지 않음
+                var sr = obj.GetComponent<SpriteRenderer>();
+                if (sr == null)
                 {
-                    mf.sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+                    // MeshFilter에 Quad 메시 보장
+                    var mf = obj.GetComponent<MeshFilter>();
+                    if (mf == null) mf = obj.AddComponent<MeshFilter>();
                     if (mf.sharedMesh == null)
                     {
-                        var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                        mf.sharedMesh = tempQuad.GetComponent<MeshFilter>().sharedMesh;
-                        Destroy(tempQuad);
+                        mf.sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+                        if (mf.sharedMesh == null)
+                        {
+                            var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                            mf.sharedMesh = tempQuad.GetComponent<MeshFilter>().sharedMesh;
+                            Destroy(tempQuad);
+                        }
                     }
-                }
 
-                // MeshRenderer + Unlit 머티리얼 보장
-                var mr = obj.GetComponent<MeshRenderer>();
-                if (mr == null) mr = obj.AddComponent<MeshRenderer>();
-                EnsureUnlitMaterial(mr);
+                    // MeshRenderer + Unlit 머티리얼 보장
+                    var mr = obj.GetComponent<MeshRenderer>();
+                    if (mr == null) mr = obj.AddComponent<MeshRenderer>();
+                    EnsureUnlitMaterial(mr);
+                }
 
                 pool.Enqueue(note);
             }

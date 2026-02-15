@@ -181,6 +181,25 @@ Unity의 `Color(r, g, b, a)`는 **0~1 범위**를 사용합니다:
   - 노트 스폰: Y=12, Z=2, scale=(0.80,0.30,1.00) 정상
   - 게임 루프: 노트 스폰/이동/판정 모두 정상 작동
 
+### 절차적 에셋 생성 및 비주얼 개선 (2026-02-15)
+- [x] **절차적 에셋 생성 시스템 구축** (`AssetGenTrigger.cs`, `ProceduralImageGenerator.cs`)
+  - AI 이미지 생성 실패 대안으로 C# 코드로 텍스처 직접 생성 구현
+  - **생성 항목**: 노트(Tap, Long Head, Scratch), 롱노트 바디, 판정 이펙트(Perfect~Bad 시트), 사이버펑크 배경
+  - **자동화**: 유니티 에디터 Play 시 `Assets/Resources/AIBeat_Design` 폴더에 자동 생성 및 저장
+
+- [x] **노트 비주얼 고도화** (`Note.cs`, `NoteSpawner.cs`)
+  - **SpriteRenderer 도입**: 기존 Quad 메쉬 제거 및 스프라이트 기반 렌더링 전환
+  - **롱노트 구조 변경**: Head(머리) + Body(몸통) 분리 렌더링. 몸통은 길이에 맞춰 늘어나고 머리는 비율 유지.
+  - **색상 동기화**: `NoteVisuals.cs`를 수정하여 롱노트 몸통까지 레인 색상(네온) 적용
+
+- [x] **판정 이펙트 구현** (`JudgementEffectController.cs`, `GameplayUI.cs`)
+  - **스프라이트 애니메이션**: 4x4 스프라이트 시트를 로드하여 판정 시 폭발/이펙트 재생
+  - **통합**: `GameplayUI`에서 판정 발생 시 해당 레인/중앙에 이펙트 스폰 연결
+
+- [x] **에셋 패키징** (`PackageDesignAssets.ps1`)
+  - 생성된 디자인 에셋을 1초 만에 zip으로 압축하는 PowerShell 스크립트 작성
+
+
 ---
 
 ## 재미나이 작업 흐름
