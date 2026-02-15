@@ -45,6 +45,9 @@ namespace AIBeat.UI
         {
             Debug.Log("[MainMenuUI] Start() 호출됨");
 
+            // 에디터에서 포커스 손실 시에도 렌더링 유지 (MCP 스크린샷 캡처용)
+            Application.runInBackground = true;
+
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             var _ = KoreanFontManager.KoreanFont;
 

@@ -1,1 +1,1 @@
-✨ MainMenu UI v5: 대형 버튼(90px) + 두꺼운 악센트바(10px) + 큰 텍스트(36pt)
+✨ MCP 자동화 UI 검증 + runInBackground 추가 + RenderTexture 스크린샷
