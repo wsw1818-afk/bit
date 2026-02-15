@@ -942,53 +942,21 @@ namespace AIBeat.UI
             // Detailed DJ - behind decks with headphones
             int cx = w / 2;
 
-            // === DJ FIGURE ===
-            // Head
-            DrawFilledCircle(pixels, w, cx, h - 95, 28, color);
+            // === 1. BOOTH LEGS (테이블 다리만) ===
+            DrawThickLine(pixels, w, cx - 150, h - 275, cx - 150, h - 420, color, 6);
+            DrawThickLine(pixels, w, cx + 150, h - 275, cx + 150, h - 420, color, 6);
+            // Cross bar
+            DrawThickLine(pixels, w, cx - 150, h - 400, cx + 150, h - 400, color, 4);
 
-            // Headphones
-            // Band over head
-            for (int x = cx - 35; x <= cx + 35; x++)
-            {
-                float t = (float)(x - (cx - 35)) / 70f;
-                int bandY = h - 70 - (int)(Mathf.Sin(t * Mathf.PI) * 25);
-                DrawThickLine(pixels, w, x, bandY, x, bandY + 3, color, 3);
-            }
-            // Ear cups
-            DrawFilledCircle(pixels, w, cx - 35, h - 95, 14, color);
-            DrawFilledCircle(pixels, w, cx + 35, h - 95, 14, color);
-
-            // Sunglasses/visor hint
-            DrawThickLine(pixels, w, cx - 20, h - 90, cx + 20, h - 90, color, 4);
-
-            // Neck
-            DrawThickLine(pixels, w, cx, h - 123, cx, h - 145, color, 8);
-
-            // Torso (leaning forward over decks)
-            DrawFilledTrapezoid(pixels, w, cx - 40, h - 145, cx + 40, h - 145, cx - 35, h - 220, cx + 35, h - 220, color);
-
-            // Left arm (raised, fist pump)
-            DrawThickLine(pixels, w, cx - 35, h - 155, cx - 80, h - 120, color, 6);
-            DrawThickLine(pixels, w, cx - 80, h - 120, cx - 100, h - 70, color, 5);
-            // Fist
-            DrawFilledCircle(pixels, w, cx - 100, h - 65, 12, color);
-
-            // Right arm (on mixer/crossfader)
-            DrawThickLine(pixels, w, cx + 35, h - 160, cx + 70, h - 200, color, 6);
-            DrawThickLine(pixels, w, cx + 70, h - 200, cx + 50, h - 250, color, 5);
-            // Hand on controls
-            DrawFilledCircle(pixels, w, cx + 48, h - 255, 10, color);
-
-            // === DJ BOOTH/DECKS ===
-            // Main table surface
-            DrawFilledRect(pixels, w, cx - 160, h - 275, cx + 160, h - 265, color);
+            // === 2. DJ BOOTH/DECKS (부스 위에 그림) ===
+            // Laptop/controller behind
+            DrawFilledRect(pixels, w, cx - 50, h - 400, cx + 50, h - 360, color);
 
             // Left turntable/CDJ
             DrawFilledCircle(pixels, w, cx - 90, h - 320, 50, color);
             DrawCircleOutline(pixels, w, cx - 90, h - 320, 50, color, 3);
             DrawCircleOutline(pixels, w, cx - 90, h - 320, 35, color, 2);
             DrawCircleOutline(pixels, w, cx - 90, h - 320, 15, color, 2);
-            // Spindle
             DrawFilledCircle(pixels, w, cx - 90, h - 320, 5, color);
             // Tonearm
             DrawThickLine(pixels, w, cx - 50, h - 360, cx - 70, h - 340, color, 3);
@@ -999,7 +967,6 @@ namespace AIBeat.UI
             DrawCircleOutline(pixels, w, cx + 90, h - 320, 50, color, 3);
             DrawCircleOutline(pixels, w, cx + 90, h - 320, 35, color, 2);
             DrawCircleOutline(pixels, w, cx + 90, h - 320, 15, color, 2);
-            // Spindle
             DrawFilledCircle(pixels, w, cx + 90, h - 320, 5, color);
             // Tonearm
             DrawThickLine(pixels, w, cx + 130, h - 360, cx + 110, h - 340, color, 3);
@@ -1020,20 +987,41 @@ namespace AIBeat.UI
             // Crossfader
             DrawFilledRect(pixels, w, cx - 25, h - 285, cx + 25, h - 280, color);
 
-            // Laptop/controller behind
-            DrawFilledRect(pixels, w, cx - 50, h - 400, cx + 50, h - 360, color);
-            // Screen glow
-            DrawFilledRect(pixels, w, cx - 45, h - 395, cx + 45, h - 365, color);
+            // Main table surface
+            DrawFilledRect(pixels, w, cx - 160, h - 275, cx + 160, h - 265, color);
 
-            // === BOOTH FRONT ===
-            // Front panel
-            DrawFilledRect(pixels, w, cx - 165, h - 265, cx + 165, h - 430, color);
-            // LED strip decoration
-            for (int i = 0; i < 10; i++)
+            // === 3. DJ FIGURE (맨 앞에 그림) ===
+            // Head
+            DrawFilledCircle(pixels, w, cx, h - 95, 28, color);
+
+            // Headphones
+            for (int x = cx - 35; x <= cx + 35; x++)
             {
-                int ledX = cx - 140 + i * 30;
-                DrawFilledCircle(pixels, w, ledX, h - 420, 4, color);
+                float t = (float)(x - (cx - 35)) / 70f;
+                int bandY = h - 70 - (int)(Mathf.Sin(t * Mathf.PI) * 25);
+                DrawThickLine(pixels, w, x, bandY, x, bandY + 3, color, 3);
             }
+            DrawFilledCircle(pixels, w, cx - 35, h - 95, 14, color);
+            DrawFilledCircle(pixels, w, cx + 35, h - 95, 14, color);
+
+            // Sunglasses
+            DrawThickLine(pixels, w, cx - 20, h - 90, cx + 20, h - 90, color, 4);
+
+            // Neck
+            DrawThickLine(pixels, w, cx, h - 123, cx, h - 145, color, 8);
+
+            // Torso
+            DrawFilledTrapezoid(pixels, w, cx - 40, h - 145, cx + 40, h - 145, cx - 35, h - 220, cx + 35, h - 220, color);
+
+            // Left arm (raised, fist pump)
+            DrawThickLine(pixels, w, cx - 35, h - 155, cx - 80, h - 120, color, 6);
+            DrawThickLine(pixels, w, cx - 80, h - 120, cx - 100, h - 70, color, 5);
+            DrawFilledCircle(pixels, w, cx - 100, h - 65, 12, color);
+
+            // Right arm (on mixer)
+            DrawThickLine(pixels, w, cx + 35, h - 160, cx + 70, h - 200, color, 6);
+            DrawThickLine(pixels, w, cx + 70, h - 200, cx + 50, h - 250, color, 5);
+            DrawFilledCircle(pixels, w, cx + 48, h - 255, 10, color);
         }
 
         // ==================================================================================
