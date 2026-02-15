@@ -249,6 +249,35 @@ mcp__mcp-unity__execute_menu_item("Assets/Refresh")
 
 ---
 
+## UI/UX 리디자인 완료 (2026-02-15)
+
+### ✅ MainMenu 연주자 개별 애니메이션
+- **Drummer**: 빠른 상하 진동 (8Hz, ±8px) - 드럼 비트 표현
+- **Pianist**: 부드러운 좌우 흔들림 (1Hz, ±12px) - 피아노 연주 표현
+- **Guitarist**: 틸팅 회전 (0.8Hz, ±8도) - 기타 연주 표현
+- **DJ**: 펄스 스케일 (2Hz, 0.95~1.05) - 비트에 맞춘 크기 변화
+- 파일: `MainMenuUI.cs` - `AnimateMusicians()` 코루틴 추가
+
+### ✅ 씬 전환 페이드 효과
+- **페이드 아웃**: 현재 화면 → 검은색 (0.3초)
+- **씬 로드**: 비동기 로드 (`SceneManager.LoadSceneAsync`)
+- **페이드 인**: 검은색 → 새 화면 (0.3초)
+- 파일: `GameManager.cs` - `LoadSceneWithFade()` 코루틴 추가
+- `EnsureFadeOverlay()`: 씬 전환 시 FadeOverlay 자동 생성/재사용
+
+### ✅ 곡 카드 등장 애니메이션
+- **초기 상태**: scale 0.8, alpha 0
+- **애니메이션**: EaseOutBack (오버슈트 1.5) + 페이드 인
+- **순차 등장**: 카드별 0.05초 딜레이로 순차 등장
+- 파일: `SongLibraryUI.cs` - `AnimateCardsEntrance()` 코루틴 추가
+
+### 테스트 결과 (2026-02-15 16:54)
+- ✅ 4개 연주자 스프라이트 모두 로드 성공
+- ✅ 한국어 폰트 로드 성공 (Resources TTF → Dynamic SDF)
+- ✅ 게임 정상 실행 (MainMenu 진입 확인)
+- ⚠️ 기존 경고: `currentSizeGroupType property not found` (무시 가능)
+
+---
 
 ## UI/UX Overhaul: Neon Live Stage (2026-02-15)
 
