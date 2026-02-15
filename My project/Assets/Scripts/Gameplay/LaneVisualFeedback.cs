@@ -34,21 +34,18 @@ namespace AIBeat.Gameplay
         private static MeshRenderer glowRenderer;
         private static Material glowMaterial;
 
-        private const int LANE_COUNT = 7;
+        private const int LANE_COUNT = 4;
 
-        // Music Theme 레인 색상 (어두운 음악 테마 톤)
+        // Music Theme 레인 색상 (어두운 음악 테마 톤) - 4레인 구조
         private static readonly Color[] laneColors = new Color[]
         {
             new Color(1f, 0.55f, 0f, 0.22f),      // Lane 0: Scratch L (어두운 오렌지)
             new Color(0.58f, 0.29f, 0.98f, 0.18f), // Lane 1: Purple Key
             new Color(0f, 0.8f, 0.82f, 0.20f),    // Lane 2: Teal Key
-            new Color(0.58f, 0.29f, 0.98f, 0.18f), // Lane 3: Purple Key (center)
-            new Color(0f, 0.8f, 0.82f, 0.20f),    // Lane 4: Teal Key
-            new Color(0.58f, 0.29f, 0.98f, 0.18f), // Lane 5: Purple Key
-            new Color(1f, 0.55f, 0f, 0.22f),      // Lane 6: Scratch R (어두운 오렌지)
+            new Color(1f, 0.55f, 0f, 0.22f),      // Lane 3: Scratch R (어두운 오렌지)
         };
 
-        private static readonly string[] keyNames = { "S", "D", "F", "SP", "J", "K", "L" };
+        private static readonly string[] keyNames = { "S", "D", "F", "L" }; // 4레인: Scratch L, Key1, Key2, Scratch R
 
         public static LaneVisualFeedback Instance => instance;
 
