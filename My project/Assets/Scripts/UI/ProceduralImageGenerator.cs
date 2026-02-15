@@ -513,6 +513,173 @@ namespace AIBeat.UI
             Debug.Log($"[ProceduralGen] Saved to {fullPath}");
 #endif
         }
+
+        // ==================================================================================
+        // NEW: Instrument Asset Generation (Silhouettes)
+        // ==================================================================================
+
+        public static Texture2D CreateInstrumentTexture(string type)
+        {
+            int w = 512;
+            int h = 512;
+            Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            Color[] colors = new Color[w * h];
+            for(int i=0; i<colors.Length; i++) colors[i] = Color.clear; // Transparent background
+
+            Color neonColor = Color.white;
+            switch(type)
+            {
+                case "Drum": neonColor = new Color(0f, 1f, 1f); break;    // Cyan
+                case "Piano": neonColor = new Color(1f, 0f, 0.8f); break; // Magenta
+                case "Guitar": neonColor = new Color(1f, 1f, 0f); break;  // Yellow
+                case "Notes": neonColor = Color.white; break;             // Mixed later
+            }
+
+            if (type == "Drum") DrawDrumSilhouette(colors, w, h, neonColor);
+            else if (type == "Piano") DrawPianoSilhouette(colors, w, h, neonColor);
+            else if (type == "Guitar") DrawGuitarSilhouette(colors, w, h, neonColor);
+            else if (type == "Notes") DrawMusicNotes(colors, w, h);
+
+            tex.SetPixels(colors);
+            tex.Apply();
+            return tex;
+        }
+
+        private static void DrawDrumSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+            // Simple Drum Set Silhouette: Bass drum (center), Snare, Toms, Cymbals
+            // Bass Drum (Circle)
+            DrawCircleOutline(pixels, w, w/2, h/3, 80, color);
+            // Tom 1 (Circle)
+            DrawCircleOutline(pixels, w, w/2 - 60, h/2 + 20, 40, color);
+            // Tom 2 (Circle)
+            DrawCircleOutline(pixels, w, w/2 + 60, h/2 + 20, 40, color);
+            // Snare (Ovular?)
+            DrawCircleOutline(pixels, w, w/2 - 90, h/3 + 10, 45, color);
+            // Floor Tom
+            DrawCircleOutline(pixels, w, w/2 + 90, h/3 - 20, 55, color);
+            // Cymbal Left (Line + flat oval)
+            DrawLine(pixels, w, w/2 - 120, h/2, w/2 - 150, h/2 + 100, color); // Stand
+            DrawCircleOutline(pixels, w, w/2 - 150, h/2 + 100, 50, color);
+            // Cymbal Right
+            DrawLine(pixels, w, w/2 + 120, h/2, w/2 + 150, h/2 + 120, color); // Stand
+            DrawCircleOutline(pixels, w, w/2 + 150, h/2 + 120, 50, color);
+        }
+
+        private static void DrawPianoSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+            // Grand Piano Side View shape
+            // Body
+            int startX = 100;
+            int startY = 150;
+            // Draw Outline
+            // Top curve
+             for (int x = startX; x < w - 100; x++)
+            {
+                // Top Lid line
+                int y = startY + (int)(Mathf.Sin((float)x/w * 3f) * 20) + 150;
+                 if (x < w/2) y = startY + 150; // Flat part
+                
+                SetPixelSafe(pixels, w, x, y, color);
+                // Bottom Body line
+                int yBot = startY + 50;
+                SetPixelSafe(pixels, w, x, yBot, color);
+            }
+             
+             // Legs
+             DrawLine(pixels, w, startX + 20, startY + 50, startX + 20, startY - 50, color);
+             DrawLine(pixels, w, w - 150, startY + 50, w - 150, startY - 50, color);
+             DrawLine(pixels, w, w/2, startY + 50, w/2, startY - 50, color); // Back leg
+        }
+
+        private static void DrawGuitarSilhouette(Color[] pixels, int w, int h, Color color)
+        {
+            // Electric Guitar Vertical
+            int cx = w/2;
+            int cy = h/2;
+            
+            // Body (Hourglass shape)
+            for (int y = h/4; y < h/2 + 50; y++)
+            {
+                float normalizedY = (float)(y - h/4) / (h/4 + 50); // 0 to 1
+                // Width varies
+                float width = 60 + Mathf.Sin(normalizedY * Mathf.PI * 2) * 20; 
+                // Outline only
+                SetPixelSafe(pixels, w, cx - (int)width, y, color);
+                SetPixelSafe(pixels, w, cx + (int)width, y, color);
+            }
+            // Neck
+            for(int y = h/2 + 50; y < h - 50; y++)
+            {
+                SetPixelSafe(pixels, w, cx - 10, y, color);
+                SetPixelSafe(pixels, w, cx + 10, y, color);
+            }
+            // Headstock
+            DrawCircleOutline(pixels, w, cx, h - 30, 20, color);
+        }
+
+        private static void DrawMusicNotes(Color[] pixels, int w, int h)
+        {
+            // Random Notes
+            DrawNote(pixels, w, 60, 60, new Color(0f, 1f, 1f)); // Cyan
+            DrawNote(pixels, w, 180, 150, new Color(1f, 0f, 0.8f)); // Magenta
+            DrawNote(pixels, w, 100, 200, new Color(1f, 1f, 0f)); // Yellow
+        }
+
+        private static void DrawNote(Color[] pixels, int w, int cx, int cy, Color c)
+        {
+            // Simple Eighth Note
+            DrawCircleOutline(pixels, w, cx, cy, 15, c); // Head
+            DrawLine(pixels, w, cx + 15, cy, cx + 15, cy + 60, c); // Stem
+            DrawLine(pixels, w, cx + 15, cy + 60, cx + 35, cy + 40, c); // Flag
+        }
+
+        private static void DrawCircleOutline(Color[] pixels, int w, int cx, int cy, int r, Color c)
+        {
+            for (int x = cx - r; x <= cx + r; x++)
+            {
+                for (int y = cy - r; y <= cy + r; y++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), new Vector2(cx, cy));
+                    if (Mathf.Abs(dist - r) < 2f)
+                    {
+                        SetPixelSafe(pixels, w, x, y, c);
+                    }
+                }
+            }
+        }
+        
+        private static void DrawLine(Color[] pixels, int w, int x0, int y0, int x1, int y1, Color c)
+        {
+             // Simple Bresenham or similar could be used, but for brevity simpler approach or assuming straight lines
+             // Vertical/Horizontal easy
+             if (x0 == x1)
+             {
+                 for(int y = Mathf.Min(y0,y1); y<=Mathf.Max(y0,y1); y++) SetPixelSafe(pixels, w, x0, y, c);
+             }
+             else if (y0 == y1)
+             {
+                 for(int x = Mathf.Min(x0,x1); x<=Mathf.Max(x0,x1); x++) SetPixelSafe(pixels, w, x, y0, c);
+             }
+             else
+             {
+                 // Diagonal simple implementation
+                 float steps = Mathf.Max(Mathf.Abs(x1-x0), Mathf.Abs(y1-y0));
+                 for(float t=0; t<=1; t+=1f/steps)
+                 {
+                     int x = (int)Mathf.Lerp(x0, x1, t);
+                     int y = (int)Mathf.Lerp(y0, y1, t);
+                     SetPixelSafe(pixels, w, x, y, c);
+                 }
+             }
+        }
+
+        private static void SetPixelSafe(Color[] pixels, int w, int x, int y, Color c)
+        {
+            if (x >= 0 && x < w && y >= 0 && y < pixels.Length / w)
+                pixels[y * w + x] = c;
+        }
     }
 }
+
 

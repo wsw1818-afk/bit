@@ -128,6 +128,21 @@ namespace AIBeat.Editor
 
             var canvas = CreateCanvas();
             CreateBackground(canvas, "Backgrounds/Menu_BG");
+            
+            // Add Instrument Decorations
+            var drumObj = CreateDecoration(canvas, "Decorations/Drum_Silhouette", new Vector2(-300, -200), new Vector2(400, 400));
+            var drumImg = drumObj.GetComponent<Image>();
+            if (drumImg) { var c = drumImg.color; c.a = 0.3f; drumImg.color = c; } // Fade
+            
+            var pianoObj = CreateDecoration(canvas, "Decorations/Piano_Silhouette", new Vector2(300, -200), new Vector2(400, 400));
+            var pianoImg = pianoObj.GetComponent<Image>();
+            if (pianoImg) { var c = pianoImg.color; c.a = 0.3f; pianoImg.color = c; }
+
+            var guitarObj = CreateDecoration(canvas, "Decorations/Guitar_Silhouette", new Vector2(400, 200), new Vector2(300, 600));
+            guitarObj.transform.localRotation = Quaternion.Euler(0, 0, -15);
+            var guitarImg = guitarObj.GetComponent<Image>();
+            if (guitarImg) { var c = guitarImg.color; c.a = 0.2f; guitarImg.color = c; }
+
             CreateLogo(canvas, 0, 500, 1.0f);
 
             // Container for buttons
@@ -313,6 +328,27 @@ namespace AIBeat.Editor
             var rt = go.GetComponent<RectTransform>();
             rt.anchoredPosition = new Vector2(x, y);
             rt.sizeDelta = new Vector2(512 * scale, 128 * scale);
+            return go;
+        }
+
+        private static GameObject CreateDecoration(Canvas canvas, string resourcePath, Vector2 pos, Vector2 size)
+        {
+            var go = new GameObject(Path.GetFileName(resourcePath));
+            go.transform.SetParent(canvas.transform, false);
+            go.transform.SetAsFirstSibling(); // Behind everything (but after BG if BG is first... tricky. SceneBuilder creates BG first, so this goes to bottom. We need it AFTER BG)
+            
+            // Actually SetAsFirstSibling puts it at index 0. BG is index 0.
+            // We want it at index 1 (after BG).
+            go.transform.SetSiblingIndex(1);
+
+            var img = go.AddComponent<Image>();
+            Texture2D tex = Resources.Load<Texture2D>("AIBeat_Design/UI/" + resourcePath);
+             if (tex != null)
+                img.sprite = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f,0.5f));
+            
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = size;
             return go;
         }
 
