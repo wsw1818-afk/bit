@@ -523,8 +523,9 @@ namespace AIBeat.UI
             int w = 512;
             int h = 512;
             Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            // CRITICAL: Initialize with Color.clear to ensure transparency
             Color[] colors = new Color[w * h];
-            for(int i=0; i<colors.Length; i++) colors[i] = Color.clear; // Transparent background
+            for(int i=0; i<colors.Length; i++) colors[i] = Color.clear; 
 
             Color neonColor = Color.white;
             switch(type)
@@ -645,14 +646,15 @@ namespace AIBeat.UI
             DrawLine(pixels, w, cx + 15, cy + 60, cx + 35, cy + 40, c); // Flag
         }
 
-        private static void DrawCircleOutline(Color[] pixels, int w, int cx, int cy, int r, Color c)
+        private static void DrawCircleOutline(Color[] pixels, int w, int cx, int cy, int r, Color c, int thickness = 1)
         {
-            for (int x = cx - r; x <= cx + r; x++)
+            for (int x = cx - r - thickness; x <= cx + r + thickness; x++)
             {
-                for (int y = cy - r; y <= cy + r; y++)
+                for (int y = cy - r - thickness; y <= cy + r + thickness; y++)
                 {
                     float dist = Vector2.Distance(new Vector2(x, y), new Vector2(cx, cy));
-                    if (Mathf.Abs(dist - r) < 2f)
+                    // Check outline thickness
+                    if (Mathf.Abs(dist - r) < thickness)
                     {
                         SetPixelSafe(pixels, w, x, y, c);
                     }
