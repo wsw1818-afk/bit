@@ -95,24 +95,11 @@ namespace AIBeat.Editor
             // Add SceneLoader
             var loaderObj = new GameObject("SceneLoader");
             loaderObj.AddComponent<SceneLoader>();
-            
-            // Logic: Splash needs script to wait/touch. 
-            // Creating a simple SplashController script here programmatically?
-            // Or just leave it visual for now as requested "Scene files only"? 
-            // Request said "SceneLoader.cs only if needed".
-            // Let's make a simple TouchToStart Button full screen invisible?
-            
-            var btnObj = new GameObject("TouchArea");
-            btnObj.transform.SetParent(canvas.transform, false);
-            var btnRt = btnObj.AddComponent<RectTransform>();
-            btnRt.anchorMin = Vector2.zero;
-            btnRt.anchorMax = Vector2.one;
-            btnObj.AddComponent<Image>().color = Color.clear;
-            var btn = btnObj.AddComponent<Button>();
-            
-            // Setup click event? Hard to Serialize UnityEvent in code without script references.
-            // User can hook it up.
-            
+
+            // Add SplashController for auto transition on click/touch
+            var controllerObj = new GameObject("SplashController");
+            controllerObj.AddComponent<SplashController>();
+
             SaveScene("Assets/Scenes/SplashScene.unity");
         }
 
