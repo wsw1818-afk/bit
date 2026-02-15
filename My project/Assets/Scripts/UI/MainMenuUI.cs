@@ -71,6 +71,11 @@ namespace AIBeat.UI
                 return;
             }
 
+            // MusicianBackground 자체의 raycastTarget도 비활성화
+            var bgImage = musicianBg.GetComponent<Image>();
+            if (bgImage != null)
+                bgImage.raycastTarget = false;
+
             // 새 고품질 AI 생성 이미지 사용 (Illustrations 폴더)
             var spriteMap = new (string childName, string spritePath)[]
             {
@@ -426,6 +431,7 @@ namespace AIBeat.UI
             // 버튼 컨테이너: 세로 중앙 배치
             var btnContainer = new GameObject("ButtonContainer");
             btnContainer.transform.SetParent(transform, false);
+            btnContainer.transform.SetAsLastSibling();  // 맨 위에 배치 (클릭 우선)
             var btnContainerRect = btnContainer.AddComponent<RectTransform>();
             btnContainerRect.anchorMin = new Vector2(0.075f, 0.12f);
             btnContainerRect.anchorMax = new Vector2(0.925f, 0.52f);
