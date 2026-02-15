@@ -69,10 +69,10 @@ namespace AIBeat.UI
 
             var spriteMap = new (string childName, string spritePath)[]
             {
-                ("Drummer", "Sprites/Instruments/drum_perform"),
-                ("Pianist", "Sprites/Instruments/piano_perform"),
-                ("Guitarist", "Sprites/Instruments/guitar_perform"),
-                ("DJ", "Sprites/Instruments/dj_perform")
+                ("Drummer", "AIBeat_Design/UI/Decorations/Drummer_Perform"),
+                ("Pianist", "AIBeat_Design/UI/Decorations/Pianist_Perform"),
+                ("Guitarist", "AIBeat_Design/UI/Decorations/Guitarist_Perform"),
+                ("DJ", "AIBeat_Design/UI/Decorations/DJ_Perform")
             };
 
             foreach (var (childName, spritePath) in spriteMap)

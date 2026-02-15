@@ -1,1 +1,1 @@
-🎨 MainMenu 디자인 개선: 4명의 연주자 이미지 추가 (드럼/피아노/기타/DJ) + 네온 색상 배치
+🐛 MainMenu 연주자 스프라이트 로딩 수정: Resources 경로 및 .meta textureType 설정 수정
