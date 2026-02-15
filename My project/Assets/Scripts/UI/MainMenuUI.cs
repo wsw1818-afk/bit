@@ -47,6 +47,45 @@ namespace AIBeat.UI
             Initialize();
             CreateEqualizerBars();
             EnsureSafeArea();
+            SetupMusicianSprites();
+        }
+
+        /// <summary>
+        /// MusicianBackground 패널의 자식 Image들에 스프라이트를 런타임에 할당
+        /// </summary>
+        private void SetupMusicianSprites()
+        {
+            var musicianBg = transform.Find("MusicianBackground");
+            if (musicianBg == null)
+            {
+                Debug.Log("[MainMenuUI] MusicianBackground not found, skipping sprite setup");
+                return;
+            }
+
+            var spriteMap = new (string childName, string spritePath)[]
+            {
+                ("Drummer", "Sprites/Instruments/drum_perform"),
+                ("Pianist", "Sprites/Instruments/piano_perform"),
+                ("Guitarist", "Sprites/Instruments/guitar_perform"),
+                ("DJ", "Sprites/Instruments/dj_perform")
+            };
+
+            foreach (var (childName, spritePath) in spriteMap)
+            {
+                var child = musicianBg.Find(childName);
+                if (child == null) continue;
+
+                var image = child.GetComponent<Image>();
+                if (image == null) continue;
+
+                var sprite = Resources.Load<Sprite>(spritePath);
+                if (sprite != null)
+                {
+                    image.sprite = sprite;
+                    image.preserveAspect = true;
+                    Debug.Log($"[MainMenuUI] Loaded sprite for '{childName}'");
+                }
+            }
         }
 
         /// <summary>
