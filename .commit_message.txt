@@ -1,1 +1,1 @@
-🔧 씬 이름 수정 + 중복 메뉴 정리: Screenshot/PlayMode 통합
+🐛 SplashController에 Application.runInBackground 추가 - 자동 전환 정상 동작

@@ -10,6 +10,7 @@ namespace AIBeat.UI
 
         private void Start()
         {
+            Application.runInBackground = true;
             Debug.Log("[SplashController] Start() - 자동 전환 대기 중");
         }
 
