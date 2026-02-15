@@ -118,6 +118,14 @@ namespace AIBeat.Editor
                     GameObject.DestroyImmediate(r);
             }
 
+            // Add Main Camera
+            var camObj = new GameObject("Main Camera");
+            var cam = camObj.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.orthographic = true;
+            camObj.tag = "MainCamera";
+
             var canvas = CreateCanvas();
             CreateBackground(canvas, "Backgrounds/Menu_BG");
             CreateLogo(canvas, 0, 500, 1.0f);
@@ -164,9 +172,17 @@ namespace AIBeat.Editor
                     GameObject.DestroyImmediate(r);
             }
 
+            // Add Main Camera
+            var camObj = new GameObject("Main Camera");
+            var cam = camObj.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.orthographic = true;
+            camObj.tag = "MainCamera";
+
             var canvas = CreateCanvas();
             CreateBackground(canvas, "Backgrounds/SongSelect_BG");
-            
+
             // Header
             CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, 800), new Vector2(800, 100));
 
