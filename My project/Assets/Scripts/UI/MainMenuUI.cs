@@ -48,7 +48,8 @@ namespace AIBeat.UI
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             var _ = KoreanFontManager.KoreanFont;
 
-            // (레거시 버튼 연결은 더 이상 사용하지 않음)
+            // 오래된 레거시 UI 요소 정리 (씬에 남아있는 기존 버튼들)
+            CleanupLegacyUI();
 
             EnsureEventSystem(); // 터치/클릭 입력을 위한 EventSystem 보장
             EnsureCanvasScaler();
@@ -61,32 +62,23 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 씬에 있는 기존 버튼(Start, Settings, Quit)을 찾아서 연결
+        /// 씬에 남아있는 오래된 레거시 UI 요소 제거
         /// </summary>
-        private void ConnectExistingButtons()
+        private void CleanupLegacyUI()
         {
-            // ButtonPanel 아래의 Start, Settings, Quit 버튼 찾기
-            var buttonPanel = transform.Find("ButtonPanel");
-            if (buttonPanel != null)
+            // 오래된 ButtonPanel 제거 (SELECT SONG, QUIT 버튼 포함)
+            var legacyNames = new string[] { "ButtonPanel", "SongSelect", "Quit", "Logo" };
+            foreach (var name in legacyNames)
             {
-                var startBtn = buttonPanel.Find("Start")?.GetComponent<Button>();
-                var settingsBtn = buttonPanel.Find("Settings")?.GetComponent<Button>();
-                var quitBtn = buttonPanel.Find("Quit")?.GetComponent<Button>();
-
-                if (startBtn != null)
+                var legacy = transform.Find(name);
+                if (legacy != null)
                 {
-                    playButton = startBtn;
-                    Debug.Log("[MainMenuUI] Found existing Start button");
+                    Debug.Log($"[MainMenuUI] Removing legacy UI element: {name}");
+                    Destroy(legacy.gameObject);
                 }
-                if (settingsBtn != null)
+                else
                 {
-                    settingsButton = settingsBtn;
-                    Debug.Log("[MainMenuUI] Found existing Settings button");
-                }
-                if (quitBtn != null)
-                {
-                    exitButton = quitBtn;
-                    Debug.Log("[MainMenuUI] Found existing Quit button");
+                    Debug.Log($"[MainMenuUI] Legacy element not found: {name}");
                 }
             }
         }
@@ -503,14 +495,6 @@ namespace AIBeat.UI
         /// </summary>
         private void EnsureButtonMobileSize()
         {
-            // 기존 ButtonPanel이 있으면 새 버튼 생성 건너뛰기 (씬에 이미 버튼이 있음)
-            var existingPanel = transform.Find("ButtonPanel");
-            if (existingPanel != null)
-            {
-                Debug.Log("[MainMenuUI] ButtonPanel exists, skipping button creation");
-                return;
-            }
-
             // 기존 ButtonContainer가 있으면 중복 생성 방지
             var existingContainer = transform.Find("ButtonContainer");
             if (existingContainer != null)
