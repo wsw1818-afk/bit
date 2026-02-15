@@ -111,7 +111,19 @@ namespace AIBeat.Editor
 
         private static void BuildMainMenuScene()
         {
-            NewScene("Assets/Scenes/MainMenuScene.unity");
+            // Update existing scene if possible, or create new
+            string path = "Assets/Scenes/MainMenu.unity"; // User has this
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            
+            // Clear old UI if we want fresh start, or try to find existing
+            // Strategy: Clear Canvas/Camera and rebuild.
+            var rootObjs = scene.GetRootGameObjects();
+            foreach(var r in rootObjs) 
+            {
+                if (r.name == "Canvas" || r.name == "Main Camera" || r.name == "SceneLoader")
+                    GameObject.DestroyImmediate(r);
+            }
+
             var canvas = CreateCanvas();
             CreateBackground(canvas, "Backgrounds/Menu_BG");
             CreateLogo(canvas, 0, 500, 1.0f);
@@ -127,34 +139,42 @@ namespace AIBeat.Editor
             vlg.childControlHeight = false;
             vlg.childControlWidth = false;
 
-            CreateMenuButton(panel, "Start", "시작하기");
+            // Buttons
+            var startBtn = CreateMenuButton(panel, "Start", "시작하기");
+            startBtn.GetComponent<Button>().onClick.AddListener(() => {
+                 GameObject.FindObjectOfType<SceneLoader>()?.LoadSongSelect();
+            });
+
             CreateMenuButton(panel, "Settings", "설정");
-            CreateMenuButton(panel, "Quit", "종료");
+            
+            var quitBtn = CreateMenuButton(panel, "Quit", "종료");
+            quitBtn.GetComponent<Button>().onClick.AddListener(() => {
+                 GameObject.FindObjectOfType<SceneLoader>()?.QuitGame();
+            });
 
             new GameObject("SceneLoader").AddComponent<SceneLoader>();
 
-            SaveScene("Assets/Scenes/MainMenuScene.unity");
+            SaveScene(path);
         }
 
         private static void BuildSongSelectScene()
         {
-            NewScene("Assets/Scenes/SongSelectScene.unity");
+            string path = "Assets/Scenes/SongSelect.unity"; // User has this
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+             
+            // Clear old UI
+            var rootObjs = scene.GetRootGameObjects();
+            foreach(var r in rootObjs) 
+            {
+                if (r.name == "Canvas" || r.name == "Main Camera" || r.name == "SceneLoader")
+                    GameObject.DestroyImmediate(r);
+            }
+
             var canvas = CreateCanvas();
             CreateBackground(canvas, "Backgrounds/SongSelect_BG");
             
             // Header
             CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, 800), new Vector2(800, 100));
-
-            // Scroll View Area (Left)
-            // Simplified: Just a Panel container for now
-            var scrollArea = new GameObject("ScrollArea");
-            scrollArea.transform.SetParent(canvas.transform, false);
-            var rt = scrollArea.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 0.1f);
-            rt.anchorMax = new Vector2(0.6f, 0.9f);
-            rt.offsetMin = new Vector2(50, 0);
-            rt.offsetMax = new Vector2(0, 0);
-            scrollArea.AddComponent<Image>().color = new Color(0,0,0,0.5f);
 
             // Back Button
             var backBtn = CreateMenuButton(canvas.gameObject, "BackBtn", "Back");
@@ -162,6 +182,9 @@ namespace AIBeat.Editor
             backRt.anchorMin = new Vector2(0, 1);
             backRt.anchorMax = new Vector2(0, 1);
             backRt.anchoredPosition = new Vector2(150, -100);
+            backBtn.GetComponent<Button>().onClick.AddListener(() => {
+                 GameObject.FindObjectOfType<SceneLoader>()?.LoadMainMenu();
+            });
 
              // Play Button
             var playBtn = CreateMenuButton(canvas.gameObject, "PlayBtn", "PLAY");
@@ -169,11 +192,15 @@ namespace AIBeat.Editor
             playRt.anchorMin = new Vector2(0.5f, 0);
             playRt.anchorMax = new Vector2(0.5f, 0);
             playRt.anchoredPosition = new Vector2(0, 150);
+            playBtn.GetComponent<Button>().onClick.AddListener(() => {
+                 GameObject.FindObjectOfType<SceneLoader>()?.LoadGame();
+            });
             
             new GameObject("SceneLoader").AddComponent<SceneLoader>();
 
-            SaveScene("Assets/Scenes/SongSelectScene.unity");
+            SaveScene(path);
         }
+
 
         // Helpers
         private static void NewScene(string path)
@@ -192,12 +219,15 @@ namespace AIBeat.Editor
 
         private static Canvas CreateCanvas()
         {
+             // Check if Canvas exists (if we didn't clear)
+             // But we cleared.
             var go = new GameObject("Canvas");
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.matchWidthOrHeight = 0.5f; // Match width/height equally
             go.AddComponent<GraphicRaycaster>();
             return canvas;
         }

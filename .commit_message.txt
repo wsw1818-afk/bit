@@ -1,1 +1,1 @@
-🎨 노트 높이 1.5배 증가: originalScale Y축 0.3 → 0.45로 조정하여 시인성 개선
+✨ Cyberpunk UI Scene 생성 완료: Splash/MainMenu/SongSelect Scene + SceneBuilder 스크립트 + UI 에셋 자동 적용
