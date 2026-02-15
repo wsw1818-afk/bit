@@ -1,13 +1,13 @@
 using UnityEditor;
 using UnityEngine;
 using System.IO;
-using System.Collections;
 
 namespace AIBeat.Editor
 {
     public static class ScreenshotCapture
     {
         private static string screenshotFolder = "Screenshots";
+        private static string pendingFilePath = null;
 
         [MenuItem("Tools/A.I. BEAT/Capture Screenshot _F12")]
         public static void CaptureScreenshot()
@@ -17,9 +17,6 @@ namespace AIBeat.Editor
                 Debug.LogWarning("[ScreenCapture] Play 모드에서만 스크린샷을 캡처할 수 있습니다.");
                 return;
             }
-
-            // Game View를 포커스하고 Repaint 강제
-            FocusAndRepaintGameView();
 
             // Screenshots 폴더 생성
             string projectPath = Path.GetDirectoryName(Application.dataPath);
@@ -32,82 +29,106 @@ namespace AIBeat.Editor
             // 파일명 생성 (타임스탬프)
             string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string fileName = $"AIBeat_{timestamp}.png";
-            string filePath = Path.Combine(folderPath, fileName);
+            pendingFilePath = Path.Combine(folderPath, fileName);
 
-            // Camera 기반 RenderTexture 캡처 (더 안정적)
-            Camera mainCamera = Camera.main;
-            if (mainCamera == null)
+            // Game View 포커스 및 리페인트
+            var gameView = GetGameViewWindow();
+            if (gameView != null)
             {
-                // 모든 카메라 중 첫 번째 활성 카메라 찾기
-                var cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
-                foreach (var cam in cameras)
-                {
-                    if (cam.gameObject.activeInHierarchy)
-                    {
-                        mainCamera = cam;
-                        break;
-                    }
-                }
+                gameView.Focus();
+                gameView.Repaint();
             }
 
-            if (mainCamera == null)
+            // 다음 프레임에서 캡처 (렌더링 완료 후)
+            EditorApplication.delayCall += DelayedCapture;
+            Debug.Log("[ScreenCapture] 스크린샷 캡처 예약됨...");
+        }
+
+        private static void DelayedCapture()
+        {
+            if (string.IsNullOrEmpty(pendingFilePath)) return;
+
+            // 한번 더 딜레이 (2프레임 대기)
+            EditorApplication.delayCall += () =>
             {
-                Debug.LogError("[ScreenCapture] 활성 카메라를 찾을 수 없습니다.");
+                if (!EditorApplication.isPlaying)
+                {
+                    Debug.LogWarning("[ScreenCapture] Play 모드가 종료되어 캡처 취소됨");
+                    pendingFilePath = null;
+                    return;
+                }
+
+                // Game View 강제 포커스
+                var gameView = GetGameViewWindow();
+                if (gameView != null)
+                {
+                    gameView.Focus();
+                    gameView.Repaint();
+                }
+
+                // 런타임 헬퍼를 리플렉션 없이 찾아서 호출 (타입 이름으로 검색)
+                TriggerRuntimeCapture(pendingFilePath);
+                pendingFilePath = null;
+            };
+        }
+
+        private static void TriggerRuntimeCapture(string filePath)
+        {
+            // ScreenshotHelper 찾기 또는 생성 (타입명으로 동적 생성)
+            var helperGO = GameObject.Find("ScreenshotHelper");
+            if (helperGO == null)
+            {
+                helperGO = new GameObject("ScreenshotHelper");
+                helperGO.hideFlags = HideFlags.HideAndDontSave;
+            }
+
+            // AIBeat.Utils.ScreenshotHelper 컴포넌트 추가/가져오기
+            var helperType = System.Type.GetType("AIBeat.Utils.ScreenshotHelper, Assembly-CSharp");
+            if (helperType == null)
+            {
+                Debug.LogError("[ScreenCapture] ScreenshotHelper 타입을 찾을 수 없습니다.");
                 return;
             }
 
-            // RenderTexture 생성 (1080x1920 세로 해상도)
-            int width = 1080;
-            int height = 1920;
-            RenderTexture rt = new RenderTexture(width, height, 24);
-            rt.antiAliasing = 2;
+            var helper = helperGO.GetComponent(helperType);
+            if (helper == null)
+            {
+                helper = helperGO.AddComponent(helperType);
+            }
 
-            // 카메라 렌더링
-            RenderTexture prevRT = mainCamera.targetTexture;
-            mainCamera.targetTexture = rt;
-            mainCamera.Render();
-            mainCamera.targetTexture = prevRT;
-
-            // RenderTexture → Texture2D 변환
-            RenderTexture.active = rt;
-            Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-            tex.Apply();
-            RenderTexture.active = null;
-
-            // PNG 저장
-            byte[] bytes = tex.EncodeToPNG();
-            File.WriteAllBytes(filePath, bytes);
-
-            // 정리
-            Object.DestroyImmediate(rt);
-            Object.DestroyImmediate(tex);
-
-            Debug.Log($"[ScreenCapture] Screenshot saved: {filePath} ({width}x{height})");
+            // CaptureAfterFrame 메서드 호출
+            var method = helperType.GetMethod("CaptureAfterFrame");
+            if (method != null)
+            {
+                method.Invoke(helper, new object[] { filePath });
+            }
+            else
+            {
+                Debug.LogError("[ScreenCapture] CaptureAfterFrame 메서드를 찾을 수 없습니다.");
+            }
         }
 
-        private static void FocusAndRepaintGameView()
+        private static EditorWindow GetGameViewWindow()
         {
             var assembly = typeof(EditorWindow).Assembly;
             var gameViewType = assembly.GetType("UnityEditor.GameView");
             if (gameViewType != null)
             {
-                var gameView = EditorWindow.GetWindow(gameViewType, false, "Game", true);
-                if (gameView != null)
-                {
-                    gameView.Focus();
-                    gameView.Repaint();
-                    // 강제 리페인트를 위해 SendEvent 호출
-                    gameView.SendEvent(EditorGUIUtility.CommandEvent("Repaint"));
-                }
+                return EditorWindow.GetWindow(gameViewType, false, "Game", false);
             }
+            return null;
         }
 
         [MenuItem("Tools/A.I. BEAT/Focus Game View")]
         public static void FocusGameViewMenuItem()
         {
-            FocusAndRepaintGameView();
-            Debug.Log("[ScreenCapture] Game View 포커스됨");
+            var gameView = GetGameViewWindow();
+            if (gameView != null)
+            {
+                gameView.Focus();
+                gameView.Repaint();
+                Debug.Log("[ScreenCapture] Game View 포커스됨");
+            }
         }
 
         [MenuItem("Tools/A.I. BEAT/Open Screenshots Folder")]

@@ -1,1 +1,1 @@
-✨ MCP 자동화 UI 검증 + runInBackground 추가 + RenderTexture 스크린샷
+✨ MCP 자동화 UI 검증 파이프라인 완성 (ScreenshotHelper 런타임 분리)
