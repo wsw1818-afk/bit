@@ -1,1 +1,1 @@
-🐛 NoteSpawner 풀 초기화 NullReferenceException 수정: SpriteRenderer 지원 추가 (MeshFilter/MeshRenderer 체크 건너뛰기)
+🐛 NoteSpawner MeshRenderer 참조 에러 수정: 디버그 로그에서 Renderer(기본 클래스) 사용으로 변경

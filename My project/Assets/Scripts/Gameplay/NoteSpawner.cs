@@ -528,8 +528,8 @@ namespace AIBeat.Gameplay
             {
                 var pos = note.transform.position;
                 var scl = note.transform.localScale;
-                var mr = note.GetComponent<MeshRenderer>();
-                Debug.Log($"[NoteSpawner] Spawned {data.Type} note at lane {data.LaneIndex}, hitTime: {data.HitTime:F2}s | Active: {activeNotes.Count} | pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) scale=({scl.x:F2},{scl.y:F2},{scl.z:F2}) visible={mr?.isVisible}");
+                var renderer = note.GetComponent<Renderer>(); // SpriteRenderer와 MeshRenderer 모두 지원
+                Debug.Log($"[NoteSpawner] Spawned {data.Type} note at lane {data.LaneIndex}, hitTime: {data.HitTime:F2}s | Active: {activeNotes.Count} | pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) scale=({scl.x:F2},{scl.y:F2},{scl.z:F2}) visible={renderer?.isVisible}");
             }
 #endif
         }
