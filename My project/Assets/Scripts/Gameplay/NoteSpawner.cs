@@ -24,7 +24,7 @@ namespace AIBeat.Gameplay
 
         [Header("Spawn Settings")]
         [SerializeField] private float noteSpeed = 5f;         // 노트 속도 (units/sec)
-        [SerializeField] private float spawnDistance = 15f;    // 판정선까지의 거리
+        [SerializeField] private float spawnDistance = 20f;    // 판정선까지의 거리 (StatsBar 바로 아래)
         [SerializeField] private float lookAhead = 3f;         // 미리 생성할 시간(초)
 
         [Header("Pool Settings")]
@@ -213,8 +213,8 @@ namespace AIBeat.Gameplay
             renderer.sortingOrder = 500; // 높은 sortingOrder
             managedMaterials.Add(mat);
 
-            // 노트 크기: 1.1 x 0.55 (1/3 더 넓게)
-            noteObj.transform.localScale = new Vector3(1.1f, 0.55f, 1f);
+            // 노트 크기: 1.5 x 0.65 (더 넓게)
+            noteObj.transform.localScale = new Vector3(1.5f, 0.65f, 1f);
 
             Debug.Log($"[NoteSpawner] Note {name} created: MeshRenderer, shader={shader?.name}, color={color}, scale={noteObj.transform.localScale}");
 
