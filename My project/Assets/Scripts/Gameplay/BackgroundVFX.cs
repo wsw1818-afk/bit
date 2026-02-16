@@ -68,13 +68,13 @@ namespace AIBeat.Gameplay
 
             CreateBackgroundGradient(judgeY);
             CreateFloatingParticles(judgeY);
-            CreateLaneDividers(judgeY);
+            // CreateLaneDividers(judgeY); // 레인 구분선 제거
             CreateBeatFlashOverlay(judgeY);
 
             StartCoroutine(AnimateParticles());
             StartCoroutine(AnimateBackground());
 
-            Debug.Log("[BackgroundVFX] Initialized: gradient + particles + dividers + beatFlash");
+            Debug.Log("[BackgroundVFX] Initialized: gradient + particles + beatFlash");
         }
 
         /// <summary>
