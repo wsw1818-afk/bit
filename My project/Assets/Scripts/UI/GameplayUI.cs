@@ -295,8 +295,8 @@ namespace AIBeat.UI
             {
                 songTitleText.transform.SetParent(topBar.transform, false);
                 var titleLE = songTitleText.gameObject.AddComponent<LayoutElement>();
-                titleLE.preferredWidth = 140;
-                songTitleText.fontSize = 24; // 18 → 24 (크게)
+                titleLE.preferredWidth = 160;
+                songTitleText.fontSize = 28; // 24 → 28 (더 크게)
                 songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
                 songTitleText.color = UIColorPalette.NEON_CYAN_BRIGHT;
                 songTitleText.fontStyle = FontStyles.Bold;
@@ -327,11 +327,11 @@ namespace AIBeat.UI
                     scoreLE.flexibleWidth = 1;
                 }
 
-                scoreText.fontSize = 38;
+                scoreText.fontSize = 52; // 38 → 52 (더 크게)
                 scoreText.alignment = TextAlignmentOptions.Center;
                 scoreText.color = UIColorPalette.NEON_GOLD; // 네온 골드
                 scoreText.fontStyle = FontStyles.Bold;
-                scoreText.characterSpacing = 6f; // LED 느낌 글자 간격 (더 넓게)
+                scoreText.characterSpacing = 4f; // LED 느낌 글자 간격
                 var korFont1 = KoreanFontManager.KoreanFont;
                 if (korFont1 != null) scoreText.font = korFont1;
                 // scoreText.outlineWidth = 0.12f; // Dynamic SDF에서 outline 비활성화
@@ -343,8 +343,8 @@ namespace AIBeat.UI
             {
                 comboText.transform.SetParent(topBar.transform, false);
                 var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
-                comboLE.preferredWidth = 100;
-                comboText.fontSize = 40; // 32 → 40 (더 크게)
+                comboLE.preferredWidth = 120;
+                comboText.fontSize = 48; // 40 → 48 (더 크게)
                 comboText.alignment = TextAlignmentOptions.Center;
                 comboText.color = Color.white;
                 comboText.fontStyle = FontStyles.Bold;

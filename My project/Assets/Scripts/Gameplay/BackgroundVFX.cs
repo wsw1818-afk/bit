@@ -34,7 +34,7 @@ namespace AIBeat.Gameplay
         private Material bgMaterial;
 
         private const int PARTICLE_COUNT = 30;
-        private const int LANE_COUNT = 7;
+        private const int LANE_COUNT = 4; // 실제 노트 레인 수와 일치
 
         // Music Theme 색상
         private static readonly Color[] themeColors = new Color[]
@@ -300,12 +300,27 @@ namespace AIBeat.Gameplay
         /// </summary>
         private void CreateLaneDividers(float judgeY)
         {
+            // 기존 구분선 정리
+            if (laneDividers != null)
+            {
+                foreach (var go in laneDividers)
+                    if (go != null) Destroy(go);
+            }
+            // 씬에 남아있는 기존 LaneDivider 오브젝트도 정리
+            foreach (Transform child in transform)
+            {
+                if (child.name.StartsWith("LaneDivider_"))
+                    Destroy(child.gameObject);
+            }
+
             float laneWidth = 1f;
             float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
-            int dividerCount = LANE_COUNT + 1; // 레인 양쪽 경계
+            int dividerCount = LANE_COUNT + 1; // 레인 양쪽 경계 (4레인 = 5개 구분선)
 
             laneDividers = new GameObject[dividerCount];
             dividerMaterials = new Material[dividerCount];
+
+            Debug.Log($"[BackgroundVFX] Creating {dividerCount} lane dividers (LANE_COUNT={LANE_COUNT})");
 
             var shader = Shader.Find("Sprites/Default");
             if (shader == null) shader = Shader.Find("Unlit/Color");
