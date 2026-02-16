@@ -320,7 +320,7 @@ namespace AIBeat.Gameplay
 
                 float x = startX - laneWidth / 2f + i * laneWidth;
                 go.transform.position = new Vector3(x, judgeY + 8f, 0.9f);
-                go.transform.localScale = new Vector3(0.06f, 20f, 1f); // 약간 두껍게
+                go.transform.localScale = new Vector3(0.12f, 20f, 1f); // 0.06 → 0.12 (두께 2배)
 
                 var col = go.GetComponent<Collider>();
                 if (col != null) Destroy(col);
@@ -328,16 +328,16 @@ namespace AIBeat.Gameplay
                 var mat = new Material(shader);
                 mat.mainTexture = lineTex;
 
-                // 네온 색상: 가장자리 시안, 내부 마젠타/골드
+                // 네온 색상: 가장자리 시안, 내부 마젠타/골드 (투명도 강화)
                 Color lineColor;
                 if (i == 0 || i == dividerCount - 1)
-                    lineColor = new Color(0f, 0.9f, 1f, 0.5f); // 네온 시안 (밝게)
+                    lineColor = new Color(0f, 0.95f, 1f, 0.75f); // 네온 시안 (밝게, alpha 0.5→0.75)
                 else if (i == 1 || i == dividerCount - 2)
-                    lineColor = new Color(0.9f, 0.2f, 0.9f, 0.4f); // 네온 마젠타
+                    lineColor = new Color(0.95f, 0.25f, 0.95f, 0.6f); // 네온 마젠타 (alpha 0.4→0.6)
                 else if (i == dividerCount / 2)
-                    lineColor = new Color(1f, 0.9f, 0.2f, 0.45f); // 중앙 골드 (밝게)
+                    lineColor = new Color(1f, 0.92f, 0.25f, 0.7f); // 중앙 골드 (alpha 0.45→0.7)
                 else
-                    lineColor = new Color(0.5f, 0.3f, 0.9f, 0.25f); // 보라 (약하게)
+                    lineColor = new Color(0.6f, 0.35f, 0.95f, 0.45f); // 보라 (alpha 0.25→0.45)
 
                 mat.color = lineColor;
                 var dividerRenderer = go.GetComponent<MeshRenderer>();

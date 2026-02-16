@@ -260,7 +260,7 @@ namespace AIBeat.UI
             topBarRect.anchorMax = new Vector2(1, 1);
             topBarRect.pivot = new Vector2(0.5f, 1);
             topBarRect.anchoredPosition = Vector2.zero;
-            topBarRect.sizeDelta = new Vector2(0, 80);
+            topBarRect.sizeDelta = new Vector2(0, 100); // 80 → 100 (더 크게)
 
             // 네온 그라데이션 배경 (위: 어두운 보라, 아래: 시안 힌트)
             var topBarBg = topBar.AddComponent<Image>();
@@ -290,15 +290,15 @@ namespace AIBeat.UI
             hLayout.childForceExpandWidth = false;
             hLayout.childForceExpandHeight = true;
 
-            // --- 곡명 (좌측, 녹색, 2줄 가능) ---
+            // --- 곡명 (좌측, 시안, 크게) ---
             if (songTitleText != null)
             {
                 songTitleText.transform.SetParent(topBar.transform, false);
                 var titleLE = songTitleText.gameObject.AddComponent<LayoutElement>();
-                titleLE.preferredWidth = 110;
-                songTitleText.fontSize = 18;
+                titleLE.preferredWidth = 140;
+                songTitleText.fontSize = 24; // 18 → 24 (크게)
                 songTitleText.alignment = TextAlignmentOptions.MidlineLeft;
-                songTitleText.color = UIColorPalette.NEON_GREEN;
+                songTitleText.color = UIColorPalette.NEON_CYAN_BRIGHT;
                 songTitleText.fontStyle = FontStyles.Bold;
                 songTitleText.textWrappingMode = TextWrappingModes.Normal;
                 songTitleText.overflowMode = TextOverflowModes.Ellipsis;
@@ -343,8 +343,8 @@ namespace AIBeat.UI
             {
                 comboText.transform.SetParent(topBar.transform, false);
                 var comboLE = comboText.gameObject.AddComponent<LayoutElement>();
-                comboLE.preferredWidth = 80;
-                comboText.fontSize = 32;
+                comboLE.preferredWidth = 100;
+                comboText.fontSize = 40; // 32 → 40 (더 크게)
                 comboText.alignment = TextAlignmentOptions.Center;
                 comboText.color = Color.white;
                 comboText.fontStyle = FontStyles.Bold;
