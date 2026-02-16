@@ -554,8 +554,7 @@ namespace AIBeat.UI
 
             var buttonConfigs = new (Button btn, string text, string subText, Color accentColor)[]
             {
-                (playButton, "플레이", "PLAY", UIColorPalette.NEON_MAGENTA),
-                (libraryButton, "라이브러리", "LIBRARY", UIColorPalette.NEON_CYAN),
+                (playButton, "곡 선택", "SELECT SONG", UIColorPalette.NEON_MAGENTA),
                 (settingsButton, "설정", "SETTINGS", UIColorPalette.NEON_PURPLE),
                 (exitButton, "종료", "EXIT", new Color(1f, 0.35f, 0.35f, 1f))
             };

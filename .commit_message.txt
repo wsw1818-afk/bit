@@ -1,1 +1,1 @@
-✅ Build All Scenes 실행 완료 및 4개 씬 생성 검증
+🎨 SongSelectUI 하단 버튼 패널 추가 (플레이/설정/뒤로) + MainMenu 버튼 이름 변경

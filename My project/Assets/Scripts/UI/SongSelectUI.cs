@@ -29,6 +29,10 @@ namespace AIBeat.UI
         private List<Image> eqBars = new List<Image>();
         private Coroutine eqAnimCoroutine;
 
+        // 하단 버튼
+        private Button playButton;
+        private Button settingsButton;
+
         private void Start()
         {
             Debug.Log("[SongSelectUI] Start() 호출됨");
@@ -267,6 +271,9 @@ namespace AIBeat.UI
             // 타이틀 바 생성
             CreateTitleBar();
 
+            // 하단 버튼 패널 생성 (플레이, 설정, 뒤로)
+            CreateBottomButtonPanel();
+
             // 라이브러리 UI 초기화 + 표시
             songLibraryUI = gameObject.AddComponent<SongLibraryUI>();
             var parentRect = GetComponent<RectTransform>();
@@ -275,6 +282,153 @@ namespace AIBeat.UI
 
             // 한국어 폰트 적용 (□□□ 방지)
             KoreanFontManager.ApplyFontToAll(gameObject);
+        }
+
+        /// <summary>
+        /// 하단 버튼 패널 생성 (플레이, 설정, 뒤로)
+        /// </summary>
+        private void CreateBottomButtonPanel()
+        {
+            if (transform.Find("BottomButtonPanel") != null) return;
+
+            var panel = new GameObject("BottomButtonPanel");
+            panel.transform.SetParent(transform, false);
+
+            var panelRect = panel.AddComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.1f, 0.02f);
+            panelRect.anchorMax = new Vector2(0.9f, 0.22f);
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            var vLayout = panel.AddComponent<VerticalLayoutGroup>();
+            vLayout.spacing = 12;
+            vLayout.childAlignment = TextAnchor.MiddleCenter;
+            vLayout.childControlWidth = true;
+            vLayout.childControlHeight = false;
+            vLayout.childForceExpandWidth = true;
+            vLayout.childForceExpandHeight = false;
+
+            // 플레이 버튼
+            playButton = CreateStyledButton(panel.transform, "플레이", "PLAY", UIColorPalette.NEON_MAGENTA);
+            playButton.onClick.AddListener(OnPlayClicked);
+
+            // 설정 버튼
+            settingsButton = CreateStyledButton(panel.transform, "설정", "SETTINGS", UIColorPalette.NEON_PURPLE);
+            settingsButton.onClick.AddListener(OnSettingsClicked);
+
+            // 뒤로 버튼
+            var backBtn = CreateStyledButton(panel.transform, "뒤로", "BACK", UIColorPalette.NEON_CYAN);
+            backBtn.onClick.AddListener(OnBackClicked);
+
+            Debug.Log("[SongSelectUI] 하단 버튼 패널 생성 완료");
+        }
+
+        /// <summary>
+        /// 스타일이 적용된 버튼 생성
+        /// </summary>
+        private Button CreateStyledButton(Transform parent, string mainText, string subText, Color accentColor)
+        {
+            var btnGo = new GameObject($"Btn_{mainText}");
+            btnGo.transform.SetParent(parent, false);
+
+            var btnRect = btnGo.AddComponent<RectTransform>();
+            btnRect.sizeDelta = new Vector2(0, 70f);
+
+            var le = btnGo.AddComponent<LayoutElement>();
+            le.preferredHeight = 70f;
+            le.minHeight = 70f;
+
+            // 배경
+            var img = btnGo.AddComponent<Image>();
+            img.color = new Color(0.12f, 0.08f, 0.22f, 0.95f);
+
+            // 버튼 컴포넌트
+            var btn = btnGo.AddComponent<Button>();
+            var colors = btn.colors;
+            colors.normalColor = new Color(0.12f, 0.08f, 0.22f, 0.95f);
+            colors.highlightedColor = new Color(0.20f, 0.15f, 0.35f, 0.98f);
+            colors.pressedColor = accentColor.WithAlpha(0.6f);
+            btn.colors = colors;
+
+            // 테두리
+            var outline = btnGo.AddComponent<Outline>();
+            outline.effectColor = accentColor.WithAlpha(0.7f);
+            outline.effectDistance = new Vector2(2f, -2f);
+
+            // 악센트 바 (좌측)
+            var accentBar = new GameObject("AccentBar");
+            accentBar.transform.SetParent(btnGo.transform, false);
+            var accentRect = accentBar.AddComponent<RectTransform>();
+            accentRect.anchorMin = new Vector2(0, 0.1f);
+            accentRect.anchorMax = new Vector2(0, 0.9f);
+            accentRect.pivot = new Vector2(0, 0.5f);
+            accentRect.anchoredPosition = new Vector2(8, 0);
+            accentRect.sizeDelta = new Vector2(6, 0);
+            var accentImg = accentBar.AddComponent<Image>();
+            accentImg.color = accentColor;
+            accentImg.raycastTarget = false;
+
+            // 메인 텍스트 (한국어)
+            var mainTextGo = new GameObject("MainText");
+            mainTextGo.transform.SetParent(btnGo.transform, false);
+            var mainTextRect = mainTextGo.AddComponent<RectTransform>();
+            mainTextRect.anchorMin = new Vector2(0, 0);
+            mainTextRect.anchorMax = new Vector2(1, 1);
+            mainTextRect.offsetMin = new Vector2(24, 0);
+            mainTextRect.offsetMax = new Vector2(-60, -8);
+            var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
+            mainTmp.text = mainText;
+            mainTmp.fontSize = 32;
+            mainTmp.fontStyle = FontStyles.Bold;
+            mainTmp.color = Color.white;
+            mainTmp.alignment = TextAlignmentOptions.MidlineLeft;
+            mainTmp.raycastTarget = false;
+
+            // 서브 텍스트 (영어)
+            var subTextGo = new GameObject("SubText");
+            subTextGo.transform.SetParent(btnGo.transform, false);
+            var subTextRect = subTextGo.AddComponent<RectTransform>();
+            subTextRect.anchorMin = new Vector2(0, 0);
+            subTextRect.anchorMax = new Vector2(1, 0.4f);
+            subTextRect.offsetMin = new Vector2(24, 0);
+            subTextRect.offsetMax = new Vector2(-60, 0);
+            var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
+            subTmp.text = subText;
+            subTmp.fontSize = 12;
+            subTmp.color = new Color(0.6f, 0.6f, 0.7f, 0.8f);
+            subTmp.alignment = TextAlignmentOptions.MidlineLeft;
+            subTmp.raycastTarget = false;
+
+            // 화살표
+            var arrowGo = new GameObject("Arrow");
+            arrowGo.transform.SetParent(btnGo.transform, false);
+            var arrowRect = arrowGo.AddComponent<RectTransform>();
+            arrowRect.anchorMin = new Vector2(1, 0);
+            arrowRect.anchorMax = new Vector2(1, 1);
+            arrowRect.pivot = new Vector2(1, 0.5f);
+            arrowRect.anchoredPosition = new Vector2(-16, 0);
+            arrowRect.sizeDelta = new Vector2(40, 0);
+            var arrowTmp = arrowGo.AddComponent<TextMeshProUGUI>();
+            arrowTmp.text = "▶";
+            arrowTmp.fontSize = 24;
+            arrowTmp.color = accentColor;
+            arrowTmp.alignment = TextAlignmentOptions.Center;
+            arrowTmp.raycastTarget = false;
+
+            return btn;
+        }
+
+        private void OnPlayClicked()
+        {
+            Debug.Log("[SongSelectUI] 플레이 버튼 클릭");
+            // 디버그 게임 시작 (빈 SongData로 시작 - GameplayController가 테스트 곡 생성)
+            GameManager.Instance?.StartGame(null);
+        }
+
+        private void OnSettingsClicked()
+        {
+            Debug.Log("[SongSelectUI] 설정 버튼 클릭");
+            // TODO: 설정 화면으로 이동
         }
 
         /// <summary>
@@ -315,6 +469,7 @@ namespace AIBeat.UI
 
             var bg = titleBar.AddComponent<Image>();
             bg.color = UIColorPalette.BG_TOPBAR;
+            bg.raycastTarget = false; // 터치 차단 방지
 
             // 타이틀 텍스트 (뒤로 버튼 56px + padding 후 시작)
             var textGo = new GameObject("TitleText");
@@ -510,6 +665,8 @@ namespace AIBeat.UI
         {
             if (eqAnimCoroutine != null) StopCoroutine(eqAnimCoroutine);
             if (backButton != null) backButton.onClick.RemoveAllListeners();
+            if (playButton != null) playButton.onClick.RemoveAllListeners();
+            if (settingsButton != null) settingsButton.onClick.RemoveAllListeners();
         }
     }
 }
