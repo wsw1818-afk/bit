@@ -213,8 +213,8 @@ namespace AIBeat.Gameplay
             renderer.sortingOrder = 500; // 높은 sortingOrder
             managedMaterials.Add(mat);
 
-            // 노트 크기: 0.9 x 0.5 (레인폭에 맞춤)
-            noteObj.transform.localScale = new Vector3(0.9f, 0.5f, 1f);
+            // 노트 크기: 1.1 x 0.35
+            noteObj.transform.localScale = new Vector3(1.1f, 0.35f, 1f);
 
             Debug.Log($"[NoteSpawner] Note {name} created: MeshRenderer, shader={shader?.name}, color={color}, scale={noteObj.transform.localScale}");
 
@@ -527,8 +527,8 @@ namespace AIBeat.Gameplay
             const float noteZ = -1f;
 
             // 항상 중앙 기준으로 레인 위치 계산 (화면 중앙 = X:0)
-            // 레인 간격 = 노트 넓이 (0.9)
-            const float laneWidth = 0.9f;
+            // 레인 간격 = 노트 넓이 (1.1)
+            const float laneWidth = 1.1f;
             float x = (laneIndex - 1.5f) * laneWidth;  // 레인 0~3이 중앙 기준 배치
             return new Vector3(x, spawnDistance, noteZ);
         }

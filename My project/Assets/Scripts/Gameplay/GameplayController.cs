@@ -77,7 +77,7 @@ namespace AIBeat.Gameplay
             var cam = Camera.main;
             if (cam == null || !cam.orthographic) return;
 
-            float laneWidth = 4f; // 4레인 x 1유닛
+            float laneWidth = 4.4f; // 4레인 x 1.1유닛
             float padding = 0.3f; // 좌우 약간의 여백
             float targetWorldWidth = laneWidth + padding;
 
@@ -89,9 +89,9 @@ namespace AIBeat.Gameplay
             // 노트는 Y=12에서 스폰, 판정선 Y=0 → 카메라 Y=6, ortho=7이면 -1~13 범위
             cam.orthographicSize = Mathf.Max(requiredOrthoSize, 7f);
 
-            // 카메라 위치 조정 (X=레인 중심, Y=화면 중앙)
+            // 카메라 위치 조정 (X=화면 중앙, Y=화면 중앙)
             var pos = cam.transform.position;
-            pos.x = 0.5f;  // 레인 중심
+            pos.x = 0f;    // 화면 중앙
             pos.y = 6f;    // 판정선(Y=0)과 스폰점(Y=12) 중간
             cam.transform.position = pos;
         }

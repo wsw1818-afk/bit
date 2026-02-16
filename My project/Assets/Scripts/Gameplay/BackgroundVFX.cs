@@ -313,7 +313,7 @@ namespace AIBeat.Gameplay
                     Destroy(child.gameObject);
             }
 
-            float laneWidth = 0.9f;  // 노트 넓이와 동일
+            float laneWidth = 1.1f;  // 노트 넓이와 동일
             float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
             int dividerCount = LANE_COUNT + 1; // 레인 양쪽 경계 (4레인 = 5개 구분선)
 

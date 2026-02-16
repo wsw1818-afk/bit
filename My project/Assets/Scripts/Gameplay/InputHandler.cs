@@ -82,7 +82,7 @@ namespace AIBeat.Gameplay
                 return;
             }
 
-            float laneWidth = 0.9f;  // 노트 넓이와 동일
+            float laneWidth = 1.1f;  // 노트 넓이와 동일
             float startX = -(touchZoneCount - 1) * laneWidth / 2f;
 
             // 5개 경계: 레인0 왼쪽, 0-1 사이, 1-2 사이, 2-3 사이, 레인3 오른쪽
