@@ -15,8 +15,8 @@ EditorBuildSettings:
     path: Assets/Scenes/SongSelectScene.unity
     guid: 5f1e045f03115ad4da1c135f728f56f5
   - enabled: 1
-    path: Assets/Scenes/Gameplay.unity
-    guid: 945058252106c334195d1cd328edeac9
+    path: Assets/Scenes/GameplayScene.unity
+    guid: 8ffb81918d427b645b1becf9389bacae
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
