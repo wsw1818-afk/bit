@@ -20,8 +20,7 @@ namespace AIBeat.Gameplay
         private NoteData noteData;
         private float speed;
         private float judgementLineY;
-        private Vector3 originalScale = new Vector3(1.8f, 0.4f, 1f);  // 기본 스케일
-        private bool scaleInitialized;
+        private readonly Vector3 originalScale = new Vector3(1.8f, 0.4f, 1f);  // 고정 스케일
 
         public NoteType NoteType => noteData.Type;
         public int LaneIndex => noteData.LaneIndex;
@@ -89,12 +88,8 @@ namespace AIBeat.Gameplay
             if (meshRenderer == null)
                 meshRenderer = GetComponent<MeshRenderer>();
 
-            // 스케일 초기화 (한 번만)
-            if (!scaleInitialized && transform.localScale.sqrMagnitude > 0.01f)
-            {
-                originalScale = transform.localScale;
-                scaleInitialized = true;
-            }
+            // 스케일은 항상 고정값 사용 (동적 캐싱 제거)
+            // originalScale은 필드 초기화에서 (1.8f, 0.4f, 1f)로 설정됨
         }
 
         public void Initialize(NoteData data, float noteSpeed, float judgeY)
