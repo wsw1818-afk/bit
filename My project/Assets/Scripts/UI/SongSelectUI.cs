@@ -37,6 +37,9 @@ namespace AIBeat.UI
         {
             Debug.Log("[SongSelectUI] Start() 호출됨");
 
+            // 에디터에서 포커스 손실 시에도 게임 루프 유지 (MCP 스크린샷 캡처용)
+            Application.runInBackground = true;
+
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             var _ = KoreanFontManager.KoreanFont;
 
@@ -295,13 +298,19 @@ namespace AIBeat.UI
             panel.transform.SetParent(transform, false);
 
             var panelRect = panel.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.1f, 0.02f);
-            panelRect.anchorMax = new Vector2(0.9f, 0.22f);
+            panelRect.anchorMin = new Vector2(0.05f, 0.18f);  // 이퀄라이저 위로 이동
+            panelRect.anchorMax = new Vector2(0.95f, 0.48f);  // 더 넓은 영역
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
+            // 반투명 배경 추가 (가독성 향상)
+            var panelBg = panel.AddComponent<Image>();
+            panelBg.color = new Color(0.05f, 0.02f, 0.12f, 0.85f);
+            panelBg.raycastTarget = false;
+
             var vLayout = panel.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 12;
+            vLayout.spacing = 8;
+            vLayout.padding = new RectOffset(10, 10, 10, 10);
             vLayout.childAlignment = TextAnchor.MiddleCenter;
             vLayout.childControlWidth = true;
             vLayout.childControlHeight = false;
@@ -332,11 +341,11 @@ namespace AIBeat.UI
             btnGo.transform.SetParent(parent, false);
 
             var btnRect = btnGo.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(0, 70f);
+            btnRect.sizeDelta = new Vector2(0, 85f);  // 높이 증가
 
             var le = btnGo.AddComponent<LayoutElement>();
-            le.preferredHeight = 70f;
-            le.minHeight = 70f;
+            le.preferredHeight = 85f;
+            le.minHeight = 85f;
 
             // 배경
             var img = btnGo.AddComponent<Image>();
@@ -378,7 +387,7 @@ namespace AIBeat.UI
             mainTextRect.offsetMax = new Vector2(-60, -8);
             var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
             mainTmp.text = mainText;
-            mainTmp.fontSize = 32;
+            mainTmp.fontSize = 38;  // 텍스트 크기 증가
             mainTmp.fontStyle = FontStyles.Bold;
             mainTmp.color = Color.white;
             mainTmp.alignment = TextAlignmentOptions.MidlineLeft;
@@ -394,8 +403,8 @@ namespace AIBeat.UI
             subTextRect.offsetMax = new Vector2(-60, 0);
             var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
             subTmp.text = subText;
-            subTmp.fontSize = 12;
-            subTmp.color = new Color(0.6f, 0.6f, 0.7f, 0.8f);
+            subTmp.fontSize = 14;  // 서브 텍스트 크기 증가
+            subTmp.color = new Color(0.7f, 0.7f, 0.8f, 0.9f);
             subTmp.alignment = TextAlignmentOptions.MidlineLeft;
             subTmp.raycastTarget = false;
 
