@@ -472,44 +472,12 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 일시정지 메뉴 버튼 생성 헬퍼
+        /// 일시정지 메뉴 버튼 생성 헬퍼 (디자인 에셋 사용)
         /// </summary>
         private Button CreatePauseMenuButton(Transform parent, string name, string label)
         {
-            var btnGo = new GameObject(name);
-            btnGo.transform.SetParent(parent, false);
-
-            var le = btnGo.AddComponent<LayoutElement>();
-            le.preferredHeight = 80;
-            le.minHeight = 60;
-
-            var btnImage = btnGo.AddComponent<Image>();
-            btnImage.color = UIColorPalette.BG_BUTTON;
-
-            var outline = btnGo.AddComponent<Outline>();
-            outline.effectColor = UIColorPalette.BORDER_MAGENTA;
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-            // 텍스트
-            var textGo = new GameObject("Text");
-            textGo.transform.SetParent(btnGo.transform, false);
-            var textRect = textGo.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            var tmp = textGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = label;
-            tmp.fontSize = 36;
-            tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.fontStyle = FontStyles.Bold;
-
-            var btn = btnGo.AddComponent<Button>();
-            btn.targetGraphic = btnImage;
-
-            return btn;
+            return UIButtonStyleHelper.CreateStyledButton(parent, name, label,
+                preferredHeight: 80f, fontSize: 36f);
         }
 
         /// <summary>
@@ -883,33 +851,11 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 버튼에 한국어 텍스트 + 네온 스타일 적용
+        /// 버튼에 한국어 텍스트 + 디자인 에셋 스타일 적용
         /// </summary>
         private void ApplyButtonStyle(Button btn, string koreanText)
         {
-            if (btn == null) return;
-
-            // BIT.jpg 스타일 배경
-            var img = btn.GetComponent<Image>();
-            if (img != null)
-                img.color = UIColorPalette.BG_BUTTON;
-
-            // 네온 마젠타 테두리
-            var outline = btn.GetComponent<Outline>();
-            if (outline == null)
-                outline = btn.gameObject.AddComponent<Outline>();
-            outline.effectColor = UIColorPalette.BORDER_MAGENTA;
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-            // 텍스트
-            var tmp = btn.GetComponentInChildren<TMP_Text>();
-            if (tmp != null)
-            {
-                tmp.text = koreanText;
-                tmp.fontSize = 30;
-                tmp.fontStyle = FontStyles.Bold;
-                tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
-            }
+            UIButtonStyleHelper.ApplyDesignStyle(btn, koreanText, fontSize: 30f);
         }
 
         /// <summary>

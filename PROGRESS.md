@@ -411,3 +411,39 @@ mcp__mcp-unity__execute_menu_item("Assets/Refresh")
 - 씬 전환 (MainMenu → SongSelect → Gameplay) 테스트
 - 터치/클릭 입력 테스트
 
+---
+
+## 전체 씬 리디자인 (2026-02-16)
+
+### ✅ UIButtonStyleHelper 유틸리티 클래스 생성
+- **파일**: `Assets/Scripts/UI/UIButtonStyleHelper.cs`
+- **기능**:
+  - 버튼 스프라이트 캐시 (`Btn_Normal`, `Btn_Hover`, `Btn_Pressed`)
+  - `ApplyDesignStyle()`: 기존 버튼에 디자인 에셋 스타일 적용
+  - `CreateStyledButton()`: 새 버튼 생성 + 스타일 적용
+  - `CreateInlineButton()`: 인라인 버튼 생성 (캘리브레이션 등)
+- **SpriteSwap 전환**: 버튼 호버/클릭 시 스프라이트 자동 전환
+
+### ✅ SettingsUI 버튼 디자인 적용
+- `CreateButton()`: UIButtonStyleHelper.CreateStyledButton() 사용으로 변경
+- `CreateInlineButton()`: UIButtonStyleHelper.CreateInlineButton() 사용으로 변경
+- 네온 테두리 대신 9-slice 스프라이트 버튼으로 통일
+
+### ✅ GameplayUI 버튼 디자인 적용
+- `CreatePauseMenuButton()`: UIButtonStyleHelper.CreateStyledButton() 사용
+- `ApplyButtonStyle()`: UIButtonStyleHelper.ApplyDesignStyle() 사용
+- 일시정지 메뉴, 결과 화면 버튼 모두 디자인 에셋 적용
+
+### ✅ 배경/로고 텍스처 Sprite 설정 수정
+- **수정된 meta 파일**:
+  - `Splash_BG.png.meta`: textureType 8, spriteMode 1
+  - `Menu_BG.png.meta`: textureType 8, spriteMode 1
+  - `SongSelect_BG.png.meta`: textureType 8, spriteMode 1
+  - `MainLogo.png.meta`: textureType 8, spriteMode 1
+- 모든 UI 배경이 Resources.Load<Sprite>()로 정상 로드 가능
+
+### ✅ 씬 빌드 및 컴파일 완료
+- 4개 씬 재생성 완료: SplashScene, MainMenuScene, SongSelectScene, GameplayScene
+- 컴파일 에러 0, 경고 2 (무시 가능)
+- 디자인 에셋 통합 완료
+

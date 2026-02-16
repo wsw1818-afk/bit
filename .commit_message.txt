@@ -1,1 +1,1 @@
-🎨 버튼 디자인 에셋 적용 (Btn_Normal/Hover/Pressed 스프라이트, 9-slice, SpriteSwap)
+🎨 전체 씬 리디자인: UIButtonStyleHelper 추가, SettingsUI/GameplayUI 버튼 스타일 통일, 배경/로고 스프라이트 설정

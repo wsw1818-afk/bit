@@ -512,45 +512,16 @@ namespace AIBeat.UI
         /// </summary>
         private void CreateInlineButton(Transform parent, string text, UnityEngine.Events.UnityAction onClick)
         {
-            var btnGo = new GameObject($"InlineBtn_{text}");
-            btnGo.transform.SetParent(parent, false);
-
-            var btnRect = btnGo.AddComponent<RectTransform>();
-            btnRect.anchorMin = Vector2.zero;
-            btnRect.anchorMax = Vector2.one;
-            btnRect.offsetMin = Vector2.zero;
-            btnRect.offsetMax = Vector2.zero;
-
-            // 버튼 배경
-            var btnImg = btnGo.AddComponent<Image>();
-            btnImg.color = new Color(0.6f, 0.4f, 0f, 0.3f);  // 오렌지 톤
-
-            // Button 컴포넌트
-            var btn = btnGo.AddComponent<Button>();
-            btn.targetGraphic = btnImg;
+            // UIButtonStyleHelper의 인라인 버튼 사용
+            var btn = UIButtonStyleHelper.CreateInlineButton(
+                parent,
+                $"InlineBtn_{text}",
+                text,
+                textColor: new Color(1f, 0.8f, 0.4f, 1f),  // 밝은 오렌지
+                bgColor: new Color(0.6f, 0.4f, 0f, 0.3f),  // 오렌지 톤
+                fontSize: 16f
+            );
             btn.onClick.AddListener(onClick);
-
-            var colors = btn.colors;
-            colors.normalColor = new Color(0.6f, 0.4f, 0f, 0.3f);
-            colors.highlightedColor = new Color(0.8f, 0.5f, 0f, 0.5f);
-            colors.pressedColor = new Color(1f, 0.6f, 0f, 0.7f);
-            btn.colors = colors;
-
-            // 텍스트
-            var textGo = new GameObject("Text");
-            textGo.transform.SetParent(btnGo.transform, false);
-            var textRect = textGo.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            var tmp = textGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = text;
-            tmp.fontSize = 16;
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.color = new Color(1f, 0.8f, 0.4f, 1f);  // 밝은 오렌지
-            tmp.alignment = TextAlignmentOptions.Center;
         }
 
         private void OnCalibrateClicked()
@@ -642,54 +613,14 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 네온 스타일 버튼 생성 (개선)
+        /// 네온 스타일 버튼 생성 (디자인 에셋 사용)
         /// </summary>
         private void CreateButton(Transform parent, string text, UnityEngine.Events.UnityAction onClick)
         {
-            var btnGo = new GameObject($"Btn_{text}");
-            btnGo.transform.SetParent(parent, false);
-
-            var btnRect = btnGo.AddComponent<RectTransform>();
-
-            // 버튼 배경
-            var btnImg = btnGo.AddComponent<Image>();
-            btnImg.color = BUTTON_BG;
-
-            // 네온 테두리 (더 두껍게)
-            var btnOutline = btnGo.AddComponent<Outline>();
-            btnOutline.effectColor = BORDER_COLOR;
-            btnOutline.effectDistance = new Vector2(2, -2);  // 1→2 (테두리 두께 확대)
-
-            // Button 컴포넌트
-            var btn = btnGo.AddComponent<Button>();
-            btn.targetGraphic = btnImg;
+            // UIButtonStyleHelper를 사용하여 버튼 생성
+            var btn = UIButtonStyleHelper.CreateStyledButton(parent, $"Btn_{text}", text,
+                preferredHeight: 56f, fontSize: 22f);
             btn.onClick.AddListener(onClick);
-
-            var colors = btn.colors;
-            colors.normalColor = BUTTON_BG;
-            colors.highlightedColor = new Color(0.08f, 0.08f, 0.2f, 0.95f);
-            colors.pressedColor = new Color(0f, 0.4f, 0.6f, 1f);  // 더 밝은 네온
-            btn.colors = colors;
-
-            // 최소 터치 영역 보장
-            var layoutElem = btnGo.AddComponent<LayoutElement>();
-            layoutElem.minHeight = 50;  // 최소 50px
-
-            // 텍스트
-            var textGo = new GameObject("Text");
-            textGo.transform.SetParent(btnGo.transform, false);
-            var textRect = textGo.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            var tmp = textGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = text;
-            tmp.fontSize = 22;  // 20→22 (폰트 크기 확대)
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.color = BUTTON_TEXT_COLOR;
-            tmp.alignment = TextAlignmentOptions.Center;
         }
 
         /// <summary>
