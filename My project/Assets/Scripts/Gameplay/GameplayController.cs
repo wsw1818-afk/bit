@@ -81,7 +81,7 @@ namespace AIBeat.Gameplay
             var cam = Camera.main;
             if (cam == null || !cam.orthographic) return;
 
-            float laneWidth = 4.4f; // 4레인 x 1.1유닛
+            float laneWidth = 5.6f; // 4레인 x 1.4유닛
             float padding = 0.3f; // 좌우 약간의 여백
             float targetWorldWidth = laneWidth + padding;
 

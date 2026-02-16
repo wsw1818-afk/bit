@@ -75,7 +75,7 @@ namespace AIBeat.Gameplay
             }
 
             float judgeY = judgementLine.transform.position.y;
-            float laneWidth = 1.1f;  // 노트 넓이와 동일
+            float laneWidth = 1.4f;  // 레인 간격 (넓게 조정)
             float laneHeight = 20f;
             float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
 
@@ -383,7 +383,7 @@ namespace AIBeat.Gameplay
             var judgementLine = GameObject.Find("JudgementLine");
             if (judgementLine != null)
             {
-                float laneWidth = 1.1f;  // 노트 넓이와 동일
+                float laneWidth = 1.4f;  // 레인 간격 (넓게 조정)
                 float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
                 float x = startX + laneIndex * laneWidth;
                 float y = judgementLine.transform.position.y;
