@@ -73,6 +73,7 @@ namespace AIBeat.UI
             // 반투명 배경 (BIT.jpg 배경이 살짝 비침)
             var rootBg = rootPanel.AddComponent<Image>();
             rootBg.color = new Color(0.02f, 0.015f, 0.06f, 0.88f);
+            rootBg.raycastTarget = false; // 하단 버튼 터치 허용
 
             // VerticalLayoutGroup 대신 앵커 기반 수동 배치
             // 1. ScrollRect 곡 목록 (먼저 생성 - 뒤에 렌더링)
