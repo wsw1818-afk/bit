@@ -57,8 +57,8 @@ namespace AIBeat.Editor
             // 빌드 씬 목록
             string[] scenes = new string[]
             {
-                "Assets/Scenes/MainMenu.unity",
-                "Assets/Scenes/SongSelect.unity",
+                "Assets/Scenes/MainMenuScene.unity",
+                "Assets/Scenes/SongSelectScene.unity",
                 "Assets/Scenes/Gameplay.unity"
             };
 
