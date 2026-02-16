@@ -623,7 +623,12 @@ namespace AIBeat.UI
             }
             else
             {
-                // 완전히 제거: 비디오 정지 + 리소스 해제 + 패널 Destroy
+                // 완전히 제거: 즉시 비활성화 + 비디오 정지 + 리소스 해제 + 패널 Destroy
+                // SetActive(false) 먼저 호출하여 Destroy 대기 중에도 화면에 안 보이게
+                if (loadingVideoPanel != null)
+                {
+                    loadingVideoPanel.SetActive(false);
+                }
                 if (videoPlayer != null)
                 {
                     videoPlayer.Stop();
