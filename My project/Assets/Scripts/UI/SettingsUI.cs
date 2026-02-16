@@ -82,37 +82,15 @@ namespace AIBeat.UI
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
-            // 배경 스프라이트 로드 시도
-            var bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Menu_BG");
+            // 설정창을 최상위로 이동 (다른 UI 요소 위에 표시)
+            transform.SetAsLastSibling();
 
-            // 패널 배경 설정
+            // 패널 배경 설정 (완전 불투명)
             var panelImage = GetComponent<Image>();
             if (panelImage == null)
                 panelImage = gameObject.AddComponent<Image>();
-
-            if (bgSprite != null)
-            {
-                panelImage.sprite = bgSprite;
-                panelImage.type = Image.Type.Sliced;
-                panelImage.color = new Color(1f, 1f, 1f, 0.95f);
-            }
-            else
-            {
-                panelImage.color = new Color(0.01f, 0.01f, 0.05f, 0.98f);
-            }
-
-            // 어두운 오버레이 추가 (가독성 향상)
-            var overlayGo = new GameObject("DarkOverlay");
-            overlayGo.transform.SetParent(transform, false);
-            overlayGo.transform.SetAsFirstSibling();
-            var overlayRect = overlayGo.AddComponent<RectTransform>();
-            overlayRect.anchorMin = Vector2.zero;
-            overlayRect.anchorMax = Vector2.one;
-            overlayRect.offsetMin = Vector2.zero;
-            overlayRect.offsetMax = Vector2.zero;
-            var overlayImg = overlayGo.AddComponent<Image>();
-            overlayImg.color = BG_OVERLAY;
-            overlayImg.raycastTarget = false;
+            panelImage.color = new Color(0.02f, 0.02f, 0.06f, 1f);  // 완전 불투명 어두운 배경
+            panelImage.raycastTarget = true;  // 클릭 차단
 
             // 네온 테두리
             var outline = GetComponent<Outline>();
@@ -127,8 +105,8 @@ namespace AIBeat.UI
             var contentRect = contentGo.AddComponent<RectTransform>();
             contentRect.anchorMin = Vector2.zero;
             contentRect.anchorMax = Vector2.one;
-            contentRect.offsetMin = new Vector2(20, 70); // 하단 버튼 영역 확보
-            contentRect.offsetMax = new Vector2(-20, -20);
+            contentRect.offsetMin = new Vector2(20, 90); // 하단 버튼 영역 확보 (더 넓게)
+            contentRect.offsetMax = new Vector2(-20, -30);
 
             // VerticalLayoutGroup으로 항목 정렬
             var layout = contentGo.AddComponent<VerticalLayoutGroup>();
@@ -655,8 +633,8 @@ namespace AIBeat.UI
             areaRect.anchorMin = new Vector2(0, 0);
             areaRect.anchorMax = new Vector2(1, 0);
             areaRect.pivot = new Vector2(0.5f, 0);
-            areaRect.anchoredPosition = new Vector2(0, 15);
-            areaRect.sizeDelta = new Vector2(-40, 56);
+            areaRect.anchoredPosition = new Vector2(0, 20);
+            areaRect.sizeDelta = new Vector2(-40, 60);
 
             var hLayout = buttonArea.AddComponent<HorizontalLayoutGroup>();
             hLayout.spacing = 20;
@@ -728,6 +706,8 @@ namespace AIBeat.UI
         /// </summary>
         private void OnEnable()
         {
+            // 설정창을 최상위로 이동 (다른 UI 요소 위에 표시)
+            transform.SetAsLastSibling();
             RefreshValues();
         }
 
