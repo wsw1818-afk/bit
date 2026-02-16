@@ -281,12 +281,20 @@ namespace AIBeat.UI
             CreateTMPText(infoPanel, "Title", displayTitle, 36, Color.white,
                 TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
 
-            // Row 2: BPM · 난이도 · 플레이 횟수
+            // Row 2: 아티스트 · BPM · 난이도
+            string artistStr = !string.IsNullOrEmpty(song.Artist) && song.Artist != "Unknown"
+                ? song.Artist : "";
             string diffStars = "Lv." + Mathf.Clamp(song.DifficultyLevel, 0, 10);
             string playsStr = song.PlayCount > 0 ? $"{song.PlayCount}회" : "NEW";
-            string row2 = song.BPM > 0
-                ? $"{song.BPM} BPM · {diffStars} · {playsStr}"
-                : $"{diffStars} · {playsStr}";
+            string row2;
+            if (!string.IsNullOrEmpty(artistStr))
+                row2 = song.BPM > 0
+                    ? $"{artistStr} · {song.BPM} BPM · {playsStr}"
+                    : $"{artistStr} · {playsStr}";
+            else
+                row2 = song.BPM > 0
+                    ? $"{song.BPM} BPM · {diffStars} · {playsStr}"
+                    : $"{diffStars} · {playsStr}";
             CreateTMPText(infoPanel, "Info", row2, 24,
                 NEON_CYAN_BRIGHT, TextAlignmentOptions.MidlineLeft);
 
@@ -384,9 +392,7 @@ namespace AIBeat.UI
 #endif
             }
 
-            AudioType audioType = AudioType.MPEG;
-            if (audioFileName.EndsWith(".wav")) audioType = AudioType.WAV;
-            else if (audioFileName.EndsWith(".ogg")) audioType = AudioType.OGGVORBIS;
+            AudioType audioType = GetAudioType(audioFileName);
 
             using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(url, audioType))
             {
@@ -401,8 +407,17 @@ namespace AIBeat.UI
                 else
                 {
                     Debug.LogError($"[SongLibrary] 오디오 로드 실패: {www.error}");
-                    if (songCountText != null)
-                        songCountText.text = "로드 실패!";
+                    string ext = System.IO.Path.GetExtension(audioFileName).ToLower();
+                    if (ext == ".m4a" || ext == ".flac")
+                    {
+                        if (songCountText != null)
+                            songCountText.text = "미지원 포맷 (MP3/WAV/OGG 권장)";
+                    }
+                    else
+                    {
+                        if (songCountText != null)
+                            songCountText.text = "로드 실패!";
+                    }
                     yield return new WaitForSeconds(2f);
                     RefreshSongList();
                 }
@@ -520,6 +535,20 @@ namespace AIBeat.UI
         }
 
         public bool IsVisible => rootPanel != null && rootPanel.activeSelf;
+
+        private static AudioType GetAudioType(string fileName)
+        {
+            string ext = System.IO.Path.GetExtension(fileName).ToLower();
+            return ext switch
+            {
+                ".mp3" => AudioType.MPEG,
+                ".wav" => AudioType.WAV,
+                ".ogg" => AudioType.OGGVORBIS,
+                ".m4a" => AudioType.UNKNOWN,
+                ".flac" => AudioType.UNKNOWN,
+                _ => AudioType.MPEG
+            };
+        }
 
         private void OnDestroy()
         {

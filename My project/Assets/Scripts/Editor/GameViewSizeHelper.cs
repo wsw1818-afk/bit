@@ -40,7 +40,7 @@ namespace AIBeat.Editor
             var gameView = EditorWindow.GetWindow(gameViewType);
             if (gameView == null)
             {
-                Debug.LogError("GameView window not found");
+                Debug.LogWarning("[GameViewSizeHelper] GameView window not found");
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace AIBeat.Editor
 
             if (currentSizeGroupTypeProperty == null)
             {
-                Debug.LogError("currentSizeGroupType property not found");
+                Debug.LogWarning("[GameViewSizeHelper] currentSizeGroupType property not found (Unity version compatibility)");
                 return;
             }
 
@@ -58,7 +58,7 @@ namespace AIBeat.Editor
             var gameViewSizeGroupTypeType = Type.GetType("UnityEditor.GameViewSizeGroupType,UnityEditor");
             if (gameViewSizeGroupTypeType == null)
             {
-                Debug.LogError("GameViewSizeGroupType not found");
+                Debug.LogWarning("[GameViewSizeHelper] GameViewSizeGroupType not found (Unity version compatibility)");
                 return;
             }
 

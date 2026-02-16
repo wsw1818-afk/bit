@@ -308,6 +308,8 @@ namespace AIBeat.UI
 
         /// <summary>
         /// 음악 파일을 스캔하여 라이브러리에 자동 등록
+        /// Android: MediaStore API (IS_MUSIC 필터 + 녹음 제외)
+        /// Editor/PC: 파일 시스템 폴백
         /// </summary>
         private void ScanAndRegisterStreamingAssets()
         {
@@ -330,61 +332,53 @@ namespace AIBeat.UI
                 RegisterSongFile(fileName, "streaming");
             }
 
-            // 2) persistentDataPath/Music 폴더 스캔
-            string musicPath = Path.Combine(Application.persistentDataPath, "Music");
-            if (Directory.Exists(musicPath))
+            // 2) 권한 확인 후 로컬 음악 스캔 (MediaStore API)
+            if (AndroidMusicScanner.HasPermission())
             {
-                ScanFolderForAudio(musicPath, "persistent");
+                ScanLocalMusic();
             }
             else
             {
-                Directory.CreateDirectory(musicPath);
-            }
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-            // 3) Android 외부 저장소 스캔
-            string sdcard = "/sdcard";
-            string[] androidScanPaths = {
-                Path.Combine(sdcard, "Music"),
-                Path.Combine(sdcard, "Download"),
-                Path.Combine(sdcard, "Downloads"),
-            };
-            foreach (var scanPath in androidScanPaths)
-            {
-                if (Directory.Exists(scanPath))
+                AndroidMusicScanner.RequestPermission(granted =>
                 {
-                    ScanFolderForAudio(scanPath, "external");
-                }
+                    if (granted)
+                    {
+                        ScanLocalMusic();
+                        songLibraryUI?.RefreshSongList();
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[SongSelectUI] 음악 파일 접근 권한이 거부됨");
+                        // 권한 없이도 접근 가능한 폴더만 스캔
+                        string musicPath = Path.Combine(Application.persistentDataPath, "Music");
+                        if (!Directory.Exists(musicPath)) Directory.CreateDirectory(musicPath);
+                        ScanFolderForAudio(musicPath, "persistent");
+                    }
+                });
             }
-#else
-            // PC: StreamingAssets + 사용자 Music 폴더
-            string streamingPath = Application.streamingAssetsPath;
-            if (Directory.Exists(streamingPath))
+        }
+
+        /// <summary>
+        /// AndroidMusicScanner를 통해 로컬 음악 스캔 및 등록
+        /// </summary>
+        private void ScanLocalMusic()
+        {
+            var scannedList = AndroidMusicScanner.ScanMusicFiles();
+
+            int addedCount = 0;
+            foreach (var music in scannedList)
             {
-                ScanFolderForAudio(streamingPath, "streaming");
+                var record = AndroidMusicScanner.ToSongRecord(music);
+                if (SongLibraryManager.Instance.AddSong(record))
+                    addedCount++;
             }
 
-            string userMusicPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyMusic);
-            if (!string.IsNullOrEmpty(userMusicPath) && Directory.Exists(userMusicPath))
-            {
-                ScanFolderForAudio(userMusicPath, "external");
-            }
-
-            string userProfile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-            if (!string.IsNullOrEmpty(userProfile))
-            {
-                string downloadsPath = Path.Combine(userProfile, "Downloads");
-                if (Directory.Exists(downloadsPath))
-                {
-                    ScanFolderForAudio(downloadsPath, "external");
-                }
-            }
-#endif
+            Debug.Log($"[SongSelectUI] 로컬 음악 스캔: {scannedList.Count}곡 발견, {addedCount}곡 새로 등록");
         }
 
         private void ScanFolderForAudio(string folderPath, string source)
         {
-            string[] extensions = { "*.mp3", "*.wav", "*.ogg" };
+            string[] extensions = { "*.mp3", "*.wav", "*.ogg", "*.m4a", "*.flac" };
             foreach (var ext in extensions)
             {
                 try

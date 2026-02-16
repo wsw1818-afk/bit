@@ -1,1 +1,1 @@
-🔧 PROGRESS 버그 분석 (10개 중 7개 오진) + Material 메모리 누수 수정 + Debug.Log 빌드 최적화
+🎵 Android 로컬 음악 스캔 기능 추가 (MediaStore API + 녹음 필터링 + 권한 관리)

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 인터넷 (AI API 통신) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Android 12 이하: 외부 저장소 읽기 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Android 13+: 오디오 파일 접근 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <application
+        android:requestLegacyExternalStorage="true"
+        tools:replace="android:requestLegacyExternalStorage">
+    </application>
+</manifest>
