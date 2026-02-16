@@ -491,7 +491,7 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(1, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 80); // 슬림 헤더 (120→80px)
+            rect.sizeDelta = new Vector2(0, 100); // 더 큰 헤더
 
             var bg = titleBar.AddComponent<Image>();
             bg.color = UIColorPalette.BG_TOPBAR;
@@ -508,7 +508,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = "\uB0B4 \uC74C\uC545"; // "내 음악"
-            tmp.fontSize = 36;
+            tmp.fontSize = 48;
             tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
             tmp.alignment = TextAlignmentOptions.MidlineLeft;
             tmp.fontStyle = FontStyles.Bold;
