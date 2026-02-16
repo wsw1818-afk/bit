@@ -1,1 +1,1 @@
-🎨 SongSelectUI 하단 버튼 패널 추가 (플레이/설정/뒤로) + MainMenu 버튼 이름 변경
+🎨 SongSelectUI 하단 버튼 패널 완성 (MainMenu v5 스타일 적용, 중복 설정 버튼 제거)
