@@ -69,8 +69,8 @@ namespace AIBeat.Gameplay
 
         /// <summary>
         /// 카메라 기반 레인 경계를 화면 정규화 좌표로 캐시
-        /// 레인 월드 X: -1.5, -0.5, 0.5, 1.5 (laneWidth=1, 4레인)
-        /// 경계는 각 레인 사이의 중간점 + 좌우 끝
+        /// 레인 중심 X: -2.1, -0.7, 0.7, 2.1 (laneWidth=1.4, 4레인)
+        /// 경계는 각 레인 중심 기준으로 정확히 계산
         /// </summary>
         private void CacheLaneBoundaries()
         {
@@ -82,19 +82,38 @@ namespace AIBeat.Gameplay
                 return;
             }
 
-            float laneWidth = 1.4f;  // 레인 간격 (넓게 조정)
-            float startX = -(touchZoneCount - 1) * laneWidth / 2f;
+            float laneWidth = 1.4f;  // 레인 간격
 
-            // 5개 경계: 레인0 왼쪽, 0-1 사이, 1-2 사이, 2-3 사이, 레인3 오른쪽
-            laneBoundaries = new float[touchZoneCount + 1];
-            for (int i = 0; i <= touchZoneCount; i++)
+            // 레인 중심 위치 계산 (NoteSpawner와 동일한 방식)
+            // Lane i: (i - 1.5) * laneWidth
+            float[] laneCenters = new float[touchZoneCount];
+            for (int i = 0; i < touchZoneCount; i++)
             {
-                float worldX = startX + (i - 0.5f) * laneWidth;
-                Vector3 screenPos = cam.WorldToScreenPoint(new Vector3(worldX, 0, 0));
+                laneCenters[i] = (i - 1.5f) * laneWidth;
+            }
+
+            // 5개 경계: 각 레인 사이의 중간점
+            laneBoundaries = new float[touchZoneCount + 1];
+
+            // 첫 번째 경계 (레인 0 왼쪽): 레인 0 중심 - laneWidth/2
+            float firstBoundaryWorld = laneCenters[0] - laneWidth / 2f;
+            Vector3 firstScreenPos = cam.WorldToScreenPoint(new Vector3(firstBoundaryWorld, 0, 0));
+            laneBoundaries[0] = Mathf.Clamp01(firstScreenPos.x / Screen.width);
+
+            // 중간 경계들: 인접 레인 중심의 중간점
+            for (int i = 1; i < touchZoneCount; i++)
+            {
+                float midX = (laneCenters[i - 1] + laneCenters[i]) / 2f;
+                Vector3 screenPos = cam.WorldToScreenPoint(new Vector3(midX, 0, 0));
                 laneBoundaries[i] = Mathf.Clamp01(screenPos.x / Screen.width);
             }
 
-            // 좌우 끝을 0/1로 보장
+            // 마지막 경계 (레인 3 오른쪽): 레인 3 중심 + laneWidth/2
+            float lastBoundaryWorld = laneCenters[touchZoneCount - 1] + laneWidth / 2f;
+            Vector3 lastScreenPos = cam.WorldToScreenPoint(new Vector3(lastBoundaryWorld, 0, 0));
+            laneBoundaries[touchZoneCount] = Mathf.Clamp01(lastScreenPos.x / Screen.width);
+
+            // 좌우 끝을 0/1로 보장 (화면 밖 터치도 가장자리 레인으로)
             laneBoundaries[0] = 0f;
             laneBoundaries[touchZoneCount] = 1f;
 
@@ -102,6 +121,15 @@ namespace AIBeat.Gameplay
             for (int j = 0; j < laneBoundaries.Length; j++)
                 boundaryStr += (j > 0 ? ", " : "") + laneBoundaries[j].ToString("F3");
             Debug.Log($"[InputHandler] Lane boundaries ({laneBoundaries.Length}): {boundaryStr}");
+
+            // 레인 중심도 로그
+            string centerStr = "";
+            for (int j = 0; j < laneCenters.Length; j++)
+            {
+                Vector3 sp = cam.WorldToScreenPoint(new Vector3(laneCenters[j], 0, 0));
+                centerStr += (j > 0 ? ", " : "") + (sp.x / Screen.width).ToString("F3");
+            }
+            Debug.Log($"[InputHandler] Lane centers (normalized): {centerStr}");
         }
 
         /// <summary>
