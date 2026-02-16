@@ -73,13 +73,14 @@ namespace AIBeat.UI
                 Destroy(transform.GetChild(i).gameObject);
             }
 
-            // RectTransform 설정 (화면 중앙, 적절한 크기)
+            // RectTransform 설정 (전체 화면 덮기)
             var panelRect = GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.03f, 0.08f);
-            panelRect.anchorMax = new Vector2(0.97f, 0.92f);
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
             panelRect.pivot = new Vector2(0.5f, 0.5f);
             panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = Vector2.zero;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
 
             // 배경 스프라이트 로드 시도
             var bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Menu_BG");
@@ -497,40 +498,68 @@ namespace AIBeat.UI
             cardGo.transform.SetParent(parent, false);
 
             var cardLayout = cardGo.AddComponent<LayoutElement>();
-            cardLayout.preferredHeight = 70;
+            cardLayout.preferredHeight = 80;
 
             // 카드 배경 + 테두리
             var cardImg = cardGo.AddComponent<Image>();
-            cardImg.color = CARD_BG_COLOR;
+            cardImg.color = new Color(0.15f, 0.1f, 0.02f, 0.9f);  // 어두운 오렌지 톤
 
             var cardOutline = cardGo.AddComponent<Outline>();
-            cardOutline.effectColor = new Color(0.8f, 0.6f, 0f, 0.6f);  // 오렌지 테두리 (구분용)
-            cardOutline.effectDistance = new Vector2(1, -1);
+            cardOutline.effectColor = new Color(1f, 0.7f, 0.2f, 0.7f);  // 밝은 오렌지 테두리
+            cardOutline.effectDistance = new Vector2(2, -2);
 
             // 카드 내부 레이아웃
             var vertLayout = cardGo.AddComponent<VerticalLayoutGroup>();
-            vertLayout.padding = new RectOffset(12, 12, 8, 8);
-            vertLayout.spacing = 6;
+            vertLayout.padding = new RectOffset(15, 15, 10, 10);
+            vertLayout.spacing = 8;
             vertLayout.childControlWidth = true;
             vertLayout.childControlHeight = true;
             vertLayout.childForceExpandWidth = true;
             vertLayout.childForceExpandHeight = false;
 
-            // 버튼 영역
-            var btnRowGo = new GameObject("ButtonRow");
-            btnRowGo.transform.SetParent(cardGo.transform, false);
-            var btnRowLayout = btnRowGo.AddComponent<LayoutElement>();
-            btnRowLayout.preferredHeight = 36;
+            // 버튼 직접 생성 (UIButtonStyleHelper 대신)
+            var btnGo = new GameObject("CalibrateBtn");
+            btnGo.transform.SetParent(cardGo.transform, false);
 
-            // 자동 조정 버튼 (카드 내부)
-            CreateInlineButton(btnRowGo.transform, "🎯 자동 조정", OnCalibrateClicked);
+            var btnLayout = btnGo.AddComponent<LayoutElement>();
+            btnLayout.preferredHeight = 40;
+
+            var btnImg = btnGo.AddComponent<Image>();
+            btnImg.color = new Color(0.8f, 0.5f, 0f, 0.8f);  // 오렌지 배경
+
+            var btn = btnGo.AddComponent<Button>();
+            btn.targetGraphic = btnImg;
+            btn.onClick.AddListener(OnCalibrateClicked);
+
+            var btnColors = btn.colors;
+            btnColors.normalColor = new Color(0.8f, 0.5f, 0f, 0.8f);
+            btnColors.highlightedColor = new Color(1f, 0.7f, 0.2f, 1f);
+            btnColors.pressedColor = new Color(1f, 0.8f, 0.4f, 1f);
+            btn.colors = btnColors;
+
+            // 버튼 텍스트
+            var btnTextGo = new GameObject("Text");
+            btnTextGo.transform.SetParent(btnGo.transform, false);
+            var btnTextRect = btnTextGo.AddComponent<RectTransform>();
+            btnTextRect.anchorMin = Vector2.zero;
+            btnTextRect.anchorMax = Vector2.one;
+            btnTextRect.offsetMin = Vector2.zero;
+            btnTextRect.offsetMax = Vector2.zero;
+
+            var btnTmp = btnTextGo.AddComponent<TextMeshProUGUI>();
+            btnTmp.text = "🎯 자동 조정";
+            btnTmp.fontSize = 20;
+            btnTmp.fontStyle = FontStyles.Bold;
+            btnTmp.color = Color.white;
+            btnTmp.alignment = TextAlignmentOptions.Center;
+            btnTmp.raycastTarget = false;
 
             // 상태 텍스트
             var statusGo = new GameObject("CalibrationStatus");
             statusGo.transform.SetParent(cardGo.transform, false);
             statusGo.AddComponent<RectTransform>();
             var statusLayout = statusGo.AddComponent<LayoutElement>();
-            statusLayout.preferredHeight = 20;
+            statusLayout.preferredHeight = 22;
 
             calibrationStatusText = statusGo.AddComponent<TextMeshProUGUI>();
             calibrationStatusText.fontSize = 14;
