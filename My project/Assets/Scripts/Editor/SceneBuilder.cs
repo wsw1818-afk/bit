@@ -17,6 +17,20 @@ namespace AIBeat.Editor
         private const string RESOURCE_PATH = "Assets/Resources/AIBeat_Design/UI";
         private static TMPro.TMP_FontAsset defaultFont = null;
 
+        [MenuItem("AIBeat/Setup Build Settings")]
+        public static void SetupBuildSettings()
+        {
+            var scenes = new EditorBuildSettingsScene[]
+            {
+                new EditorBuildSettingsScene("Assets/Scenes/SplashScene.unity", true),
+                new EditorBuildSettingsScene("Assets/Scenes/MainMenuScene.unity", true),
+                new EditorBuildSettingsScene("Assets/Scenes/SongSelectScene.unity", true),
+                new EditorBuildSettingsScene("Assets/Scenes/GameplayScene.unity", true),
+            };
+            EditorBuildSettings.scenes = scenes;
+            Debug.Log("[SceneBuilder] Build Settings updated with 4 scenes");
+        }
+
         [MenuItem("AIBeat/Build All Scenes")]
         public static void BuildAll()
         {
