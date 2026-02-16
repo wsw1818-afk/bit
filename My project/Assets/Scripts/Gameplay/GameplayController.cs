@@ -52,6 +52,10 @@ namespace AIBeat.Gameplay
         private Action<int> comboChangedHandler;
         private Action<int, int> bonusScoreHandler;
 
+        // 분석 중복 실행 방지
+        private bool isAnalyzing = false;
+        private Coroutine analyzeCoroutine = null;
+
         private void Start()
         {
             // timeScale 강제 복원
@@ -563,12 +567,20 @@ namespace AIBeat.Gameplay
 
         private void OnAudioLoaded()
         {
+            // 이미 분석 중이거나 게임이 시작되었으면 무시
+            if (isAnalyzing || isPlaying)
+            {
+                Debug.Log($"[GameplayController] OnAudioLoaded ignored - isAnalyzing={isAnalyzing}, isPlaying={isPlaying}");
+                return;
+            }
+
             // AudioClip이 있으면 오프라인 분석으로 노트 생성 시도
             var clip = AudioManager.Instance?.GetAudioClip() ?? currentSong.AudioClip;
             if (clip != null && smartBeatMapper != null &&
                 (currentSong.Notes == null || currentSong.Notes.Length == 0))
             {
-                StartCoroutine(AnalyzeAndGenerateNotes(clip));
+                isAnalyzing = true;
+                analyzeCoroutine = StartCoroutine(AnalyzeAndGenerateNotes(clip));
                 return;
             }
 
@@ -592,6 +604,14 @@ namespace AIBeat.Gameplay
         /// </summary>
         private System.Collections.IEnumerator AnalyzeAndGenerateNotes(AudioClip clip)
         {
+            // 중복 실행 방지: 이미 게임이 시작되었으면 중단
+            if (isPlaying)
+            {
+                Debug.Log("[GameplayController] AnalyzeAndGenerateNotes aborted - game already playing");
+                isAnalyzing = false;
+                yield break;
+            }
+
 #if UNITY_EDITOR
             Debug.Log($"[GameplayController] Starting offline audio analysis: {clip.name}");
 #endif
@@ -614,11 +634,20 @@ namespace AIBeat.Gameplay
             // 분석 완료 → 영상 정지
             gameplayUI?.ShowLoadingVideo(false);
 
+            // 분석 중에 게임이 시작되었으면 중단
+            if (isPlaying)
+            {
+                Debug.Log("[GameplayController] AnalyzeAndGenerateNotes aborted after analysis - game already playing");
+                isAnalyzing = false;
+                yield break;
+            }
+
             if (result == null)
             {
                 Debug.LogWarning("[GameplayController] Audio analysis failed, using BPM fallback");
                 var fallbackSections = currentSong.Sections ?? BeatMapper.CreateDefaultSections(currentSong.Duration);
                 var fallbackNotes = beatMapper.GenerateNotesFromBPM(currentSong.BPM, currentSong.Duration, fallbackSections);
+                isAnalyzing = false;
                 StartGameWithNotes(fallbackNotes);
                 yield break;
             }
@@ -634,6 +663,7 @@ namespace AIBeat.Gameplay
             Debug.Log($"[GameplayController] Analysis complete: BPM={result.BPM}, notes={notes.Count}, sections={result.Sections.Count}");
 #endif
 
+            isAnalyzing = false;
             StartGameWithNotes(notes);
         }
 
