@@ -211,15 +211,42 @@ namespace AIBeat.Gameplay
                 Debug.Log("[GameplayController] Loaded test song from Resources");
             }
 
-            // 컴포넌트 참조 자동 연결
+            // 컴포넌트 참조 자동 연결 (없으면 자동 생성)
             if (noteSpawner == null)
                 noteSpawner = FindFirstObjectByType<NoteSpawner>();
+            if (noteSpawner == null)
+            {
+                var go = new GameObject("NoteSpawner");
+                noteSpawner = go.AddComponent<NoteSpawner>();
+                Debug.Log("[GameplayController] NoteSpawner 자동 생성됨");
+            }
+
             if (judgementSystem == null)
                 judgementSystem = FindFirstObjectByType<JudgementSystem>();
+            if (judgementSystem == null)
+            {
+                var go = new GameObject("JudgementSystem");
+                judgementSystem = go.AddComponent<JudgementSystem>();
+                Debug.Log("[GameplayController] JudgementSystem 자동 생성됨");
+            }
+
             if (inputHandler == null)
                 inputHandler = FindFirstObjectByType<InputHandler>();
+            if (inputHandler == null)
+            {
+                var go = new GameObject("InputHandler");
+                inputHandler = go.AddComponent<InputHandler>();
+                Debug.Log("[GameplayController] InputHandler 자동 생성됨");
+            }
+
             if (smartBeatMapper == null)
                 smartBeatMapper = FindFirstObjectByType<SmartBeatMapper>();
+            if (smartBeatMapper == null)
+            {
+                var go = new GameObject("SmartBeatMapper");
+                smartBeatMapper = go.AddComponent<SmartBeatMapper>();
+                Debug.Log("[GameplayController] SmartBeatMapper 자동 생성됨");
+            }
 
             if (noteSpawner == null || judgementSystem == null || inputHandler == null)
             {
