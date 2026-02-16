@@ -698,9 +698,17 @@ namespace AIBeat.UI
                 arrowTmp.color = cfg.accentColor;
                 arrowTmp.alignment = TextAlignmentOptions.Center;
                 arrowTmp.raycastTarget = false;
+                
+                // === 버튼 애니메이션 컴포넌트 추가 ===
+                var buttonAnim = cfg.btn.gameObject.GetComponent<ButtonAnimation>();
+                if (buttonAnim == null)
+                    buttonAnim = cfg.btn.gameObject.AddComponent<ButtonAnimation>();
+                
+                // 애니메이션 설정 커스터마이즈
+                buttonAnim.enabled = true;
             }
 
-            Debug.Log("[MainMenuUI] 버튼 UI 리디자인 완료 (v5 - 대형 고가시성)");
+            Debug.Log("[MainMenuUI] 버튼 UI 리디자인 완료 (v5 - 대형 고가시성 + 애니메이션)");
         }
 
         /// <summary>
