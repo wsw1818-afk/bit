@@ -68,13 +68,13 @@ namespace AIBeat.Gameplay
 
             CreateBackgroundGradient(judgeY);
             CreateFloatingParticles(judgeY);
-            // CreateLaneDividers(judgeY); // 레인 구분선 제거
+            CreateLaneDividers(judgeY);
             CreateBeatFlashOverlay(judgeY);
 
             StartCoroutine(AnimateParticles());
             StartCoroutine(AnimateBackground());
 
-            Debug.Log("[BackgroundVFX] Initialized: gradient + particles + beatFlash");
+            Debug.Log("[BackgroundVFX] Initialized: gradient + particles + dividers + beatFlash");
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 레인 구분선 (네온 글로우 세로선 + 하단 판정 가이드)
+        /// 레인 구분선 (심플한 세로선 - 노트 영역과 동일 사이즈)
         /// </summary>
         private void CreateLaneDividers(float judgeY)
         {
@@ -306,62 +306,45 @@ namespace AIBeat.Gameplay
                 foreach (var go in laneDividers)
                     if (go != null) Destroy(go);
             }
-            // 씬에 남아있는 기존 LaneDivider 오브젝트도 정리
             foreach (Transform child in transform)
             {
                 if (child.name.StartsWith("LaneDivider_"))
                     Destroy(child.gameObject);
             }
 
-            float laneWidth = 1.4f;  // 레인 간격 (넓게 조정)
+            float laneWidth = 1.4f;
             float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
-            int dividerCount = LANE_COUNT + 1; // 레인 양쪽 경계 (4레인 = 5개 구분선)
+            int dividerCount = LANE_COUNT + 1; // 양쪽 끝 포함 (4레인 = 5개 구분선)
 
             laneDividers = new GameObject[dividerCount];
             dividerMaterials = new Material[dividerCount];
 
-            Debug.Log($"[BackgroundVFX] Creating {dividerCount} lane dividers (LANE_COUNT={LANE_COUNT})");
-
             var shader = Shader.Find("Sprites/Default");
             if (shader == null) shader = Shader.Find("Unlit/Color");
 
-            var lineTex = CreateNeonLineTex(8, 256);
+            // 노트 영역 높이 (스폰 거리 10 + 여유)
+            float lineHeight = 12f;
 
             for (int i = 0; i < dividerCount; i++)
             {
-                // 양쪽 끝 구분선 건너뛰기 (화면 밖으로 나가서 반만 보임)
-                if (i == 0 || i == dividerCount - 1)
-                    continue;
-
                 var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 go.name = $"LaneDivider_{i}";
                 go.transform.SetParent(transform);
 
+                // 양쪽 끝 포함 위치
                 float x = startX - laneWidth / 2f + i * laneWidth;
-                // 원상복구: 높이 20, 하단이 정확히 판정선 위치 (judgeY)
-                // 중심 = judgeY + 10 → 하단 = judgeY, 상단 = judgeY + 20
-                go.transform.position = new Vector3(x, judgeY + 10f, 0.9f);
-                go.transform.localScale = new Vector3(0.12f, 20f, 1f);
+                go.transform.position = new Vector3(x, judgeY + lineHeight / 2f, 0.5f);
+                go.transform.localScale = new Vector3(0.04f, lineHeight, 1f); // 심플하게 얇음
 
                 var col = go.GetComponent<Collider>();
                 if (col != null) Destroy(col);
 
                 var mat = new Material(shader);
-                mat.mainTexture = lineTex;
+                mat.color = new Color(1f, 1f, 1f, 0.4f); // 심플 반투명 흰색
 
-                // 네온 색상: 마젠타/골드
-                Color lineColor;
-                if (i == 1 || i == dividerCount - 2)
-                    lineColor = new Color(0.95f, 0.25f, 0.95f, 0.6f); // 네온 마젠타
-                else if (i == dividerCount / 2)
-                    lineColor = new Color(1f, 0.92f, 0.25f, 0.7f); // 중앙 골드
-                else
-                    lineColor = new Color(0.6f, 0.35f, 0.95f, 0.45f); // 보라
-
-                mat.color = lineColor;
-                var dividerRenderer = go.GetComponent<MeshRenderer>();
-                dividerRenderer.material = mat;
-                dividerRenderer.sortingOrder = -30;
+                var renderer = go.GetComponent<MeshRenderer>();
+                renderer.material = mat;
+                renderer.sortingOrder = -30;
 
                 laneDividers[i] = go;
                 dividerMaterials[i] = mat;
@@ -369,6 +352,8 @@ namespace AIBeat.Gameplay
 
             // 판정선 위 글로우 바 생성
             CreateJudgementLineGlow(judgeY);
+
+            Debug.Log($"[BackgroundVFX] Created {dividerCount} simple lane dividers");
         }
 
         /// <summary>
