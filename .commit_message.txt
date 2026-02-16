@@ -1,1 +1,1 @@
-✨ MCP 자동화 UI 검증 파이프라인 완성 (ScreenshotHelper 런타임 분리)
+✅ Build All Scenes 실행 완료 및 4개 씬 생성 검증

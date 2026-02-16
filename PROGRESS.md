@@ -392,7 +392,22 @@ mcp__mcp-unity__execute_menu_item("Assets/Refresh")
 - **SongSelectUI**: Verified `ScanFolderForAudio` logic and `OnBackClicked` navigation. Confirmed `SongLibraryManager` integration.
 - **GameplayController**: Verified `StartDebugGame` and `StartGame` flows. Checked component dependency checks (`NoteSpawner`, `JudgementSystem`).
 
-### 🔜 Next Steps for User
-- Run **AIBeat -> Build All Scenes** in Unity Editor.
-- Verify scene transitions and UI functionality in Play Mode.
+### ✅ Build All Scenes 실행 완료 (2026-02-16)
+- **실행**: MCP를 통해 `AIBeat/Build All Scenes` 메뉴 실행 완료
+- **생성된 씬 파일**:
+  - `Assets/Scenes/SplashScene.unity`
+  - `Assets/Scenes/MainMenuScene.unity`
+  - `Assets/Scenes/SongSelectScene.unity`
+  - `Assets/Scenes/Gameplay.unity`
+- **검증 결과**:
+  - 4개 씬 파일 모두 존재 확인 ✅
+  - MainMenuScene: Canvas, SceneLoader, Main Camera 정상 ✅
+  - 한국어 버튼 생성 로그 확인: "플레이", "라이브러리", "설정", "종료" ✅
+  - 연주자 스프라이트 로드 성공: Drummer, Pianist, Guitarist, DJ ✅
+  - 한국어 폰트 로드 성공 (KoreanFontManager) ✅
+
+### 🔜 Next Steps
+- Play 모드에서 UI 동작 테스트
+- 씬 전환 (MainMenu → SongSelect → Gameplay) 테스트
+- 터치/클릭 입력 테스트
 
