@@ -69,6 +69,7 @@ namespace AIBeat.UI
 
         /// <summary>
         /// 전체 화면 배경 (Canvas 직접 자식으로 Safe Area 밖에도 표시)
+        /// 단색 그라데이션 배경 - 격자 없음
         /// </summary>
         private void CreateFullscreenBackground()
         {
@@ -81,7 +82,7 @@ namespace AIBeat.UI
             var existingOverlay = canvas.transform.Find("FullscreenOverlay");
             if (existingOverlay != null) DestroyImmediate(existingOverlay.gameObject);
 
-            // 전체 화면 배경 (Canvas 직접 자식, 맨 뒤)
+            // 전체 화면 배경 (Canvas 직접 자식, 맨 뒤) - 단색
             var bgGo = new GameObject("FullscreenBackground");
             bgGo.transform.SetParent(canvas.transform, false);
             bgGo.transform.SetAsFirstSibling();
@@ -94,23 +95,8 @@ namespace AIBeat.UI
 
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
-            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
-            img.type = Image.Type.Sliced;
-
-            // 어두운 오버레이
-            var overlayGo = new GameObject("FullscreenOverlay");
-            overlayGo.transform.SetParent(canvas.transform, false);
-            overlayGo.transform.SetSiblingIndex(1);
-
-            var overlayRect = overlayGo.AddComponent<RectTransform>();
-            overlayRect.anchorMin = Vector2.zero;
-            overlayRect.anchorMax = Vector2.one;
-            overlayRect.offsetMin = Vector2.zero;
-            overlayRect.offsetMax = Vector2.zero;
-
-            var overlayImg = overlayGo.AddComponent<Image>();
-            overlayImg.raycastTarget = false;
-            overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.65f);
+            // 단색 어두운 보라 배경 (격자 없음)
+            img.color = new Color(0.04f, 0.02f, 0.08f, 1f);
         }
 
         /// <summary>
@@ -202,7 +188,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 상단 타이틀 바 (뒤로 버튼 통합)
+        /// 상단 타이틀 바 (뒤로 버튼 통합) - 사이버펑크 스타일
         /// </summary>
         private void CreateTitleBar()
         {
@@ -217,30 +203,44 @@ namespace AIBeat.UI
             rect.anchorMax = new Vector2(1, 1);
             rect.pivot = new Vector2(0.5f, 1);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 90);
+            rect.sizeDelta = new Vector2(0, 100);
 
+            // 배경 (진한 보라 + 하단 네온 라인)
             var bg = titleBar.AddComponent<Image>();
-            bg.color = new Color(0.02f, 0.01f, 0.06f, 0.95f);
+            bg.color = new Color(0.06f, 0.02f, 0.12f, 0.98f);
             bg.raycastTarget = false;
 
-            // 뒤로 버튼 (좌측)
+            // 하단 네온 라인 (시안)
+            var bottomLine = new GameObject("BottomLine");
+            bottomLine.transform.SetParent(titleBar.transform, false);
+            var lineRect = bottomLine.AddComponent<RectTransform>();
+            lineRect.anchorMin = new Vector2(0, 0);
+            lineRect.anchorMax = new Vector2(1, 0);
+            lineRect.pivot = new Vector2(0.5f, 0);
+            lineRect.anchoredPosition = Vector2.zero;
+            lineRect.sizeDelta = new Vector2(0, 3);
+            var lineImg = bottomLine.AddComponent<Image>();
+            lineImg.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            lineImg.raycastTarget = false;
+
+            // 뒤로 버튼 (좌측) - 원형 스타일
             var backBtn = new GameObject("BackButton");
             backBtn.transform.SetParent(titleBar.transform, false);
             var backRect = backBtn.AddComponent<RectTransform>();
-            backRect.anchorMin = new Vector2(0, 0);
-            backRect.anchorMax = new Vector2(0, 1);
+            backRect.anchorMin = new Vector2(0, 0.5f);
+            backRect.anchorMax = new Vector2(0, 0.5f);
             backRect.pivot = new Vector2(0, 0.5f);
-            backRect.anchoredPosition = new Vector2(10, 0);
-            backRect.sizeDelta = new Vector2(70, 0);
+            backRect.anchoredPosition = new Vector2(15, 0);
+            backRect.sizeDelta = new Vector2(65, 65);
 
             var backBg = backBtn.AddComponent<Image>();
-            backBg.color = new Color(0.08f, 0.04f, 0.2f, 0.8f);
+            backBg.color = new Color(0.12f, 0.04f, 0.25f, 0.9f);
 
             var backBtnComp = backBtn.AddComponent<Button>();
             backBtnComp.onClick.AddListener(OnBackClicked);
 
             var backOutline = backBtn.AddComponent<Outline>();
-            backOutline.effectColor = UIColorPalette.NEON_MAGENTA.WithAlpha(0.6f);
+            backOutline.effectColor = UIColorPalette.NEON_MAGENTA;
             backOutline.effectDistance = new Vector2(2, -2);
 
             var backTextGo = new GameObject("BackText");
@@ -252,28 +252,34 @@ namespace AIBeat.UI
             backTextRect.offsetMax = Vector2.zero;
 
             var backTmp = backTextGo.AddComponent<TextMeshProUGUI>();
-            backTmp.text = "<";
-            backTmp.fontSize = 36;
+            backTmp.text = "◀";
+            backTmp.fontSize = 32;
             backTmp.fontStyle = FontStyles.Bold;
             backTmp.color = UIColorPalette.NEON_MAGENTA;
             backTmp.alignment = TextAlignmentOptions.Center;
             backTmp.raycastTarget = false;
 
-            // 타이틀 텍스트 (중앙)
+            // 타이틀 텍스트 (중앙) - 큰 글씨 + 글로우 효과
             var textGo = new GameObject("TitleText");
             textGo.transform.SetParent(titleBar.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(90, 0);
+            textRect.offsetMin = new Vector2(95, 0);
             textRect.offsetMax = new Vector2(-20, 0);
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = "내 음악";
-            tmp.fontSize = 44;
+            tmp.text = "MY MUSIC";
+            tmp.fontSize = 42;
             tmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
             tmp.alignment = TextAlignmentOptions.MidlineLeft;
             tmp.fontStyle = FontStyles.Bold;
+            tmp.characterSpacing = 6f;
+
+            // 타이틀 글로우 효과
+            var titleOutline = textGo.AddComponent<Outline>();
+            titleOutline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.4f);
+            titleOutline.effectDistance = new Vector2(2, -2);
 
             var korFont = KoreanFontManager.KoreanFont;
             if (korFont != null) tmp.font = korFont;

@@ -48,18 +48,18 @@ namespace AIBeat.UI
 
         private void CreateLibraryUI(RectTransform parent)
         {
-            // 루트 패널 (타이틀바 90px 아래 ~ 이퀄라이저 120px 위)
+            // 루트 패널 (타이틀바 100px 아래 ~ 이퀄라이저 120px 위)
             rootPanel = new GameObject("LibraryPanel");
             rootPanel.transform.SetParent(parent, false);
             var rootRect = rootPanel.AddComponent<RectTransform>();
             rootRect.anchorMin = Vector2.zero;
             rootRect.anchorMax = Vector2.one;
             rootRect.offsetMin = new Vector2(0, 120);  // 이퀄라이저 바(120px) 위부터
-            rootRect.offsetMax = new Vector2(0, -90);  // 타이틀 바(90px) 아래부터
+            rootRect.offsetMax = new Vector2(0, -100); // 타이틀 바(100px) 아래부터
 
-            // 반투명 배경
+            // 배경 없음 (투명) - 메인 배경 보이게
             var rootBg = rootPanel.AddComponent<Image>();
-            rootBg.color = new Color(0.02f, 0.015f, 0.06f, 0.85f);
+            rootBg.color = Color.clear;
             rootBg.raycastTarget = false;
 
             // ScrollRect 곡 목록 (먼저 생성)
@@ -78,11 +78,25 @@ namespace AIBeat.UI
             countRect.anchorMax = new Vector2(1, 1);
             countRect.pivot = new Vector2(0.5f, 1);
             countRect.anchoredPosition = Vector2.zero;
-            countRect.sizeDelta = new Vector2(0, 60);
+            countRect.sizeDelta = new Vector2(0, 55);
 
+            // 배경 (반투명 진한 보라)
             var bgImg = countBar.AddComponent<Image>();
-            bgImg.color = new Color(0.03f, 0.02f, 0.08f, 0.95f);
+            bgImg.color = new Color(0.08f, 0.03f, 0.15f, 0.9f);
             bgImg.raycastTarget = false;
+
+            // 하단 얇은 라인 (마젠타)
+            var bottomLine = new GameObject("BottomLine");
+            bottomLine.transform.SetParent(countBar.transform, false);
+            var lineRect = bottomLine.AddComponent<RectTransform>();
+            lineRect.anchorMin = new Vector2(0, 0);
+            lineRect.anchorMax = new Vector2(1, 0);
+            lineRect.pivot = new Vector2(0.5f, 0);
+            lineRect.anchoredPosition = Vector2.zero;
+            lineRect.sizeDelta = new Vector2(0, 2);
+            var lineImg = bottomLine.AddComponent<Image>();
+            lineImg.color = UIColorPalette.NEON_MAGENTA.WithAlpha(0.6f);
+            lineImg.raycastTarget = false;
 
             var textGo = new GameObject("SongCount");
             textGo.transform.SetParent(countBar.transform, false);
@@ -94,10 +108,10 @@ namespace AIBeat.UI
 
             songCountText = textGo.AddComponent<TextMeshProUGUI>();
             songCountText.text = "0곡";
-            songCountText.fontSize = 36;
-            songCountText.color = NEON_CYAN_BRIGHT;
+            songCountText.fontSize = 32;
+            songCountText.color = Color.white;
             songCountText.alignment = TextAlignmentOptions.Center;
-            songCountText.fontStyle = FontStyles.Bold;
+            songCountText.fontStyle = FontStyles.Normal;
         }
 
         private void CreateScrollArea(Transform parent)
@@ -107,8 +121,8 @@ namespace AIBeat.UI
             var scrollViewRect = scrollView.AddComponent<RectTransform>();
             scrollViewRect.anchorMin = Vector2.zero;
             scrollViewRect.anchorMax = Vector2.one;
-            scrollViewRect.offsetMin = new Vector2(12, 8);
-            scrollViewRect.offsetMax = new Vector2(-12, -65);
+            scrollViewRect.offsetMin = new Vector2(10, 8);
+            scrollViewRect.offsetMax = new Vector2(-10, -60);
 
             scrollRect = scrollView.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
