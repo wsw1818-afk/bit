@@ -338,8 +338,9 @@ namespace AIBeat.Gameplay
                 go.transform.SetParent(transform);
 
                 float x = startX - laneWidth / 2f + i * laneWidth;
-                go.transform.position = new Vector3(x, judgeY + 10f, 0.9f);  // 판정선 위로만 (Y=0~20)
-                go.transform.localScale = new Vector3(0.12f, 20f, 1f);
+                // 판정선 위로만: 중심 = judgeY + 9 + 0.5(여유), 높이 = 18 → 하단 = judgeY + 0.5
+                go.transform.position = new Vector3(x, judgeY + 9.5f, 0.9f);
+                go.transform.localScale = new Vector3(0.12f, 18f, 1f);
 
                 var col = go.GetComponent<Collider>();
                 if (col != null) Destroy(col);
