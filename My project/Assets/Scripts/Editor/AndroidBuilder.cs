@@ -75,7 +75,7 @@ namespace AIBeat.Editor
                 scenes = scenes,
                 locationPathName = apkPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.None
+                options = BuildOptions.Development | BuildOptions.AllowDebugging
             };
 
             Debug.Log($"[AndroidBuilder] Starting Android APK build...");

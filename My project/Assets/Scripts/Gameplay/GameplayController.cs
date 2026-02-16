@@ -782,6 +782,7 @@ namespace AIBeat.Gameplay
             }
 
             var result = judgementSystem.Judge(currentTime, nearestNote.HitTime);
+            Debug.Log($"[Judge Result] lane={lane} result={result} noteTime={nearestNote.HitTime:F2} inputTime={currentTime:F2} diff={(currentTime-nearestNote.HitTime)*1000:F1}ms");
             if (result != JudgementResult.Miss)
             {
                 nearestNote.MarkAsJudged();
