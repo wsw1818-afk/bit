@@ -246,7 +246,7 @@ namespace AIBeat.Core
         {
             // 곡 데이터를 저장하고 게임 씬으로 이동
             CurrentSongData = songData;
-            LoadScene("GameplayScene");
+            LoadScene("Gameplay");
         }
 
         public SongData CurrentSongData { get; private set; }
