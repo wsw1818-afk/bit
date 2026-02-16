@@ -603,32 +603,50 @@ namespace AIBeat.UI
         /// </summary>
         public void ShowLoadingVideo(bool show)
         {
-            if (loadingVideoPanel == null) return;
-
             if (show)
             {
-                loadingVideoPanel.SetActive(true);
-                if (videoPlayer != null)
+                // 패널이 없으면 재생성
+                if (loadingVideoPanel == null)
                 {
-                    videoPlayer.Play();
+                    CreateLoadingVideoPanel();
                 }
-                Debug.Log("[GameplayUI] Loading video started");
+
+                if (loadingVideoPanel != null)
+                {
+                    loadingVideoPanel.SetActive(true);
+                    if (videoPlayer != null)
+                    {
+                        videoPlayer.Play();
+                    }
+                    Debug.Log("[GameplayUI] Loading video started");
+                }
             }
             else
             {
-                // 완전히 숨기기: 비디오 정지 + 텍스처 클리어 + 패널 비활성화
+                // 완전히 제거: 비디오 정지 + 리소스 해제 + 패널 Destroy
                 if (videoPlayer != null)
                 {
                     videoPlayer.Stop();
                     videoPlayer.targetTexture = null;
+                    videoPlayer = null;
                 }
                 if (videoDisplay != null)
                 {
                     videoDisplay.texture = null;
-                    videoDisplay.enabled = false;
+                    videoDisplay = null;
                 }
-                loadingVideoPanel.SetActive(false);
-                Debug.Log("[GameplayUI] Loading video stopped and hidden");
+                if (videoRenderTexture != null)
+                {
+                    videoRenderTexture.Release();
+                    Destroy(videoRenderTexture);
+                    videoRenderTexture = null;
+                }
+                if (loadingVideoPanel != null)
+                {
+                    Destroy(loadingVideoPanel);
+                    loadingVideoPanel = null;
+                    Debug.Log("[GameplayUI] Loading video panel DESTROYED");
+                }
             }
         }
 
@@ -1404,9 +1422,6 @@ namespace AIBeat.UI
         }
 
         private void OnDestroy()
-
-
-
         {
             if (resumeButton != null) resumeButton.onClick.RemoveAllListeners();
             if (restartButton != null) restartButton.onClick.RemoveAllListeners();
@@ -1414,12 +1429,17 @@ namespace AIBeat.UI
             if (retryButton != null) retryButton.onClick.RemoveAllListeners();
             if (menuButton != null) menuButton.onClick.RemoveAllListeners();
 
-            // 영상 리소스 해제
-            if (videoPlayer != null) videoPlayer.Stop();
+            // 영상 리소스 해제 (ShowLoadingVideo(false)에서 이미 해제되었을 수 있음)
+            if (videoPlayer != null)
+            {
+                videoPlayer.Stop();
+                videoPlayer = null;
+            }
             if (videoRenderTexture != null)
             {
                 videoRenderTexture.Release();
                 Destroy(videoRenderTexture);
+                videoRenderTexture = null;
             }
         }
     }
