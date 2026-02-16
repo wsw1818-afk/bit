@@ -16,7 +16,7 @@ namespace AIBeat.Gameplay
         [SerializeField] private int touchZoneCount = 4;       // 4개 균등 터치 존 (Lane0~3 직접 매핑)
         [SerializeField] private float touchAreaRatio = 0.85f;  // 하단 85% 입력 영역 (상단 UI만 제외)
         [Header("Debug")]
-        [SerializeField] private bool showTouchDebug = true;
+        [SerializeField] private bool showTouchDebug = false;  // 빌드 성능을 위해 기본 false
 
         [Header("Scratch Swipe Settings")]
         [SerializeField] private float scratchThresholdMM = 7f;  // 스크래치 인식 최소 거리(mm)

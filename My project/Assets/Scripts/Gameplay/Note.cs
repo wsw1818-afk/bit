@@ -146,13 +146,15 @@ namespace AIBeat.Gameplay
                 pos.y = newY;
                 transform.position = pos;
 
-                // 처음 5프레임만 로그 출력 (디버그용)
+                #if UNITY_EDITOR
+                // 에디터에서만 디버그 로그 출력 (빌드 성능 최적화)
                 frameCount++;
                 if (frameCount <= 5)
                 {
                     var renderer = GetComponent<Renderer>();
                     Debug.Log($"[Note] Lane{noteData.LaneIndex} frame{frameCount} | Y={newY:F1} | visible={renderer?.isVisible} color={renderer?.material?.color}");
                 }
+                #endif
             }
         }
 
