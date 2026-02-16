@@ -262,10 +262,23 @@ namespace AIBeat.UI
             topBarRect.anchoredPosition = Vector2.zero;
             topBarRect.sizeDelta = new Vector2(0, 80);
 
-            // 검정에 가까운 진한 배경
+            // 네온 그라데이션 배경 (위: 어두운 보라, 아래: 시안 힌트)
             var topBarBg = topBar.AddComponent<Image>();
-            topBarBg.color = new Color(0.01f, 0.005f, 0.03f, 0.95f);
+            topBarBg.color = new Color(0.02f, 0.01f, 0.05f, 0.92f);
             topBarBg.raycastTarget = false;
+
+            // 하단 네온 글로우 라인
+            var glowLine = new GameObject("TopBarGlow");
+            glowLine.transform.SetParent(topBar.transform, false);
+            var glowRect = glowLine.AddComponent<RectTransform>();
+            glowRect.anchorMin = new Vector2(0, 0);
+            glowRect.anchorMax = new Vector2(1, 0);
+            glowRect.pivot = new Vector2(0.5f, 0);
+            glowRect.anchoredPosition = Vector2.zero;
+            glowRect.sizeDelta = new Vector2(0, 3);
+            var glowImg = glowLine.AddComponent<Image>();
+            glowImg.color = new Color(0f, 0.85f, 0.9f, 0.7f); // 시안 글로우
+            glowImg.raycastTarget = false;
 
             // HorizontalLayoutGroup
             var hLayout = topBar.AddComponent<HorizontalLayoutGroup>();
@@ -314,11 +327,11 @@ namespace AIBeat.UI
                     scoreLE.flexibleWidth = 1;
                 }
 
-                scoreText.fontSize = 36;
+                scoreText.fontSize = 38;
                 scoreText.alignment = TextAlignmentOptions.Center;
-                scoreText.color = Color.white;
+                scoreText.color = UIColorPalette.NEON_GOLD; // 네온 골드
                 scoreText.fontStyle = FontStyles.Bold;
-                scoreText.characterSpacing = 4f; // LED 느낌 글자 간격
+                scoreText.characterSpacing = 6f; // LED 느낌 글자 간격 (더 넓게)
                 var korFont1 = KoreanFontManager.KoreanFont;
                 if (korFont1 != null) scoreText.font = korFont1;
                 // scoreText.outlineWidth = 0.12f; // Dynamic SDF에서 outline 비활성화
@@ -709,12 +722,25 @@ namespace AIBeat.UI
             statsRect.anchorMax = new Vector2(1, 1);
             statsRect.pivot = new Vector2(0.5f, 1);
             statsRect.anchoredPosition = new Vector2(0, -80); // TopBar(80px) 바로 아래
-            statsRect.sizeDelta = new Vector2(0, 36);
+            statsRect.sizeDelta = new Vector2(0, 32); // 약간 더 작게
 
-            // 배경 (어두운, 거의 투명)
+            // 배경 (더 투명하게)
             var bgImage = statsPanel.AddComponent<Image>();
-            bgImage.color = new Color(0.005f, 0.005f, 0.02f, 0.8f);
+            bgImage.color = new Color(0.01f, 0.005f, 0.03f, 0.65f);
             bgImage.raycastTarget = false;
+
+            // 하단 네온 글로우 라인 (마젠타)
+            var statsGlow = new GameObject("StatsBarGlow");
+            statsGlow.transform.SetParent(statsPanel.transform, false);
+            var statsGlowRect = statsGlow.AddComponent<RectTransform>();
+            statsGlowRect.anchorMin = new Vector2(0, 0);
+            statsGlowRect.anchorMax = new Vector2(1, 0);
+            statsGlowRect.pivot = new Vector2(0.5f, 0);
+            statsGlowRect.anchoredPosition = Vector2.zero;
+            statsGlowRect.sizeDelta = new Vector2(0, 2);
+            var statsGlowImg = statsGlow.AddComponent<Image>();
+            statsGlowImg.color = new Color(0.9f, 0.2f, 0.8f, 0.5f); // 마젠타 글로우
+            statsGlowImg.raycastTarget = false;
 
             // HorizontalLayoutGroup
             var layout = statsPanel.AddComponent<HorizontalLayoutGroup>();
@@ -901,14 +927,14 @@ namespace AIBeat.UI
         {
             if (comboText != null)
             {
-                // 레퍼런스: "COMBO" 라벨 위, 숫자 아래
+                // 네온 스타일: "COMBO" 라벨 (시안) + 숫자
                 if (combo <= 0)
                 {
-                    comboText.text = "<size=14>COMBO</size>\n<size=28>0</size>";
+                    comboText.text = "<size=12><color=#00D4D8>COMBO</color></size>\n<size=26>-</size>";
                 }
                 else
                 {
-                    comboText.text = $"<size=14>COMBO</size>\n<size=30>{combo}</size>";
+                    comboText.text = $"<size=12><color=#00D4D8>COMBO</color></size>\n<size=32>{combo}</size>";
                 }
 
                 // 콤보 색상 단계
