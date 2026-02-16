@@ -447,3 +447,33 @@ mcp__mcp-unity__execute_menu_item("Assets/Refresh")
 - 컴파일 에러 0, 경고 2 (무시 가능)
 - 디자인 에셋 통합 완료
 
+---
+
+## 노트 렌더링 버그 수정 (2026-02-16)
+
+### ✅ Alpha 값 오버플로우 수정
+- **문제**: `NoteVisuals.GetLaneColor()`에서 `intensity * 1.2f`가 Alpha까지 곱해져 Alpha=1.2 발생
+- **수정**: RGB만 intensity 적용, Alpha는 1.0 고정
+- **파일**: `NoteVisuals.cs` - `GetLaneColor()` 메서드
+```csharp
+// 수정 전: return new Color(0f, 0.8f, 0.82f) * 1.2f; // Alpha=1.2!
+// 수정 후:
+return new Color(
+    Mathf.Min(baseColor.r * intensity, 1f),
+    Mathf.Min(baseColor.g * intensity, 1f),
+    Mathf.Min(baseColor.b * intensity, 1f),
+    1f  // Alpha 고정
+);
+```
+
+### ✅ 테스트 코드 정리
+- **제거**: `GameplayController.CreateTestQuad()` 메서드 및 호출
+- **재활성화**: `BackgroundVFX` 자동 생성 (테스트용 비활성화 해제)
+
+### ✅ MCP 테스트 결과 (2026-02-16 14:25)
+- **노트 색상**: `RGBA(0.000, 0.960, 0.984, 1.000)` - Alpha 정상 (1.0)
+- **노트 가시성**: frame 2부터 `visible=True` 확인
+- **게임 완주**: 30초 테스트곡, 61개 노트 전체 처리
+- **판정 시스템**: 모든 노트 MISS (입력 없음 - 정상)
+- **VFX**: BackgroundVFX 정상 초기화됨
+

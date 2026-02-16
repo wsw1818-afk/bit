@@ -170,72 +170,59 @@ namespace AIBeat.Gameplay
         }
 
         /// <summary>
-        /// 노트 프리팹 동적 생성 (Sprite-based)
+        /// 노트 프리팹 동적 생성 (MeshRenderer + Quad 방식 - URP 호환)
         /// </summary>
         private GameObject CreateNotePrefab(string name, Color color)
         {
             var noteObj = new GameObject(name);
-            // noteObj.transform.localScale = new Vector3(0.82f, 0.22f, 1f); // Sprite handles size better usually but let's keep scale for now or adjust
-            // Original Quad was 1x1 scale transformed. 
-            // Let's use SpriteRenderer.
-            
-            // Try load sprite from Resources
-            string resourcePath = $"AIBeat_Design/Notes/{name}"; 
-            // Name mapping: "TapNote" -> "NormalNote", "LongNote" -> "LongNote", "ScratchNote" -> "ScratchNote"
-            string fileName = name == "TapNote" ? "NormalNote" : name;
-            
-            Sprite sprite = Resources.Load<Sprite>($"AIBeat_Design/Notes/{fileName}");
-            
-            if (sprite == null)
+
+            // MeshRenderer + Quad 방식 (URP에서 확실히 렌더링됨)
+            var filter = noteObj.AddComponent<MeshFilter>();
+            var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            filter.sharedMesh = tempQuad.GetComponent<MeshFilter>().sharedMesh;
+
+            // Collider 제거 (Quad에 기본 Collider가 있음)
+            var col = tempQuad.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+            Destroy(tempQuad);
+
+            var renderer = noteObj.AddComponent<MeshRenderer>();
+
+            // URP 호환 셰이더 사용
+            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+
+            var mat = new Material(shader);
+            mat.color = color;
+
+            // 텍스처 생성 시도
+            Texture2D tex = null;
+            if (name == "TapNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Tap);
+            else if (name == "LongNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Long);
+            else if (name == "ScratchNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Scratch);
+
+            if (tex != null)
             {
-                // Fallback: Generate runtime texture
-                Texture2D tex = null;
-                if (name == "TapNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Tap);
-                else if (name == "LongNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Long);
-                else if (name == "ScratchNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Scratch);
-                
-                if (tex != null)
-                {
-                    sprite = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f, 0.5f));
-                    sprite.name = name + "_Procedural";
-                }
+                mat.mainTexture = tex;
+                if (mat.HasProperty("_BaseMap"))
+                    mat.SetTexture("_BaseMap", tex);
             }
 
-            var sr = noteObj.AddComponent<SpriteRenderer>();
-            if (sprite != null)
-            {
-                sr.sprite = sprite;
-                // Scale adjustment: Note needs to fill lane width (approx 1.0 unit).
-                // If texture is 128px and PPU is 100, size is 1.28 units.
-                // We want width ~ 0.9 units.
-                float targetWidth = 0.9f;
-                float currentWidth = sr.bounds.size.x;
-                if (currentWidth > 0)
-                {
-                    float ratio = targetWidth / currentWidth;
-                    noteObj.transform.localScale = new Vector3(ratio, ratio, 1f);
-                }
-            }
-            else
-            {
-                // Absolute fallback (Quad)
-                 var filter = noteObj.AddComponent<MeshFilter>();
-                 var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                 filter.sharedMesh = tempQuad.GetComponent<MeshFilter>().sharedMesh;
-                 Destroy(tempQuad);
-                 
-                 var renderer = noteObj.AddComponent<MeshRenderer>();
-                 var mat = new Material(Shader.Find("Sprites/Default"));
-                 mat.color = color;
-                 renderer.material = mat;
-                 noteObj.transform.localScale = new Vector3(0.82f, 0.22f, 1f);
-            }
+            renderer.material = mat;
+            renderer.sortingOrder = 500; // 높은 sortingOrder
+            managedMaterials.Add(mat);
+
+            // 노트 크기: 0.8 x 0.45 (레인 너비에 맞춤)
+            noteObj.transform.localScale = new Vector3(0.8f, 0.45f, 1f);
+
+            Debug.Log($"[NoteSpawner] Note {name} created: MeshRenderer, shader={shader?.name}, color={color}, scale={noteObj.transform.localScale}");
 
             // Note 컴포넌트 추가
             noteObj.AddComponent<Note>();
             // NoteVisuals 컴포넌트 추가
             noteObj.AddComponent<NoteVisuals>();
-            // 글로우 이펙트 (Sprite Glow handled by Shader often, but keep script for logic)
+            // 글로우 이펙트
             noteObj.AddComponent<NoteGlowEffect>();
 
             noteObj.SetActive(false);
@@ -528,16 +515,16 @@ namespace AIBeat.Gameplay
             {
                 var pos = note.transform.position;
                 var scl = note.transform.localScale;
-                var renderer = note.GetComponent<Renderer>(); // SpriteRenderer와 MeshRenderer 모두 지원
-                Debug.Log($"[NoteSpawner] Spawned {data.Type} note at lane {data.LaneIndex}, hitTime: {data.HitTime:F2}s | Active: {activeNotes.Count} | pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) scale=({scl.x:F2},{scl.y:F2},{scl.z:F2}) visible={renderer?.isVisible}");
+                var mr = note.GetComponent<MeshRenderer>();
+                Debug.Log($"[NoteSpawner] Spawned {data.Type} note at lane {data.LaneIndex}, hitTime: {data.HitTime:F2}s | Active: {activeNotes.Count} | pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) scale=({scl.x:F2},{scl.y:F2},{scl.z:F2}) | MeshRenderer: enabled={mr?.enabled}, visible={mr?.isVisible}");
             }
 #endif
         }
 
         private Vector3 GetSpawnPosition(int laneIndex)
         {
-            // 노트 Z 위치 (배경 Z=1보다 카메라(Z=-10)에 가깝게 → Z=0이 배경 앞)
-            const float noteZ = 0f;
+            // 노트 Z 위치: 배경(Z=2)보다 카메라(Z=-10)에 가깝게 → Z=-1이 배경 앞
+            const float noteZ = -1f;
 
             // laneSpawnPoints 유효성 검사
             if (laneSpawnPoints == null || laneSpawnPoints.Length == 0)

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using System.Collections;
 
 namespace AIBeat.Gameplay
@@ -11,6 +12,8 @@ namespace AIBeat.Gameplay
     {
         private static BackgroundVFX instance;
         public static BackgroundVFX Instance => instance;
+
+        private SortingGroup sortingGroup;
 
         // 떠다니는 파티클들
         private Transform[] floatingParticles;
@@ -45,6 +48,10 @@ namespace AIBeat.Gameplay
         private void Awake()
         {
             instance = this;
+
+            // SortingGroup을 추가하여 배경 전체가 노트(sortingOrder=100)보다 뒤에 렌더링되도록 함
+            sortingGroup = gameObject.AddComponent<SortingGroup>();
+            sortingGroup.sortingOrder = -200; // 노트(100)보다 훨씬 낮은 값
         }
 
         private void Start()
@@ -91,7 +98,9 @@ namespace AIBeat.Gameplay
             bgMaterial.mainTexture = tex;
             bgMaterial.color = Color.white;
 
-            bgGradient.GetComponent<MeshRenderer>().material = bgMaterial;
+            var bgRenderer = bgGradient.GetComponent<MeshRenderer>();
+            bgRenderer.material = bgMaterial;
+            bgRenderer.sortingOrder = -100; // 노트(100)보다 훨씬 뒤
         }
 
         /// <summary>
@@ -184,7 +193,9 @@ namespace AIBeat.Gameplay
                 color.a = Random.Range(0.1f, 0.4f);
                 mat.color = color;
 
-                go.GetComponent<MeshRenderer>().material = mat;
+                var particleRenderer = go.GetComponent<MeshRenderer>();
+                particleRenderer.material = mat;
+                particleRenderer.sortingOrder = -50; // 배경 앞, 노트(100) 뒤
 
                 floatingParticles[i] = go.transform;
                 particleMaterials[i] = mat;
@@ -263,7 +274,9 @@ namespace AIBeat.Gameplay
                     lineColor = new Color(1f, 0.84f, 0f, 0.15f); // Gold (투명)
 
                 mat.color = lineColor;
-                go.GetComponent<MeshRenderer>().material = mat;
+                var dividerRenderer = go.GetComponent<MeshRenderer>();
+                dividerRenderer.material = mat;
+                dividerRenderer.sortingOrder = -30; // 파티클 앞, 노트(100) 뒤
 
                 laneDividers[i] = go;
                 dividerMaterials[i] = mat;
@@ -312,7 +325,9 @@ namespace AIBeat.Gameplay
             if (shader == null) shader = Shader.Find("Unlit/Color");
             beatFlashMaterial = new Material(shader);
             beatFlashMaterial.color = new Color(1f, 0.84f, 0f, 0f); // 투명 시작
-            beatFlashOverlay.GetComponent<MeshRenderer>().material = beatFlashMaterial;
+            var flashRenderer = beatFlashOverlay.GetComponent<MeshRenderer>();
+            flashRenderer.material = beatFlashMaterial;
+            flashRenderer.sortingOrder = 200; // 노트(100) 앞, 히트 시 플래시 효과
         }
 
         /// <summary>

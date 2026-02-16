@@ -290,10 +290,12 @@ namespace AIBeat.Editor
              if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
              var camObj = new GameObject("Main Camera");
+             camObj.transform.position = new Vector3(0, 0, -10); // 노트(Z=0)를 볼 수 있도록
              var cam = camObj.AddComponent<Camera>();
              cam.clearFlags = CameraClearFlags.SolidColor;
              cam.backgroundColor = Color.black;
              cam.orthographic = true;
+             cam.orthographicSize = 15f; // 노트가 lookAhead=3초 전에 스폰, Y=judgeY+15까지 보여야 함
              camObj.tag = "MainCamera";
              // Add AudioListener
              camObj.AddComponent<AudioListener>();

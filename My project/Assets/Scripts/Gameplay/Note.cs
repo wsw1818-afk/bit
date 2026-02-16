@@ -139,6 +139,7 @@ namespace AIBeat.Gameplay
         /// </summary>
         private IEnumerator MoveCoroutine()
         {
+            int frameCount = 0;
             while (true)
             {
                 yield return null;
@@ -146,8 +147,17 @@ namespace AIBeat.Gameplay
 
                 float currentTime = AudioManager.Instance.CurrentTime;
                 var pos = transform.position;
-                pos.y = judgementLineY + (noteData.HitTime - currentTime) * speed;
+                float newY = judgementLineY + (noteData.HitTime - currentTime) * speed;
+                pos.y = newY;
                 transform.position = pos;
+
+                // 처음 5프레임만 로그 출력 (디버그용)
+                frameCount++;
+                if (frameCount <= 5)
+                {
+                    var renderer = GetComponent<Renderer>();
+                    Debug.Log($"[Note] Lane{noteData.LaneIndex} frame{frameCount} | Y={newY:F1} | visible={renderer?.isVisible} color={renderer?.material?.color}");
+                }
             }
         }
 
