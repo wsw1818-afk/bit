@@ -890,11 +890,27 @@ namespace AIBeat.Gameplay
             {
                 AudioManager.Instance.OnBGMEnded -= OnSongEnd;
                 AudioManager.Instance.OnBGMEnded += OnSongEnd;
-                AudioManager.Instance.SetBGM(currentSong.AudioClip);
-                AudioManager.Instance.PlayBGM();
+
+                // 디버그 모드 활성화 (시간 진행 보장)
+                float duration = currentSong.Duration > 0 ? currentSong.Duration : 300f;
+                AudioManager.Instance.EnableDebugMode(duration);
+                AudioManager.Instance.StartDebugPlayback();
+
+                // AudioClip이 있으면 실제 오디오도 재생
+                if (currentSong.AudioClip != null)
+                {
+                    AudioManager.Instance.SetBGM(currentSong.AudioClip);
+                    AudioManager.Instance.PlayBGM();
 #if UNITY_EDITOR
-                Debug.Log("[GameplayController] Playing actual audio");
+                    Debug.Log($"[GameplayController] Playing audio + debug time, clip={currentSong.AudioClip.name}, duration={duration}s");
 #endif
+                }
+                else
+                {
+#if UNITY_EDITOR
+                    Debug.Log($"[GameplayController] Debug time mode only, duration={duration}s");
+#endif
+                }
             }
 
             noteSpawner?.StartSpawning();
