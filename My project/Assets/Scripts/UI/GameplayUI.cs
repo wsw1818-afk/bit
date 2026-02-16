@@ -356,9 +356,9 @@ namespace AIBeat.UI
             {
                 pauseButton.transform.SetParent(topBar.transform, false);
                 var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
-                pauseLE.preferredWidth = 56;
-                pauseLE.preferredHeight = 56;
-                pauseLE.minWidth = 56;
+                pauseLE.preferredWidth = 70;
+                pauseLE.preferredHeight = 70;
+                pauseLE.minWidth = 70;
             }
 
             // ============================================================
@@ -392,7 +392,7 @@ namespace AIBeat.UI
             pauseBtnGo.transform.SetParent(transform, false);
 
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(56, 56);
+            btnRect.sizeDelta = new Vector2(70, 70); // 56 → 70 (더 크게)
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
             btnImage.color = UIColorPalette.PAUSE_BTN_BG;
@@ -407,8 +407,8 @@ namespace AIBeat.UI
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
-            iconText.text = "| |";
-            iconText.fontSize = 28;
+            iconText.text = "||";
+            iconText.fontSize = 40; // 28 → 40 (더 크게)
             iconText.color = Color.white;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
