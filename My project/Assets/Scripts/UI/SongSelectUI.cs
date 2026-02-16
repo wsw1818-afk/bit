@@ -174,6 +174,27 @@ namespace AIBeat.UI
             // StreamingAssets 내 MP3 파일 자동 스캔 → 라이브러리에 등록
             ScanAndRegisterStreamingAssets();
 
+            // 기존 BackButton 제거 (씬에 남아있는 경우)
+            // 1) 직접 자식에서 찾기
+            var oldBackBtn = transform.Find("BackButton");
+            if (oldBackBtn != null) DestroyImmediate(oldBackBtn.gameObject);
+
+            // 2) SafeAreaPanel 내부에서 찾기 (SafeAreaApplier가 이동시킨 경우)
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                var safeAreaPanel = canvas.transform.Find("SafeAreaPanel");
+                if (safeAreaPanel != null)
+                {
+                    var oldBackBtnInSafe = safeAreaPanel.Find("BackButton");
+                    if (oldBackBtnInSafe != null)
+                    {
+                        Debug.Log("[SongSelectUI] SafeAreaPanel 내부의 기존 BackButton 제거");
+                        DestroyImmediate(oldBackBtnInSafe.gameObject);
+                    }
+                }
+            }
+
             // 타이틀 바 생성 (뒤로 버튼 포함)
             CreateTitleBar();
 
