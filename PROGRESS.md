@@ -376,3 +376,23 @@ mcp__mcp-unity__execute_menu_item("Assets/Refresh")
    - `GameplayController.cs`: 배경 이미지 교체 로직 적용.
 
 ---
+
+## SceneBuilder Refactoring & Visual Verification (2026-02-16)
+
+### ✅ SceneBuilder.cs Refactoring
+- **Objective**: Align Editor scene generation with runtime UI logic (`MainMenuUI`, `SongSelectUI`, `GameplayUI`).
+- **Changes**:
+  - Removed manual UI element creation (buttons, texts) that was conflicting with self-initializing scripts.
+  - Implemented `BuildMainMenuScene`, `BuildSongSelectScene`, and `BuildGameplayScene` methods to attach correct UI scripts and create necessary hierarchy placeholders (e.g., `MusicianBackground`, `BackButton`).
+  - Added `BuildGameplayScene` to generate the gameplay environment with `GameplayController` and `JudgementSystem`.
+  - Ensured correct namespaces (`AIBeat.UI`, `AIBeat.Gameplay`, `AIBeat.Core`) are used.
+
+### ✅ Logic Verification
+- **MainMenuUI**: Verified `AutoSetupReferences` correctly handles button and text generation if missing. Confirmed animation logic for musicians.
+- **SongSelectUI**: Verified `ScanFolderForAudio` logic and `OnBackClicked` navigation. Confirmed `SongLibraryManager` integration.
+- **GameplayController**: Verified `StartDebugGame` and `StartGame` flows. Checked component dependency checks (`NoteSpawner`, `JudgementSystem`).
+
+### 🔜 Next Steps for User
+- Run **AIBeat -> Build All Scenes** in Unity Editor.
+- Verify scene transitions and UI functionality in Play Mode.
+

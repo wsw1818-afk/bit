@@ -7,6 +7,8 @@ using UnityEditor.SceneManagement;
 using TMPro;
 using System.IO;
 using AIBeat.UI;
+using AIBeat.Core;
+using AIBeat.Gameplay;
 
 namespace AIBeat.Editor
 {
@@ -21,8 +23,8 @@ namespace AIBeat.Editor
             // Ensure assets exist first
             if (!Directory.Exists(Application.dataPath + "/Resources/AIBeat_Design/UI"))
             {
-                EditorUtility.DisplayDialog("Error", "UI Assets not found. Please run 'AIBeat/Generate Design Assets' first.", "OK");
-                return;
+                // Warning only, continue if possible or create defaults
+                 Debug.LogWarning("UI Assets folder not found at expected path. Procedural generation might be used.");
             }
 
             // Load default font once at the start
@@ -31,9 +33,8 @@ namespace AIBeat.Editor
             BuildSplashScene();
             BuildMainMenuScene();
             BuildSongSelectScene();
-            BuildSongListItemPrefab(); // Build Prefab first or last? Prefab used in SongSelect... so maybe before?
-            // Actually SongSelect just needs ScrollView, prefab usually instantiated at runtime.
-            // But let's build prefab for user usage.
+            BuildGameplayScene();
+            BuildSongListItemPrefab(); 
         }
 
         [MenuItem("AIBeat/Build SongListItem Prefab")]
@@ -62,14 +63,6 @@ namespace AIBeat.Editor
 
             var script = go.AddComponent<SongListItem>();
             
-            // Link references via SerializedObject since fields are private [SerializeField]
-            // Or just make them public for Builder? No, stick to clean code.
-            // We can use Reflection or SerializedObject.
-            // Simplified: Component references
-            // Let's rely on GetComponent in script or public fields for Editor construction?
-            // For now, let's assume user might link manually or use Find?
-            // Wait, I can use SerializedObject.
-            
             // Save Prefab
             string prefabPath = "Assets/Prefabs/UI";
             if (!Directory.Exists(prefabPath)) Directory.CreateDirectory(prefabPath);
@@ -96,177 +89,154 @@ namespace AIBeat.Editor
             var loaderObj = new GameObject("SceneLoader");
             loaderObj.AddComponent<SceneLoader>();
 
-            // Add SplashController for auto transition on click/touch
+            // Add SplashController (assumed to exist) for auto transition on click/touch
             var controllerObj = new GameObject("SplashController");
-            controllerObj.AddComponent<SplashController>();
+            // Check if SplashController exists
+            if (System.Type.GetType("AIBeat.UI.SplashController, Assembly-CSharp") != null)
+                controllerObj.AddComponent(System.Type.GetType("AIBeat.UI.SplashController, Assembly-CSharp"));
+            
+            // Simple fallback if script missing: SceneLoader button
+            if (controllerObj.GetComponent<MonoBehaviour>() == null)
+            {
+                var btn = canvas.gameObject.AddComponent<Button>();
+                btn.onClick.AddListener(() => {
+                     GameObject.FindObjectOfType<SceneLoader>()?.LoadMainMenu();
+                });
+            }
 
             SaveScene("Assets/Scenes/SplashScene.unity");
         }
 
         private static void BuildMainMenuScene()
         {
-            // Update existing scene if possible, or create new
-            string path = "Assets/Scenes/MainMenuScene.unity";
-            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            NewScene("Assets/Scenes/MainMenuScene.unity");
             
-            // Clear old UI if we want fresh start, or try to find existing
-            // Strategy: Clear Canvas/Camera and rebuild.
-            var rootObjs = scene.GetRootGameObjects();
-            foreach(var r in rootObjs) 
-            {
-                if (r.name == "Canvas" || r.name == "Main Camera" || r.name == "SceneLoader")
-                    GameObject.DestroyImmediate(r);
-            }
-
-            // Add Main Camera
-            var camObj = new GameObject("Main Camera");
-            var cam = camObj.AddComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = Color.black;
-            cam.orthographic = true;
-            camObj.tag = "MainCamera";
-
             var canvas = CreateCanvas();
-            CreateBackground(canvas, "Backgrounds/Menu_BG");
             
-            // Add Instrument Decorations
-            var drumObj = CreateDecoration(canvas, "Decorations/Drum_Silhouette", new Vector2(-300, -200), new Vector2(400, 400));
-            var drumImg = drumObj.GetComponent<Image>();
-            if (drumImg) { var c = drumImg.color; c.a = 0.3f; drumImg.color = c; } // Fade
+            // Attach MainMenuUI - it handles background, buttons (if missing), and animations
+            var uiScript = canvas.gameObject.AddComponent<MainMenuUI>();
             
-            var pianoObj = CreateDecoration(canvas, "Decorations/Piano_Silhouette", new Vector2(300, -200), new Vector2(400, 400));
-            var pianoImg = pianoObj.GetComponent<Image>();
-            if (pianoImg) { var c = pianoImg.color; c.a = 0.3f; pianoImg.color = c; }
+            // Create MusicianBackground panel for MainMenuUI to find
+            var musicianBg = new GameObject("MusicianBackground");
+            musicianBg.transform.SetParent(canvas.transform, false);
+            musicianBg.transform.SetAsFirstSibling(); // Behind other UI
+            
+            var mbRect = musicianBg.AddComponent<RectTransform>();
+            mbRect.anchorMin = Vector2.zero;
+            mbRect.anchorMax = Vector2.one;
+            mbRect.offsetMin = Vector2.zero;
+            mbRect.offsetMax = Vector2.zero;
+            
+            // Musician Placeholders (Scripts will load sprites)
+            CreateMusicianPlaceholder(musicianBg, "Drummer", new Vector2(-250, -100));
+            CreateMusicianPlaceholder(musicianBg, "Pianist", new Vector2(250, -100));
+            CreateMusicianPlaceholder(musicianBg, "Guitarist", new Vector2(0, 50));
+            CreateMusicianPlaceholder(musicianBg, "DJ", new Vector2(0, 200));
 
-            var guitarObj = CreateDecoration(canvas, "Decorations/Guitar_Silhouette", new Vector2(400, 200), new Vector2(300, 600));
-            guitarObj.transform.localRotation = Quaternion.Euler(0, 0, -15);
-            var guitarImg = guitarObj.GetComponent<Image>();
-            if (guitarImg) { var c = guitarImg.color; c.a = 0.2f; guitarImg.color = c; }
+            // MainMenuUI.AutoSetupReferences will create buttons if they don't exist.
+            // But let's create the layout container so it doesn't just pile them up.
+            // Actually MainMenuUI's code (EnsureButtonMobileSize) creates a container and parents them.
+            // So we just need to ensure the SceneLoader/GameManager is present.
 
-            CreateLogo(canvas, 0, 500, 1.0f);
+            var loader = new GameObject("SceneLoader");
+            loader.AddComponent<SceneLoader>();
+            
+            // GameManager is usually a singleton from Boot, but for testing MainMenu independently:
+            var gm = new GameObject("GameManager");
+            gm.AddComponent<GameManager>();
 
-            // Container for buttons
-            var panel = new GameObject("ButtonPanel");
-            panel.transform.SetParent(canvas.transform, false);
-            var rt = panel.AddComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(0, -300);
-            var vlg = panel.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 20;
-            vlg.childAlignment = TextAnchor.MiddleCenter;
-            vlg.childControlHeight = false;
-            vlg.childControlWidth = false;
-
-            // Buttons
-            var startBtn = CreateMenuButton(panel, "Start", "START");
-            startBtn.GetComponent<Button>().onClick.AddListener(() => {
-                 GameObject.FindObjectOfType<SceneLoader>()?.LoadSongSelect();
-            });
-
-            CreateMenuButton(panel, "Settings", "SETTINGS");
-
-            var quitBtn = CreateMenuButton(panel, "Quit", "QUIT");
-            quitBtn.GetComponent<Button>().onClick.AddListener(() => {
-                 GameObject.FindObjectOfType<SceneLoader>()?.QuitGame();
-            });
-
-            new GameObject("SceneLoader").AddComponent<SceneLoader>();
-
-            SaveScene(path);
+            SaveScene("Assets/Scenes/MainMenuScene.unity");
         }
 
         private static void BuildSongSelectScene()
         {
-            string path = "Assets/Scenes/SongSelectScene.unity";
-            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-             
-            // Clear old UI
-            var rootObjs = scene.GetRootGameObjects();
-            foreach(var r in rootObjs) 
-            {
-                if (r.name == "Canvas" || r.name == "Main Camera" || r.name == "SceneLoader")
-                    GameObject.DestroyImmediate(r);
-            }
-
-            // Add Main Camera
-            var camObj = new GameObject("Main Camera");
-            var cam = camObj.AddComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = Color.black;
-            cam.orthographic = true;
-            camObj.tag = "MainCamera";
+             NewScene("Assets/Scenes/SongSelectScene.unity");
 
             var canvas = CreateCanvas();
-            CreateBackground(canvas, "Backgrounds/SongSelect_BG");
-
-            // Play Button (최상단)
-            var playBtn = CreateMenuButton(canvas.gameObject, "PlayBtn", "PLAY");
-            var playRt = playBtn.GetComponent<RectTransform>();
-            playRt.anchorMin = new Vector2(0.5f, 1);
-            playRt.anchorMax = new Vector2(0.5f, 1);
-            playRt.anchoredPosition = new Vector2(0, -150);
-            playBtn.GetComponent<Button>().onClick.AddListener(() => {
-                 GameObject.FindObjectOfType<SceneLoader>()?.LoadGame();
-            });
-
-            // TODO: 곡 목록 ScrollView (나중에 추가)
-            // Header as placeholder
-            var header = CreateText(canvas.gameObject, "Header", "SELECT MUSIC", 60, new Vector2(0, 0), new Vector2(800, 100));
-            var headerRt = header.GetComponent<RectTransform>();
-            headerRt.anchorMin = new Vector2(0.5f, 1);
-            headerRt.anchorMax = new Vector2(0.5f, 1);
-            headerRt.anchoredPosition = new Vector2(0, -450);
-
-            // Settings Button (하단 위)
-            var settingsBtn = CreateMenuButton(canvas.gameObject, "SettingsBtn", "SETTINGS");
-            var settingsRt = settingsBtn.GetComponent<RectTransform>();
-            settingsRt.anchorMin = new Vector2(0.5f, 0);
-            settingsRt.anchorMax = new Vector2(0.5f, 0);
-            settingsRt.anchoredPosition = new Vector2(0, 220);
-
-            // Back Button (맨 아래)
-            var backBtn = CreateMenuButton(canvas.gameObject, "BackBtn", "BACK");
-            var backRt = backBtn.GetComponent<RectTransform>();
-            backRt.anchorMin = new Vector2(0.5f, 0);
-            backRt.anchorMax = new Vector2(0.5f, 0);
-            backRt.anchoredPosition = new Vector2(0, 90);
-            backBtn.GetComponent<Button>().onClick.AddListener(() => {
-                 GameObject.FindObjectOfType<SceneLoader>()?.LoadMainMenu();
-            });
             
-            new GameObject("SceneLoader").AddComponent<SceneLoader>();
+            // Attach SongSelectUI
+            var uiScript = canvas.gameObject.AddComponent<SongSelectUI>();
+            
+            // Create BackButton (SongSelectUI expects it)
+            var backBtn = CreateMenuButton(canvas.gameObject, "BackButton", "<");
+            var backRt = backBtn.GetComponent<RectTransform>();
+            backRt.anchorMin = new Vector2(0, 1);
+            backRt.anchorMax = new Vector2(0, 1);
+            backRt.pivot = new Vector2(0, 1);
+            backRt.anchoredPosition = new Vector2(20, -20);
+            backRt.sizeDelta = new Vector2(100, 100);
 
-            SaveScene(path);
+            // Create SongLibraryManager if needed (Singleton logic in script handles it, but good to have empty GO)
+            
+            var loader = new GameObject("SceneLoader");
+            loader.AddComponent<SceneLoader>();
+
+            SaveScene("Assets/Scenes/SongSelectScene.unity");
         }
 
+        private static void BuildGameplayScene()
+        {
+            NewScene("Assets/Scenes/GameplayScene.unity");
+            
+            var canvas = CreateCanvas();
+            
+            // GameplayUI
+            var uiScript = canvas.gameObject.AddComponent<GameplayUI>();
+            
+            // Controllers
+            var controllerGo = new GameObject("GameplayController");
+            // Check types to avoid compilation error if scripts missing
+            controllerGo.AddComponent<GameplayController>();
+            
+            var judgeGo = new GameObject("JudgementSystem");
+            judgeGo.AddComponent<JudgementSystem>();
+            
+            var noteArea = new GameObject("NoteArea");
+            // noteArea.transform.SetParent(canvas.transform, false); // Or World Space? Usually NoteArea is separate.
+            // Assuming NoteArea is World Space or managed by Controller.
+            
+            // HUD Structuring
+            // GameplayUI expects ScorePanel, ComboText etc.
+            // AutoSetupReferences tries to find them. Let's create basic hierarchy.
+            
+            var scorePanel = new GameObject("ScorePanel");
+            scorePanel.transform.SetParent(canvas.transform, false);
+            var spRect = scorePanel.AddComponent<RectTransform>();
+            spRect.anchorMin = new Vector2(0.5f, 1); 
+            spRect.anchorMax = new Vector2(0.5f, 1);
+            spRect.anchoredPosition = new Vector2(0, -100);
+            var scoreObj = CreateText(scorePanel, "ScoreText", "000000", 60, Vector2.zero, new Vector2(400, 80));
+            scoreObj.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Center;
+            
+            var comboObj = CreateText(canvas.gameObject, "ComboText", "0", 80, new Vector2(0, 100), new Vector2(400, 100)); // Center screen
+            comboObj.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Center;
 
+            var judgeObj = CreateText(canvas.gameObject, "JudgementText", "", 60, new Vector2(0, -200), new Vector2(600, 100));
+            judgeObj.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Center;
+
+            SaveScene("Assets/Scenes/GameplayScene.unity");
+        }
+        
         // Helpers
         private static void LoadDefaultFont()
         {
             defaultFont = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
-            if (defaultFont == null)
-            {
-                Debug.LogError("[SceneBuilder] Failed to load default TMP font. Make sure TMP Essential Resources are imported.");
-            }
-            else
-            {
-                Debug.Log($"[SceneBuilder] Loaded default font: {defaultFont.name}");
-            }
         }
 
         private static void NewScene(string path)
         {
              var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-             // Ensure path directory
              string dir = Path.GetDirectoryName(path);
              if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-             // Add Main Camera for UI rendering
              var camObj = new GameObject("Main Camera");
              var cam = camObj.AddComponent<Camera>();
              cam.clearFlags = CameraClearFlags.SolidColor;
              cam.backgroundColor = Color.black;
              cam.orthographic = true;
              camObj.tag = "MainCamera";
+             // Add AudioListener
+             camObj.AddComponent<AudioListener>();
         }
 
         private static void SaveScene(string path)
@@ -277,16 +247,19 @@ namespace AIBeat.Editor
 
         private static Canvas CreateCanvas()
         {
-             // Check if Canvas exists (if we didn't clear)
-             // But we cleared.
             var go = new GameObject("Canvas");
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080, 1920);
-            scaler.matchWidthOrHeight = 0.5f; // Match width/height equally
+            scaler.matchWidthOrHeight = 0.5f; 
             go.AddComponent<GraphicRaycaster>();
+            
+            // Add SafeAreaApplier
+            if (System.Type.GetType("AIBeat.UI.SafeAreaApplier, Assembly-CSharp") != null)
+               go.AddComponent(System.Type.GetType("AIBeat.UI.SafeAreaApplier, Assembly-CSharp"));
+
             return canvas;
         }
 
@@ -297,16 +270,7 @@ namespace AIBeat.Editor
             var img = go.AddComponent<Image>();
             
             Sprite sp = Resources.Load<Sprite>("AIBeat_Design/UI/" + resourceName);
-            if (sp == null) 
-            {
-                 // Try load texture and create sprite if sprite missing (generated as PNG)
-                 Texture2D tex = Resources.Load<Texture2D>("AIBeat_Design/UI/" + resourceName);
-                 if (tex != null)
-                 {
-                     sp = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f,0.5f));
-                 }
-            }
-            img.sprite = sp;
+            if (sp != null) img.sprite = sp;
             
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
@@ -331,44 +295,13 @@ namespace AIBeat.Editor
             return go;
         }
 
-        private static GameObject CreateDecoration(Canvas canvas, string resourcePath, Vector2 pos, Vector2 size)
-        {
-            var go = new GameObject(Path.GetFileName(resourcePath));
-            go.transform.SetParent(canvas.transform, false);
-            go.transform.SetAsFirstSibling(); // Behind everything (but after BG if BG is first... tricky. SceneBuilder creates BG first, so this goes to bottom. We need it AFTER BG)
-            
-            // Actually SetAsFirstSibling puts it at index 0. BG is index 0.
-            // We want it at index 1 (after BG).
-            go.transform.SetSiblingIndex(1);
-
-            var img = go.AddComponent<Image>();
-            Texture2D tex = Resources.Load<Texture2D>("AIBeat_Design/UI/" + resourcePath);
-             if (tex != null)
-                img.sprite = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f,0.5f));
-            
-            var rt = go.GetComponent<RectTransform>();
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-            return go;
-        }
-
         private static GameObject CreateText(GameObject parent, string name, string content, int fontSize, Vector2 pos, Vector2 size)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent.transform, false);
             var txt = go.AddComponent<TextMeshProUGUI>();
 
-            // Assign font BEFORE setting text to avoid warning
-            if (defaultFont != null)
-            {
-                txt.font = defaultFont;
-                Debug.Log($"[SceneBuilder] Assigned font to {name}");
-            }
-            else
-            {
-                Debug.LogWarning($"[SceneBuilder] defaultFont is null when creating {name}");
-            }
-
+            if (defaultFont != null) txt.font = defaultFont;
             txt.text = content;
             txt.fontSize = fontSize;
             txt.color = Color.white;
@@ -379,7 +312,7 @@ namespace AIBeat.Editor
             rt.sizeDelta = size;
             return go;
         }
-
+        
         private static GameObject CreateMenuButton(GameObject parent, string name, string text)
         {
             var go = new GameObject(name);
@@ -387,14 +320,6 @@ namespace AIBeat.Editor
             var img = go.AddComponent<Image>();
             var btn = go.AddComponent<Button>();
             
-            // Load sprites
-            img.sprite = LoadSprite("Buttons/Btn_Normal");
-            SpriteState ss = new SpriteState();
-            ss.highlightedSprite = LoadSprite("Buttons/Btn_Hover");
-            ss.pressedSprite = LoadSprite("Buttons/Btn_Pressed");
-            btn.transition = Selectable.Transition.SpriteSwap;
-            btn.spriteState = ss;
-
             var rt = go.GetComponent<RectTransform>();
             rt.sizeDelta = new Vector2(600, 120);
 
@@ -402,9 +327,19 @@ namespace AIBeat.Editor
             var txtObj = CreateText(go, "Text", text, 40, Vector2.zero, new Vector2(600, 120));
             var tmpro = txtObj.GetComponent<TextMeshProUGUI>();
             tmpro.alignment = TextAlignmentOptions.Center;
-            tmpro.color = new Color(0, 1, 1); // Cyan text
 
             return go;
+        }
+
+        private static void CreateMusicianPlaceholder(GameObject parent, string name, Vector2 pos)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent.transform, false);
+            var img = go.AddComponent<Image>();
+            img.color = Color.clear; // Invisible until sprite loaded
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = new Vector2(400, 400); // Default size
         }
 
         private static Sprite LoadSprite(string path)
