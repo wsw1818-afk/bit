@@ -526,30 +526,11 @@ namespace AIBeat.Gameplay
             // 노트 Z 위치: 배경(Z=2)보다 카메라(Z=-10)에 가깝게 → Z=-1이 배경 앞
             const float noteZ = -1f;
 
-            // laneSpawnPoints 유효성 검사
-            if (laneSpawnPoints == null || laneSpawnPoints.Length == 0)
-            {
-                // 기본 레인 위치 계산 (중앙 기준 -1.5 ~ +1.5)
-                float x = -1.5f + laneIndex;
-                return new Vector3(x, spawnDistance, noteZ);
-            }
-
-            if (laneIndex < 0 || laneIndex >= laneSpawnPoints.Length)
-            {
-                Debug.LogWarning($"[NoteSpawner] Invalid lane index: {laneIndex}");
-                return new Vector3(0f, spawnDistance, noteZ);
-            }
-
-            if (laneSpawnPoints[laneIndex] == null)
-            {
-                float x = -1.5f + laneIndex;
-                return new Vector3(x, spawnDistance, noteZ);
-            }
-
-            Vector3 pos = laneSpawnPoints[laneIndex].position;
-            pos.y += spawnDistance;
-            pos.z = noteZ;  // 노트가 배경 앞에 표시되도록
-            return pos;
+            // 항상 중앙 기준으로 레인 위치 계산 (화면 중앙 = X:0)
+            // 레인 간격 = 노트 넓이 (0.9)
+            const float laneWidth = 0.9f;
+            float x = (laneIndex - 1.5f) * laneWidth;  // 레인 0~3이 중앙 기준 배치
+            return new Vector3(x, spawnDistance, noteZ);
         }
 
         private void UpdateActiveNotes()
