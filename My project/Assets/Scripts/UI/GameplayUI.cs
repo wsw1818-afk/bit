@@ -105,9 +105,7 @@ namespace AIBeat.UI
             CreatePausePanel();
             CreateCountdownPanel();
             CreateLoadingVideoPanel();
-            CreateLoadingVideoPanel();
             // CreateGameplayBackground(); // Cyberpunk 배경 활성화 (LaneBackground 가리므로 비활성)
-            RepositionHUD();
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기
@@ -607,16 +605,30 @@ namespace AIBeat.UI
         {
             if (loadingVideoPanel == null) return;
 
-            loadingVideoPanel.SetActive(show);
             if (show)
             {
-                videoPlayer.Play();
+                loadingVideoPanel.SetActive(true);
+                if (videoPlayer != null)
+                {
+                    videoPlayer.Play();
+                }
                 Debug.Log("[GameplayUI] Loading video started");
             }
             else
             {
-                videoPlayer.Stop();
-                Debug.Log("[GameplayUI] Loading video stopped");
+                // 완전히 숨기기: 비디오 정지 + 텍스처 클리어 + 패널 비활성화
+                if (videoPlayer != null)
+                {
+                    videoPlayer.Stop();
+                    videoPlayer.targetTexture = null;
+                }
+                if (videoDisplay != null)
+                {
+                    videoDisplay.texture = null;
+                    videoDisplay.enabled = false;
+                }
+                loadingVideoPanel.SetActive(false);
+                Debug.Log("[GameplayUI] Loading video stopped and hidden");
             }
         }
 
