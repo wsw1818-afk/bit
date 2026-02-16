@@ -67,7 +67,7 @@ namespace AIBeat.UI
             var rootRect = rootPanel.AddComponent<RectTransform>();
             rootRect.anchorMin = Vector2.zero;
             rootRect.anchorMax = Vector2.one;
-            rootRect.offsetMin = new Vector2(0, 0);
+            rootRect.offsetMin = new Vector2(0, 280); // 하단 버튼 영역(280px) 위부터
             rootRect.offsetMax = new Vector2(0, -100); // 타이틀 바(100px) 아래부터
 
             // 반투명 배경 (BIT.jpg 배경이 살짝 비침)

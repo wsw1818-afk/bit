@@ -113,14 +113,20 @@ namespace AIBeat.UI
 
         /// <summary>
         /// BIT.jpg 배경 이미지 + 어두운 오버레이
+        /// Canvas에 직접 추가하여 Safe Area 밖에도 배경 표시
         /// </summary>
         private void CreateBITBackground()
         {
-            var existing = transform.Find("BIT_Background");
-            if (existing != null) return;
+            // Canvas에 직접 배경 추가 (Safe Area 밖에도 배경 표시)
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return;
 
-            var bgGo = new GameObject("BIT_Background");
-            bgGo.transform.SetParent(transform, false);
+            var existingBg = canvas.transform.Find("FullscreenBackground");
+            if (existingBg != null) return;
+
+            // 전체 화면 배경 (Canvas 직접 자식)
+            var bgGo = new GameObject("FullscreenBackground");
+            bgGo.transform.SetParent(canvas.transform, false);
             bgGo.transform.SetAsFirstSibling();
 
             var rect = bgGo.AddComponent<RectTransform>();
@@ -131,16 +137,14 @@ namespace AIBeat.UI
 
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
-            
+
             // Procedural Generation 호출
             img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
             img.type = Image.Type.Sliced;
-            
-            // Legacy Resource Load 제거됨
 
-            // 오버레이
-            var overlayGo = new GameObject("DarkOverlay");
-            overlayGo.transform.SetParent(transform, false);
+            // 오버레이 (Canvas 직접 자식)
+            var overlayGo = new GameObject("FullscreenOverlay");
+            overlayGo.transform.SetParent(canvas.transform, false);
             overlayGo.transform.SetSiblingIndex(1);
             var overlayRect = overlayGo.AddComponent<RectTransform>();
             overlayRect.anchorMin = Vector2.zero;
@@ -148,7 +152,7 @@ namespace AIBeat.UI
             overlayRect.offsetMin = Vector2.zero;
             overlayRect.offsetMax = Vector2.zero;
             var overlayImg = overlayGo.AddComponent<Image>();
-            overlayImg.raycastTarget = false; // 오버레이도 터치 차단 안 함
+            overlayImg.raycastTarget = false;
             overlayImg.color = new Color(0.01f, 0.005f, 0.04f, 0.65f);
         }
 
