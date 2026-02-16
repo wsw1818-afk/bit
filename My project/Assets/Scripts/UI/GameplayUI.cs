@@ -104,12 +104,11 @@ namespace AIBeat.UI
             CreatePauseButton();
             CreatePausePanel();
             CreateCountdownPanel();
-            CreateLoadingVideoPanel();
+            // CreateLoadingVideoPanel(); // 필요할 때만 생성 (ShowLoadingVideo(true) 호출 시)
             // CreateGameplayBackground(); // Cyberpunk 배경 활성화 (LaneBackground 가리므로 비활성)
             RepositionHUD();
 
-            // 패널은 Awake에서 즉시 숨기기
-            if (loadingVideoPanel != null) loadingVideoPanel.SetActive(false);
+            // 패널은 Awake에서 즉시 숨기기 (loadingVideoPanel은 더 이상 Awake에서 생성 안 함)
             if (countdownPanel != null) countdownPanel.SetActive(false);
             if (pausePanel != null) pausePanel.SetActive(false);
             if (resultPanel != null) resultPanel.SetActive(false);
