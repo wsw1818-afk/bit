@@ -43,6 +43,7 @@ namespace AIBeat.UI
         private TMP_Text backgroundDimValueText;
 
         private MainMenuUI mainMenuUI;
+        private GameObject fullscreenBackground;  // 전체 화면 배경 참조
 
         private void Awake()
         {
@@ -79,10 +80,10 @@ namespace AIBeat.UI
         /// </summary>
         private void BuildUI()
         {
-            // 기존 자식 오브젝트 정리 (중복 생성 방지)
+            // 기존 자식 오브젝트 정리 (중복 생성 방지) - 즉시 삭제
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
-                Destroy(transform.GetChild(i).gameObject);
+                DestroyImmediate(transform.GetChild(i).gameObject);
             }
 
             // RectTransform 설정 (전체 화면 덮기)
@@ -97,19 +98,15 @@ namespace AIBeat.UI
             // 설정창을 최상위로 이동 (다른 UI 요소 위에 표시)
             transform.SetAsLastSibling();
 
-            // 패널 배경 설정 (완전 불투명)
-            var panelImage = GetComponent<Image>();
-            if (panelImage == null)
-                panelImage = gameObject.AddComponent<Image>();
-            panelImage.color = new Color(0.02f, 0.02f, 0.06f, 1f);  // 완전 불투명 어두운 배경
-            panelImage.raycastTarget = true;  // 클릭 차단
+            // 기존 전체 화면 배경 삭제
+            if (fullscreenBackground != null)
+            {
+                DestroyImmediate(fullscreenBackground);
+                fullscreenBackground = null;
+            }
 
-            // 네온 테두리
-            var outline = GetComponent<Outline>();
-            if (outline == null)
-                outline = gameObject.AddComponent<Outline>();
-            outline.effectColor = BORDER_CYAN;
-            outline.effectDistance = new Vector2(3, -3);
+            // 전체 화면 배경 생성
+            CreateFullscreenBackground();
 
             // 스크롤 가능한 콘텐츠 영역
             var contentGo = new GameObject("Content");
@@ -117,22 +114,23 @@ namespace AIBeat.UI
             var contentRect = contentGo.AddComponent<RectTransform>();
             contentRect.anchorMin = Vector2.zero;
             contentRect.anchorMax = Vector2.one;
-            contentRect.offsetMin = new Vector2(20, 90); // 하단 버튼 영역 확보 (더 넓게)
-            contentRect.offsetMax = new Vector2(-20, -30);
+            contentRect.offsetMin = new Vector2(20, 100); // 하단 버튼 영역 확보
+            contentRect.offsetMax = new Vector2(-20, 0); // 상단 여백 없음
+
 
             // VerticalLayoutGroup으로 항목 정렬
             var layout = contentGo.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(15, 15, 15, 15);
-            layout.spacing = 12;  // 8→12 (카드 간 여백 확대)
+            layout.padding = new RectOffset(15, 15, 5, 5);
+            layout.spacing = 14;  // 여유있게
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            // ContentSizeFitter 추가
-            var fitter = contentGo.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // ContentSizeFitter 제거 - 콘텐츠가 화면 전체를 채우도록
+            // var fitter = contentGo.AddComponent<ContentSizeFitter>();
+            // fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // 타이틀
             CreateTitle(contentGo.transform, "설정");
@@ -254,11 +252,11 @@ namespace AIBeat.UI
 
             var rect = titleGo.AddComponent<RectTransform>();
             var layoutElem = titleGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 60;
+            layoutElem.preferredHeight = 90;
 
             var tmp = titleGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 42;
+            tmp.fontSize = 60;
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = TITLE_COLOR;
             tmp.alignment = TextAlignmentOptions.Center;
@@ -285,11 +283,11 @@ namespace AIBeat.UI
 
             var rect = headerGo.AddComponent<RectTransform>();
             var layoutElem = headerGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 36;
+            layoutElem.preferredHeight = 55;
 
             var tmp = headerGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 22;
+            tmp.fontSize = 32;
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = UIColorPalette.NEON_MAGENTA;
             tmp.alignment = TextAlignmentOptions.MidlineLeft;
@@ -311,7 +309,7 @@ namespace AIBeat.UI
 
             var rect = sepGo.AddComponent<RectTransform>();
             var layoutElem = sepGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 4;
+            layoutElem.preferredHeight = 8;
 
             var img = sepGo.AddComponent<Image>();
             img.color = UIColorPalette.BORDER_CYAN.WithAlpha(0.6f);
@@ -337,7 +335,7 @@ namespace AIBeat.UI
 
             var cardRect = cardGo.AddComponent<RectTransform>();
             var cardLayout = cardGo.AddComponent<LayoutElement>();
-            cardLayout.preferredHeight = 85;  // 70→85 (카드 스타일로 높이 확대)
+            cardLayout.preferredHeight = 120;  // 더 크게
 
             // 카드 배경 + 테두리
             var cardImg = cardGo.AddComponent<Image>();
@@ -362,7 +360,7 @@ namespace AIBeat.UI
 
             var headerRect = headerGo.AddComponent<RectTransform>();
             var headerLayout = headerGo.AddComponent<LayoutElement>();
-            headerLayout.preferredHeight = 26;  // 24→26 (라벨 높이 확대)
+            headerLayout.preferredHeight = 38;  // 더 크게
 
             var hLayout = headerGo.AddComponent<HorizontalLayoutGroup>();
             hLayout.childControlWidth = true;
@@ -378,7 +376,7 @@ namespace AIBeat.UI
             labelLayout2.flexibleWidth = 1;
             var labelTmp = labelGo.AddComponent<TextMeshProUGUI>();
             labelTmp.text = label;
-            labelTmp.fontSize = 20;  // 18→20 (라벨 크기 확대)
+            labelTmp.fontSize = 28;  // 더 크게
             labelTmp.fontStyle = FontStyles.Bold;
             labelTmp.color = LABEL_COLOR;
             labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
@@ -390,7 +388,7 @@ namespace AIBeat.UI
             var valueLayout2 = valueGo.AddComponent<LayoutElement>();
             valueLayout2.preferredWidth = 90;  // 80→90 (값 영역 확대)
             var valueTmp = valueGo.AddComponent<TextMeshProUGUI>();
-            valueTmp.fontSize = 22;  // 18→22 (값 크기 확대)
+            valueTmp.fontSize = 30;  // 더 크게
             valueTmp.fontStyle = FontStyles.Bold;
             valueTmp.color = VALUE_COLOR;
             valueTmp.alignment = TextAlignmentOptions.MidlineRight;
@@ -402,7 +400,7 @@ namespace AIBeat.UI
 
             var sliderRect = sliderGo.AddComponent<RectTransform>();
             var sliderLayout = sliderGo.AddComponent<LayoutElement>();
-            sliderLayout.preferredHeight = 40;  // 48→40 (슬라이더 높이 최적화)
+            sliderLayout.preferredHeight = 55;  // 더 크게
 
             // 슬라이더 배경 (둥근 모서리 시뮬레이션)
             var bgGo = new GameObject("Background");
@@ -446,7 +444,7 @@ namespace AIBeat.UI
             var handleGo = new GameObject("Handle");
             handleGo.transform.SetParent(handleAreaGo.transform, false);
             var handleRect = handleGo.AddComponent<RectTransform>();
-            handleRect.sizeDelta = new Vector2(48, 48);  // 44→48 (핸들 크기 최대화)
+            handleRect.sizeDelta = new Vector2(52, 52);  // 핸들 크기 최대화
             var handleImg = handleGo.AddComponent<Image>();
             handleImg.color = SLIDER_HANDLE_COLOR;
 
@@ -488,7 +486,7 @@ namespace AIBeat.UI
             cardGo.transform.SetParent(parent, false);
 
             var cardLayout = cardGo.AddComponent<LayoutElement>();
-            cardLayout.preferredHeight = 80;
+            cardLayout.preferredHeight = 100;
 
             // 카드 배경 + 테두리
             var cardImg = cardGo.AddComponent<Image>();
@@ -538,7 +536,7 @@ namespace AIBeat.UI
 
             var btnTmp = btnTextGo.AddComponent<TextMeshProUGUI>();
             btnTmp.text = "● 자동 조정";
-            btnTmp.fontSize = 20;
+            btnTmp.fontSize = 24;
             btnTmp.fontStyle = FontStyles.Bold;
             btnTmp.color = Color.white;
             btnTmp.alignment = TextAlignmentOptions.Center;
@@ -549,10 +547,10 @@ namespace AIBeat.UI
             statusGo.transform.SetParent(cardGo.transform, false);
             statusGo.AddComponent<RectTransform>();
             var statusLayout = statusGo.AddComponent<LayoutElement>();
-            statusLayout.preferredHeight = 22;
+            statusLayout.preferredHeight = 28;
 
             calibrationStatusText = statusGo.AddComponent<TextMeshProUGUI>();
-            calibrationStatusText.fontSize = 14;
+            calibrationStatusText.fontSize = 18;
             calibrationStatusText.color = new Color(0.7f, 0.7f, 0.8f, 1f);  // 연한 회색
             calibrationStatusText.alignment = TextAlignmentOptions.Center;
             calibrationStatusText.text = "탭 테스트로 오프셋 자동 감지";
@@ -645,8 +643,8 @@ namespace AIBeat.UI
             areaRect.anchorMin = new Vector2(0, 0);
             areaRect.anchorMax = new Vector2(1, 0);
             areaRect.pivot = new Vector2(0.5f, 0);
-            areaRect.anchoredPosition = new Vector2(0, 20);
-            areaRect.sizeDelta = new Vector2(-40, 60);
+            areaRect.anchoredPosition = new Vector2(0, 25);
+            areaRect.sizeDelta = new Vector2(-40, 70);
 
             var hLayout = buttonArea.AddComponent<HorizontalLayoutGroup>();
             hLayout.spacing = 20;
@@ -670,7 +668,7 @@ namespace AIBeat.UI
         {
             // UIButtonStyleHelper를 사용하여 버튼 생성
             var btn = UIButtonStyleHelper.CreateStyledButton(parent, $"Btn_{text}", text,
-                preferredHeight: 56f, fontSize: 22f);
+                preferredHeight: 65f, fontSize: 30f);
             btn.onClick.AddListener(onClick);
         }
 
@@ -720,7 +718,61 @@ namespace AIBeat.UI
         {
             // 설정창을 최상위로 이동 (다른 UI 요소 위에 표시)
             transform.SetAsLastSibling();
+
+            // 전체 화면 배경이 없으면 생성
+            if (fullscreenBackground == null)
+            {
+                CreateFullscreenBackground();
+            }
+
+            // 전체 화면 배경 표시 및 위치 조정 (SafeAreaPanel 뒤에)
+            if (fullscreenBackground != null)
+            {
+                fullscreenBackground.SetActive(true);
+                fullscreenBackground.transform.SetAsFirstSibling();  // 가장 먼저 렌더링 = 가장 뒤
+            }
+
             RefreshValues();
+        }
+
+        /// <summary>
+        /// 전체 화면 배경 생성 (SafeArea 무시)
+        /// </summary>
+        private void CreateFullscreenBackground()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogWarning("[SettingsUI] Canvas not found!");
+                return;
+            }
+
+            fullscreenBackground = new GameObject("SettingsFullscreenBackground");
+            fullscreenBackground.transform.SetParent(canvas.transform, false);
+            var bgRect = fullscreenBackground.AddComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            var panelImage = fullscreenBackground.AddComponent<Image>();
+            panelImage.color = new Color(0.02f, 0.02f, 0.06f, 1f);  // 완전 불투명 어두운 배경
+            panelImage.raycastTarget = true;  // 클릭 차단
+
+            // 네온 테두리
+            var outline = fullscreenBackground.AddComponent<Outline>();
+            outline.effectColor = BORDER_CYAN;
+            outline.effectDistance = new Vector2(3, -3);
+
+            Debug.Log($"[SettingsUI] Fullscreen background created. Canvas: {canvas.name}");
+        }
+
+        private void OnDisable()
+        {
+            // 전체 화면 배경 숨기기
+            if (fullscreenBackground != null)
+            {
+                fullscreenBackground.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -760,6 +812,12 @@ namespace AIBeat.UI
 
         private void OnDestroy()
         {
+            // 전체 화면 배경 정리
+            if (fullscreenBackground != null)
+            {
+                Destroy(fullscreenBackground);
+            }
+
             // 슬라이더 리스너 정리
             if (noteSpeedSlider != null) noteSpeedSlider.onValueChanged.RemoveAllListeners();
             if (judgementOffsetSlider != null) judgementOffsetSlider.onValueChanged.RemoveAllListeners();
