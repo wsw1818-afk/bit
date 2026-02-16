@@ -315,7 +315,7 @@ namespace AIBeat.Gameplay
 
             float laneWidth = 1.4f;  // 레인 간격 (넓게 조정)
             float startX = -(LANE_COUNT - 1) * laneWidth / 2f;
-            int dividerCount = LANE_COUNT - 1; // 레인 사이 구분선만 (4레인 = 3개 구분선)
+            int dividerCount = LANE_COUNT + 1; // 레인 양쪽 경계 (4레인 = 5개 구분선)
 
             laneDividers = new GameObject[dividerCount];
             dividerMaterials = new Material[dividerCount];
@@ -333,8 +333,7 @@ namespace AIBeat.Gameplay
                 go.name = $"LaneDivider_{i}";
                 go.transform.SetParent(transform);
 
-                // 레인 사이에만 구분선 배치 (레인0-1, 1-2, 2-3 사이)
-                float x = startX + (i + 0.5f) * laneWidth;
+                float x = startX - laneWidth / 2f + i * laneWidth;
                 go.transform.position = new Vector3(x, judgeY + 8f, 0.9f);
                 go.transform.localScale = new Vector3(0.12f, 20f, 1f);
 
@@ -344,12 +343,16 @@ namespace AIBeat.Gameplay
                 var mat = new Material(shader);
                 mat.mainTexture = lineTex;
 
-                // 네온 색상: 중앙 골드, 나머지 마젠타
+                // 네온 색상: 가장자리 시안, 내부 마젠타/골드
                 Color lineColor;
-                if (i == dividerCount / 2)
+                if (i == 0 || i == dividerCount - 1)
+                    lineColor = new Color(0f, 0.95f, 1f, 0.75f); // 네온 시안
+                else if (i == 1 || i == dividerCount - 2)
+                    lineColor = new Color(0.95f, 0.25f, 0.95f, 0.6f); // 네온 마젠타
+                else if (i == dividerCount / 2)
                     lineColor = new Color(1f, 0.92f, 0.25f, 0.7f); // 중앙 골드
                 else
-                    lineColor = new Color(0.95f, 0.25f, 0.95f, 0.6f); // 마젠타
+                    lineColor = new Color(0.6f, 0.35f, 0.95f, 0.45f); // 보라
 
                 mat.color = lineColor;
                 var dividerRenderer = go.GetComponent<MeshRenderer>();
