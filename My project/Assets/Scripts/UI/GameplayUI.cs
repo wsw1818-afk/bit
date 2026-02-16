@@ -721,8 +721,8 @@ namespace AIBeat.UI
             statsRect.anchorMin = new Vector2(0, 1);
             statsRect.anchorMax = new Vector2(1, 1);
             statsRect.pivot = new Vector2(0.5f, 1);
-            statsRect.anchoredPosition = new Vector2(0, -80); // TopBar(80px) 바로 아래
-            statsRect.sizeDelta = new Vector2(0, 32); // 약간 더 작게
+            statsRect.anchoredPosition = new Vector2(0, -100); // TopBar(100px) 바로 아래
+            statsRect.sizeDelta = new Vector2(0, 50); // 32 → 50 (더 크게)
 
             // 배경 (더 투명하게)
             var bgImage = statsPanel.AddComponent<Image>();
@@ -784,7 +784,7 @@ namespace AIBeat.UI
 
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = $"<color=#{ColorUtility.ToHtmlStringRGB(textColor)}>{label}</color>{value}";
-            tmp.fontSize = 20;
+            tmp.fontSize = 28; // 20 → 28 (더 크게)
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
