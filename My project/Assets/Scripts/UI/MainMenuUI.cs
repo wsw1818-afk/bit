@@ -578,29 +578,45 @@ namespace AIBeat.UI
             vLayout.childForceExpandHeight = false;
             vLayout.padding = new RectOffset(0, 0, 0, 0);
 
+            // 디자인 에셋에서 버튼 스프라이트 로드
+            var normalSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Normal");
+            var hoverSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Hover");
+            var pressedSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Pressed");
+            bool usingSpriteAsset = normalSprite != null;
+
             foreach (var cfg in buttonConfigs)
             {
                 if (cfg.btn == null) continue;
 
                 cfg.btn.transform.SetParent(btnContainer.transform, false);
 
-                // 버튼 높이 증가 (90px)
+                // 버튼 높이 증가 (100px)
                 var rect = cfg.btn.GetComponent<RectTransform>();
                 if (rect != null)
-                    rect.sizeDelta = new Vector2(0, 90f);
+                    rect.sizeDelta = new Vector2(0, 100f);
 
                 var le = cfg.btn.gameObject.GetComponent<LayoutElement>();
                 if (le == null) le = cfg.btn.gameObject.AddComponent<LayoutElement>();
-                le.preferredHeight = 90f;
-                le.minHeight = 90f;
+                le.preferredHeight = 100f;
+                le.minHeight = 100f;
 
-                // 버튼 배경 (더 밝은 글래스)
+                // 버튼 배경 (디자인 에셋 사용)
                 var img = cfg.btn.GetComponent<Image>();
                 if (img != null)
                 {
-                    img.color = new Color(0.20f, 0.15f, 0.30f, 0.92f);
-                    img.sprite = CreateRoundedRectSprite(16);
-                    img.type = Image.Type.Sliced;
+                    if (usingSpriteAsset)
+                    {
+                        img.sprite = normalSprite;
+                        img.type = Image.Type.Sliced;
+                        img.color = Color.white;  // 스프라이트 원본 색상 사용
+                    }
+                    else
+                    {
+                        // 폴백: 프로그래매틱 배경
+                        img.color = new Color(0.20f, 0.15f, 0.30f, 0.92f);
+                        img.sprite = CreateRoundedRectSprite(16);
+                        img.type = Image.Type.Sliced;
+                    }
                 }
 
                 // 기존 컴포넌트 정리
@@ -611,18 +627,36 @@ namespace AIBeat.UI
                 var existingHLayout = cfg.btn.GetComponent<HorizontalLayoutGroup>();
                 if (existingHLayout != null) Destroy(existingHLayout);
 
-                // 버튼 테두리 (더 밝게)
-                var outline = cfg.btn.gameObject.AddComponent<Outline>();
-                outline.effectColor = cfg.accentColor.WithAlpha(0.6f);
-                outline.effectDistance = new Vector2(2f, -2f);
+                // SpriteState 설정 (디자인 에셋 사용 시)
+                if (usingSpriteAsset)
+                {
+                    cfg.btn.transition = Button.Transition.SpriteSwap;
+                    var spriteState = new SpriteState();
+                    spriteState.highlightedSprite = hoverSprite;
+                    spriteState.pressedSprite = pressedSprite;
+                    spriteState.selectedSprite = hoverSprite;
+                    spriteState.disabledSprite = normalSprite;
+                    cfg.btn.spriteState = spriteState;
+                }
+                else
+                {
+                    // 폴백: 색상 전환
+                    var colors = cfg.btn.colors;
+                    colors.normalColor = new Color(0.20f, 0.15f, 0.30f, 0.92f);
+                    colors.highlightedColor = new Color(0.28f, 0.22f, 0.40f, 0.95f);
+                    colors.pressedColor = cfg.accentColor.WithAlpha(0.6f);
+                    colors.selectedColor = colors.highlightedColor;
+                    cfg.btn.colors = colors;
+                }
 
-                // 버튼 상태 색상
-                var colors = cfg.btn.colors;
-                colors.normalColor = new Color(0.20f, 0.15f, 0.30f, 0.92f);
-                colors.highlightedColor = new Color(0.28f, 0.22f, 0.40f, 0.95f);
-                colors.pressedColor = cfg.accentColor.WithAlpha(0.6f);
-                colors.selectedColor = colors.highlightedColor;
-                cfg.btn.colors = colors;
+                // 네온 글로우 효과
+                var outline = cfg.btn.gameObject.AddComponent<Outline>();
+                outline.effectColor = cfg.accentColor;
+                outline.effectDistance = new Vector2(3f, -3f);
+
+                var shadow = cfg.btn.gameObject.AddComponent<Shadow>();
+                shadow.effectColor = cfg.accentColor.WithAlpha(0.5f);
+                shadow.effectDistance = new Vector2(5f, -5f);
 
                 // 기존 자식 제거
                 for (int i = cfg.btn.transform.childCount - 1; i >= 0; i--)
@@ -630,82 +664,83 @@ namespace AIBeat.UI
                     Destroy(cfg.btn.transform.GetChild(i).gameObject);
                 }
 
-                // === 좌측 악센트 바 (10px 두께) ===
+                // === 좌측 악센트 바 (14px 두께) ===
                 var accentBar = new GameObject("AccentBar");
                 accentBar.transform.SetParent(cfg.btn.transform, false);
                 var accentRect = accentBar.AddComponent<RectTransform>();
-                accentRect.anchorMin = new Vector2(0, 0.1f);
-                accentRect.anchorMax = new Vector2(0, 0.9f);
+                accentRect.anchorMin = new Vector2(0, 0);
+                accentRect.anchorMax = new Vector2(0, 1);
                 accentRect.pivot = new Vector2(0, 0.5f);
-                accentRect.anchoredPosition = new Vector2(8, 0);
-                accentRect.sizeDelta = new Vector2(10, 0);  // 10px 두께
+                accentRect.anchoredPosition = Vector2.zero;
+                accentRect.sizeDelta = new Vector2(14, 0);
                 var accentImg = accentBar.AddComponent<Image>();
                 accentImg.color = cfg.accentColor;
                 accentImg.raycastTarget = false;
-                accentImg.sprite = CreateRoundedRectSprite(5);
-                accentImg.type = Image.Type.Sliced;
 
-                // === 메인 텍스트 (한국어) - 28pt, 버튼 상단 ===
+                // === 메인 텍스트 (한국어) - 42pt, 버튼 상단 ===
                 var mainTextGo = new GameObject("MainText");
                 mainTextGo.transform.SetParent(cfg.btn.transform, false);
                 var mainRect = mainTextGo.AddComponent<RectTransform>();
-                mainRect.anchorMin = new Vector2(0, 0.45f);
+                mainRect.anchorMin = new Vector2(0, 0.38f);
                 mainRect.anchorMax = new Vector2(0.82f, 1);
                 mainRect.pivot = new Vector2(0, 0.5f);
-                mainRect.offsetMin = new Vector2(26, 0);
-                mainRect.offsetMax = new Vector2(0, 0);
+                mainRect.offsetMin = new Vector2(24, 0);
+                mainRect.offsetMax = new Vector2(0, -6);
                 var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
                 mainTmp.text = cfg.text;
-                mainTmp.fontSize = 28;
+                mainTmp.fontSize = 42;
                 mainTmp.fontStyle = FontStyles.Bold;
                 mainTmp.color = Color.white;
                 mainTmp.alignment = TextAlignmentOptions.BottomLeft;
                 mainTmp.overflowMode = TextOverflowModes.Overflow;
                 mainTmp.raycastTarget = false;
 
-                // === 서브 텍스트 (영어) - 12pt, 버튼 하단 ===
+                // === 서브 텍스트 (영어) - 16pt, 버튼 하단 ===
                 var subTextGo = new GameObject("SubText");
                 subTextGo.transform.SetParent(cfg.btn.transform, false);
                 var subRect = subTextGo.AddComponent<RectTransform>();
                 subRect.anchorMin = new Vector2(0, 0);
-                subRect.anchorMax = new Vector2(0.82f, 0.45f);
+                subRect.anchorMax = new Vector2(0.82f, 0.40f);
                 subRect.pivot = new Vector2(0, 0.5f);
-                subRect.offsetMin = new Vector2(26, 0);
+                subRect.offsetMin = new Vector2(24, 6);
                 subRect.offsetMax = new Vector2(0, 0);
                 var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
                 subTmp.text = cfg.subText;
-                subTmp.fontSize = 12;
+                subTmp.fontSize = 16;
+                subTmp.fontStyle = FontStyles.Bold;
                 subTmp.color = cfg.accentColor;
-                subTmp.characterSpacing = 3f;
+                subTmp.characterSpacing = 5f;
                 subTmp.alignment = TextAlignmentOptions.TopLeft;
                 subTmp.overflowMode = TextOverflowModes.Overflow;
                 subTmp.raycastTarget = false;
 
-                // === 우측 화살표 (▶ 아이콘, 32pt) ===
+                // === 우측 화살표 (▶ 아이콘, 42pt) ===
                 var arrowGo = new GameObject("Arrow");
                 arrowGo.transform.SetParent(cfg.btn.transform, false);
                 var arrowRect = arrowGo.AddComponent<RectTransform>();
                 arrowRect.anchorMin = new Vector2(1, 0);
                 arrowRect.anchorMax = new Vector2(1, 1);
                 arrowRect.pivot = new Vector2(1, 0.5f);
-                arrowRect.offsetMin = new Vector2(-60, 0);
+                arrowRect.offsetMin = new Vector2(-70, 0);
                 arrowRect.offsetMax = new Vector2(-12, 0);
                 var arrowTmp = arrowGo.AddComponent<TextMeshProUGUI>();
                 arrowTmp.text = "▶";
-                arrowTmp.fontSize = 32;
+                arrowTmp.fontSize = 42;
                 arrowTmp.fontStyle = FontStyles.Bold;
                 arrowTmp.color = cfg.accentColor;
                 arrowTmp.alignment = TextAlignmentOptions.Center;
                 arrowTmp.raycastTarget = false;
-                
+
                 // === 버튼 애니메이션 컴포넌트 추가 ===
                 var buttonAnim = cfg.btn.gameObject.GetComponent<ButtonAnimation>();
                 if (buttonAnim == null)
                     buttonAnim = cfg.btn.gameObject.AddComponent<ButtonAnimation>();
-                
+
                 // 애니메이션 설정 커스터마이즈
                 buttonAnim.enabled = true;
             }
+
+            Debug.Log($"[MainMenuUI] 버튼 스프라이트 에셋: {(usingSpriteAsset ? "로드됨" : "폴백")}");
 
             Debug.Log("[MainMenuUI] 버튼 UI 리디자인 완료 (v5 - 대형 고가시성 + 애니메이션)");
         }

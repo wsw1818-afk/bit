@@ -1,1 +1,1 @@
-🎨 SongSelectUI 프리미엄 버튼 UI (52pt 텍스트, 18px 악센트바, 중복 메뉴 제거)
+🎨 버튼 디자인 에셋 적용 (Btn_Normal/Hover/Pressed 스프라이트, 9-slice, SpriteSwap)
