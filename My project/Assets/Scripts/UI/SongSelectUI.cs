@@ -334,76 +334,84 @@ namespace AIBeat.UI
             btnGo.transform.SetParent(parent, false);
 
             var btnRect = btnGo.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(0, 120f);  // 큰 버튼
+            btnRect.sizeDelta = new Vector2(0, 110f);
 
             var le = btnGo.AddComponent<LayoutElement>();
-            le.preferredHeight = 120f;
-            le.minHeight = 120f;
+            le.preferredHeight = 110f;
+            le.minHeight = 110f;
 
-            // 배경 (선명하고 존재감 있게)
+            // 배경 (확실하게 보이는 진한 색)
             var img = btnGo.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.08f, 0.25f, 0.98f);
+            img.color = new Color(0.18f, 0.12f, 0.32f, 1f);  // 불투명, 진한 보라
 
             // 버튼 컴포넌트
             var btn = btnGo.AddComponent<Button>();
             var colors = btn.colors;
-            colors.normalColor = new Color(0.12f, 0.08f, 0.25f, 0.98f);
-            colors.highlightedColor = new Color(0.22f, 0.15f, 0.40f, 1f);
-            colors.pressedColor = accentColor.WithAlpha(0.8f);
+            colors.normalColor = new Color(0.18f, 0.12f, 0.32f, 1f);
+            colors.highlightedColor = new Color(0.28f, 0.20f, 0.45f, 1f);
+            colors.pressedColor = accentColor.WithAlpha(0.9f);
             colors.selectedColor = colors.highlightedColor;
             btn.colors = colors;
 
-            // 테두리 (선명한 글로우)
-            var outline = btnGo.AddComponent<Outline>();
-            outline.effectColor = accentColor;
-            outline.effectDistance = new Vector2(3f, -3f);
+            // 다중 테두리로 네온 글로우 효과
+            var outline1 = btnGo.AddComponent<Outline>();
+            outline1.effectColor = accentColor;
+            outline1.effectDistance = new Vector2(2f, -2f);
 
-            // === 좌측 악센트 바 (18px 두께) ===
+            var outline2 = btnGo.AddComponent<Outline>();
+            outline2.effectColor = accentColor.WithAlpha(0.6f);
+            outline2.effectDistance = new Vector2(4f, -4f);
+
+            var shadow = btnGo.AddComponent<Shadow>();
+            shadow.effectColor = accentColor.WithAlpha(0.4f);
+            shadow.effectDistance = new Vector2(6f, -6f);
+
+            // === 좌측 악센트 바 (20px, 전체 높이) ===
             var accentBar = new GameObject("AccentBar");
             accentBar.transform.SetParent(btnGo.transform, false);
             var accentRect = accentBar.AddComponent<RectTransform>();
-            accentRect.anchorMin = new Vector2(0, 0.05f);
-            accentRect.anchorMax = new Vector2(0, 0.95f);
+            accentRect.anchorMin = new Vector2(0, 0);
+            accentRect.anchorMax = new Vector2(0, 1);
             accentRect.pivot = new Vector2(0, 0.5f);
-            accentRect.anchoredPosition = new Vector2(10, 0);
-            accentRect.sizeDelta = new Vector2(18, 0);  // 18px 두께
+            accentRect.anchoredPosition = Vector2.zero;
+            accentRect.sizeDelta = new Vector2(20, 0);  // 20px, 전체 높이
             var accentImg = accentBar.AddComponent<Image>();
             accentImg.color = accentColor;
             accentImg.raycastTarget = false;
 
-            // === 메인 텍스트 (한국어) - 52pt ===
+            // === 메인 텍스트 (한국어) - 48pt ===
             var mainTextGo = new GameObject("MainText");
             mainTextGo.transform.SetParent(btnGo.transform, false);
             var mainTextRect = mainTextGo.AddComponent<RectTransform>();
-            mainTextRect.anchorMin = new Vector2(0, 0.32f);
-            mainTextRect.anchorMax = new Vector2(0.78f, 1);
+            mainTextRect.anchorMin = new Vector2(0, 0.38f);
+            mainTextRect.anchorMax = new Vector2(0.80f, 1);
             mainTextRect.pivot = new Vector2(0, 0.5f);
-            mainTextRect.offsetMin = new Vector2(42, 0);
-            mainTextRect.offsetMax = new Vector2(0, -8);
+            mainTextRect.offsetMin = new Vector2(32, 0);  // 악센트바(20) + 여백(12)
+            mainTextRect.offsetMax = new Vector2(0, -5);
             var mainTmp = mainTextGo.AddComponent<TextMeshProUGUI>();
             mainTmp.text = mainText;
-            mainTmp.fontSize = 52;
+            mainTmp.fontSize = 48;
             mainTmp.fontStyle = FontStyles.Bold;
             mainTmp.color = Color.white;
             mainTmp.alignment = TextAlignmentOptions.BottomLeft;
             mainTmp.overflowMode = TextOverflowModes.Overflow;
             mainTmp.raycastTarget = false;
 
-            // === 서브 텍스트 (영어) - 22pt ===
+            // === 서브 텍스트 (영어) - 18pt ===
             var subTextGo = new GameObject("SubText");
             subTextGo.transform.SetParent(btnGo.transform, false);
             var subTextRect = subTextGo.AddComponent<RectTransform>();
             subTextRect.anchorMin = new Vector2(0, 0);
-            subTextRect.anchorMax = new Vector2(0.78f, 0.35f);
+            subTextRect.anchorMax = new Vector2(0.80f, 0.40f);
             subTextRect.pivot = new Vector2(0, 0.5f);
-            subTextRect.offsetMin = new Vector2(42, 8);
+            subTextRect.offsetMin = new Vector2(32, 5);
             subTextRect.offsetMax = new Vector2(0, 0);
             var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
             subTmp.text = subText;
-            subTmp.fontSize = 22;
+            subTmp.fontSize = 18;
             subTmp.fontStyle = FontStyles.Bold;
             subTmp.color = accentColor;
-            subTmp.characterSpacing = 8f;
+            subTmp.characterSpacing = 6f;
             subTmp.alignment = TextAlignmentOptions.TopLeft;
             subTmp.overflowMode = TextOverflowModes.Overflow;
             subTmp.raycastTarget = false;
