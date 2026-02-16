@@ -54,11 +54,12 @@ namespace AIBeat.UI
 
             // 기존 자식들을 SafeAreaPanel 안으로 이동
             // (역순으로 수집 후 이동해야 인덱스 꼬이지 않음)
+            // Fullscreen으로 시작하는 오브젝트는 제외 (전체 화면 배경용)
             var children = new System.Collections.Generic.List<Transform>();
             for (int i = 0; i < transform.childCount; i++)
             {
                 var child = transform.GetChild(i);
-                if (child != safeAreaPanel.transform)
+                if (child != safeAreaPanel.transform && !child.name.StartsWith("Fullscreen"))
                     children.Add(child);
             }
 
