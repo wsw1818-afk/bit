@@ -410,8 +410,8 @@ namespace AIBeat.Gameplay
             for (int y = 0; y < h; y++)
             {
                 float ny = (float)y / h;
-                // 하단에서 시작해서 위로 페이드
-                float baseAlpha = Mathf.Lerp(0.9f, 0.05f, ny * ny);
+                // 상단이 밝고 하단으로 페이드 (위에서 아래로 자연스럽게 사라짐)
+                float baseAlpha = Mathf.Lerp(0.05f, 0.9f, ny * ny);
 
                 for (int x = 0; x < w; x++)
                 {
