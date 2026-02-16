@@ -1,1 +1,1 @@
-🎨 SongSelectUI 하단 버튼 패널 완성 (MainMenu v5 스타일 적용, 중복 설정 버튼 제거)
+🎨 SongSelectUI 프리미엄 버튼 UI (52pt 텍스트, 18px 악센트바, 중복 메뉴 제거)
