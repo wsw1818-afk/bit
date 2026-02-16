@@ -329,6 +329,10 @@ namespace AIBeat.Gameplay
 
             for (int i = 0; i < dividerCount; i++)
             {
+                // 양쪽 끝 구분선 건너뛰기 (화면 밖으로 나가서 반만 보임)
+                if (i == 0 || i == dividerCount - 1)
+                    continue;
+
                 var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 go.name = $"LaneDivider_{i}";
                 go.transform.SetParent(transform);
@@ -343,11 +347,9 @@ namespace AIBeat.Gameplay
                 var mat = new Material(shader);
                 mat.mainTexture = lineTex;
 
-                // 네온 색상: 가장자리 시안, 내부 마젠타/골드
+                // 네온 색상: 마젠타/골드
                 Color lineColor;
-                if (i == 0 || i == dividerCount - 1)
-                    lineColor = new Color(0f, 0.95f, 1f, 0.75f); // 네온 시안
-                else if (i == 1 || i == dividerCount - 2)
+                if (i == 1 || i == dividerCount - 2)
                     lineColor = new Color(0.95f, 0.25f, 0.95f, 0.6f); // 네온 마젠타
                 else if (i == dividerCount / 2)
                     lineColor = new Color(1f, 0.92f, 0.25f, 0.7f); // 중앙 골드
