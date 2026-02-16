@@ -599,59 +599,13 @@ namespace AIBeat.UI
 
         /// <summary>
         /// 로딩 영상 표시/숨김
+        /// TODO: 로딩 비디오 기능 임시 비활성화 - 게임 중 겹침 버그로 인해
         /// </summary>
         public void ShowLoadingVideo(bool show)
         {
-            if (show)
-            {
-                // 패널이 없으면 재생성
-                if (loadingVideoPanel == null)
-                {
-                    CreateLoadingVideoPanel();
-                }
-
-                if (loadingVideoPanel != null)
-                {
-                    loadingVideoPanel.SetActive(true);
-                    if (videoPlayer != null)
-                    {
-                        videoPlayer.Play();
-                    }
-                    Debug.Log("[GameplayUI] Loading video started");
-                }
-            }
-            else
-            {
-                // 완전히 제거: 즉시 비활성화 + 비디오 정지 + 리소스 해제 + 패널 Destroy
-                // SetActive(false) 먼저 호출하여 Destroy 대기 중에도 화면에 안 보이게
-                if (loadingVideoPanel != null)
-                {
-                    loadingVideoPanel.SetActive(false);
-                }
-                if (videoPlayer != null)
-                {
-                    videoPlayer.Stop();
-                    videoPlayer.targetTexture = null;
-                    videoPlayer = null;
-                }
-                if (videoDisplay != null)
-                {
-                    videoDisplay.texture = null;
-                    videoDisplay = null;
-                }
-                if (videoRenderTexture != null)
-                {
-                    videoRenderTexture.Release();
-                    Destroy(videoRenderTexture);
-                    videoRenderTexture = null;
-                }
-                if (loadingVideoPanel != null)
-                {
-                    Destroy(loadingVideoPanel);
-                    loadingVideoPanel = null;
-                    Debug.Log("[GameplayUI] Loading video panel DESTROYED");
-                }
-            }
+            // 로딩 비디오 기능 비활성화 - 분석 함수 중복 호출 문제 해결 전까지
+            Debug.Log($"[GameplayUI] ShowLoadingVideo({show}) - DISABLED");
+            return;
         }
 
         /// <summary>
