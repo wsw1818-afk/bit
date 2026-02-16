@@ -211,6 +211,14 @@ namespace AIBeat.Gameplay
                 Debug.Log("[GameplayController] Loaded test song from Resources");
             }
 
+            // AudioManager 자동 생성 (없으면)
+            if (AudioManager.Instance == null)
+            {
+                var audioGo = new GameObject("AudioManager");
+                audioGo.AddComponent<AudioManager>();
+                Debug.Log("[GameplayController] AudioManager 자동 생성됨");
+            }
+
             // 컴포넌트 참조 자동 연결 (없으면 자동 생성)
             if (noteSpawner == null)
                 noteSpawner = FindFirstObjectByType<NoteSpawner>();

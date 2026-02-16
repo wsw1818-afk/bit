@@ -1,1 +1,1 @@
-🔧 전체 게임 플로우: Build Settings + 필수 컴포넌트 자동 생성
+🔧 전체 게임 플로우: AudioManager 포함 모든 컴포넌트 자동 생성
