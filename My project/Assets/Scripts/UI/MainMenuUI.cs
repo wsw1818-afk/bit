@@ -16,7 +16,6 @@ namespace AIBeat.UI
     {
         [Header("Buttons")]
         [SerializeField] private Button playButton;
-        [SerializeField] private Button libraryButton;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button exitButton;
 
@@ -398,7 +397,6 @@ namespace AIBeat.UI
         {
             // 버튼이 없으면 자동 생성
             playButton = EnsureButton("PlayButton");
-            libraryButton = EnsureButton("LibraryButton");
             settingsButton = EnsureButton("SettingsButton");
             exitButton = EnsureButton("ExitButton");
 
@@ -501,11 +499,6 @@ namespace AIBeat.UI
             {
                 playButton.onClick.RemoveAllListeners();
                 playButton.onClick.AddListener(OnPlayClicked);
-            }
-            if (libraryButton != null)
-            {
-                libraryButton.onClick.RemoveAllListeners();
-                libraryButton.onClick.AddListener(OnLibraryClicked);
             }
             if (settingsButton != null)
             {
@@ -963,15 +956,6 @@ namespace AIBeat.UI
             GameManager.Instance?.LoadScene("SongSelectScene");
         }
 
-        private void OnLibraryClicked()
-        {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.OpenLibraryOnSongSelect = true;
-                GameManager.Instance.LoadScene("SongSelectScene");
-            }
-        }
-
         private void OnSettingsClicked()
         {
             if (settingsPanel != null)
@@ -1040,7 +1024,6 @@ namespace AIBeat.UI
             if (breatheCoroutine != null) StopCoroutine(breatheCoroutine);
             if (musicianAnimCoroutine != null) StopCoroutine(musicianAnimCoroutine);
             if (playButton != null) playButton.onClick.RemoveAllListeners();
-            if (libraryButton != null) libraryButton.onClick.RemoveAllListeners();
             if (settingsButton != null) settingsButton.onClick.RemoveAllListeners();
             if (exitButton != null) exitButton.onClick.RemoveAllListeners();
         }

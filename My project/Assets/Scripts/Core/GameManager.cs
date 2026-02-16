@@ -251,12 +251,6 @@ namespace AIBeat.Core
 
         public SongData CurrentSongData { get; private set; }
 
-        /// <summary>
-        /// SongSelect 씬 로드 시 Library 탭을 자동으로 열지 여부
-        /// MainMenuUI의 Library 버튼에서 설정
-        /// </summary>
-        public bool OpenLibraryOnSongSelect { get; set; }
-
         public void PauseGame()
         {
             if (currentState == GameState.Gameplay)

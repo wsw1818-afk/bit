@@ -1,1 +1,1 @@
-🎨 전체 씬 리디자인: UIButtonStyleHelper 추가, SettingsUI/GameplayUI 버튼 스타일 통일, 배경/로고 스프라이트 설정
+🗑️ libraryButton 완전 제거 + SettingsUI 리디자인 (배경 스프라이트, 네온 글로우 강화)

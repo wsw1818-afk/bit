@@ -12,18 +12,16 @@ namespace AIBeat.UI
     /// </summary>
     public class SettingsUI : MonoBehaviour
     {
-        // 네온 스타일 색상 (개선)
-        private static readonly Color BG_COLOR = new Color(0.01f, 0.01f, 0.05f, 0.98f);  // 더 어두운 배경
-        private static readonly Color CARD_BG_COLOR = new Color(0.03f, 0.03f, 0.12f, 0.95f);  // 카드 배경
-        private static readonly Color BORDER_COLOR = new Color(0f, 0.9f, 1f, 0.6f);  // 더 밝은 테두리
-        private static readonly Color LABEL_COLOR = new Color(0.4f, 0.95f, 1f, 1f);  // 밝은 시안
+        // 디자인 에셋 기반 색상 팔레트
+        private static readonly Color BG_OVERLAY = new Color(0f, 0f, 0.02f, 0.85f);  // 반투명 오버레이
+        private static readonly Color CARD_BG_COLOR = new Color(0.02f, 0.02f, 0.08f, 0.92f);  // 카드 배경
+        private static readonly Color BORDER_CYAN = UIColorPalette.BORDER_CYAN;  // 시안 테두리
+        private static readonly Color LABEL_COLOR = UIColorPalette.NEON_CYAN_BRIGHT;  // 밝은 시안
         private static readonly Color VALUE_COLOR = Color.white;
-        private static readonly Color TITLE_COLOR = new Color(0f, 1f, 1f, 1f);
-        private static readonly Color BUTTON_BG = new Color(0.05f, 0.05f, 0.15f, 0.95f);
-        private static readonly Color BUTTON_TEXT_COLOR = new Color(0f, 0.95f, 1f, 1f);
-        private static readonly Color SLIDER_BG_COLOR = new Color(0.08f, 0.08f, 0.18f, 0.9f);  // 더 어두운 슬라이더 배경
-        private static readonly Color SLIDER_FILL_COLOR = new Color(0f, 0.85f, 1f, 1f);  // 밝은 네온 시안
-        private static readonly Color SLIDER_HANDLE_COLOR = Color.white;  // 흰색 핸들 (명확성)
+        private static readonly Color TITLE_COLOR = UIColorPalette.NEON_CYAN_BRIGHT;
+        private static readonly Color SLIDER_BG_COLOR = new Color(0.05f, 0.05f, 0.12f, 0.9f);
+        private static readonly Color SLIDER_FILL_COLOR = UIColorPalette.NEON_MAGENTA;  // 마젠타 필
+        private static readonly Color SLIDER_HANDLE_COLOR = Color.white;
 
         // 슬라이더 참조 (기본값 복원 시 사용)
         private Slider noteSpeedSlider;
@@ -75,26 +73,52 @@ namespace AIBeat.UI
                 Destroy(transform.GetChild(i).gameObject);
             }
 
+            // RectTransform 설정 (화면 중앙, 적절한 크기)
+            var panelRect = GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.03f, 0.08f);
+            panelRect.anchorMax = new Vector2(0.97f, 0.92f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.anchoredPosition = Vector2.zero;
+            panelRect.sizeDelta = Vector2.zero;
+
+            // 배경 스프라이트 로드 시도
+            var bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Menu_BG");
+
             // 패널 배경 설정
             var panelImage = GetComponent<Image>();
             if (panelImage == null)
                 panelImage = gameObject.AddComponent<Image>();
-            panelImage.color = BG_COLOR;
+
+            if (bgSprite != null)
+            {
+                panelImage.sprite = bgSprite;
+                panelImage.type = Image.Type.Sliced;
+                panelImage.color = new Color(1f, 1f, 1f, 0.95f);
+            }
+            else
+            {
+                panelImage.color = new Color(0.01f, 0.01f, 0.05f, 0.98f);
+            }
+
+            // 어두운 오버레이 추가 (가독성 향상)
+            var overlayGo = new GameObject("DarkOverlay");
+            overlayGo.transform.SetParent(transform, false);
+            overlayGo.transform.SetAsFirstSibling();
+            var overlayRect = overlayGo.AddComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+            var overlayImg = overlayGo.AddComponent<Image>();
+            overlayImg.color = BG_OVERLAY;
+            overlayImg.raycastTarget = false;
 
             // 네온 테두리
             var outline = GetComponent<Outline>();
             if (outline == null)
                 outline = gameObject.AddComponent<Outline>();
-            outline.effectColor = BORDER_COLOR;
-            outline.effectDistance = new Vector2(2, -2);
-
-            // RectTransform 설정 (화면 중앙, 적절한 크기)
-            var panelRect = GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.05f, 0.1f);
-            panelRect.anchorMax = new Vector2(0.95f, 0.9f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = Vector2.zero;
+            outline.effectColor = BORDER_CYAN;
+            outline.effectDistance = new Vector2(3, -3);
 
             // 스크롤 가능한 콘텐츠 영역
             var contentGo = new GameObject("Content");
@@ -230,7 +254,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 타이틀 텍스트 생성 (네온 효과 강화)
+        /// 타이틀 텍스트 생성 (디자인 에셋 스타일)
         /// </summary>
         private void CreateTitle(Transform parent, string text)
         {
@@ -239,19 +263,25 @@ namespace AIBeat.UI
 
             var rect = titleGo.AddComponent<RectTransform>();
             var layoutElem = titleGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 50;  // 40→50 (타이틀 높이 확대)
+            layoutElem.preferredHeight = 60;
 
             var tmp = titleGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 38;  // 32→38 (폰트 크기 확대)
+            tmp.fontSize = 42;
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = TITLE_COLOR;
             tmp.alignment = TextAlignmentOptions.Center;
+            tmp.raycastTarget = false;
 
-            // 네온 효과 (Outline)
+            // 글로우 효과
             var outline = titleGo.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0.6f, 1f, 0.8f);
-            outline.effectDistance = new Vector2(2, -2);
+            outline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.7f);
+            outline.effectDistance = new Vector2(3, -3);
+
+            // 섀도우 효과
+            var shadow = titleGo.AddComponent<Shadow>();
+            shadow.effectColor = UIColorPalette.NEON_MAGENTA.WithAlpha(0.4f);
+            shadow.effectDistance = new Vector2(4, -4);
         }
 
         /// <summary>
@@ -264,23 +294,24 @@ namespace AIBeat.UI
 
             var rect = headerGo.AddComponent<RectTransform>();
             var layoutElem = headerGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 32;
+            layoutElem.preferredHeight = 36;
 
             var tmp = headerGo.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
-            tmp.fontSize = 20;
+            tmp.fontSize = 22;
             tmp.fontStyle = FontStyles.Bold;
-            tmp.color = new Color(0.8f, 0.9f, 1f, 0.9f);  // 밝은 시안
+            tmp.color = UIColorPalette.NEON_MAGENTA;
             tmp.alignment = TextAlignmentOptions.MidlineLeft;
+            tmp.raycastTarget = false;
 
-            // 네온 효과
+            // 글로우 효과
             var outline = headerGo.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0.7f, 1f, 0.5f);
-            outline.effectDistance = new Vector2(1, -1);
+            outline.effectColor = UIColorPalette.NEON_MAGENTA.WithAlpha(0.5f);
+            outline.effectDistance = new Vector2(2, -2);
         }
 
         /// <summary>
-        /// 구분선 생성 (네온 효과 강화)
+        /// 구분선 생성 (그라데이션 네온)
         /// </summary>
         private void CreateSeparator(Transform parent)
         {
@@ -289,15 +320,16 @@ namespace AIBeat.UI
 
             var rect = sepGo.AddComponent<RectTransform>();
             var layoutElem = sepGo.AddComponent<LayoutElement>();
-            layoutElem.preferredHeight = 3;  // 2→3 (두께 확대)
+            layoutElem.preferredHeight = 4;
 
             var img = sepGo.AddComponent<Image>();
-            img.color = new Color(0f, 0.9f, 1f, 0.5f);  // 더 밝고 진한 네온
+            img.color = UIColorPalette.BORDER_CYAN.WithAlpha(0.6f);
+            img.raycastTarget = false;
 
-            // 네온 효과
+            // 글로우 효과
             var outline = sepGo.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 1f, 1f, 0.8f);
-            outline.effectDistance = new Vector2(0, 1);
+            outline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.4f);
+            outline.effectDistance = new Vector2(0, 2);
         }
 
         /// <summary>
@@ -321,8 +353,8 @@ namespace AIBeat.UI
             cardImg.color = CARD_BG_COLOR;
 
             var cardOutline = cardGo.AddComponent<Outline>();
-            cardOutline.effectColor = BORDER_COLOR;
-            cardOutline.effectDistance = new Vector2(1, -1);
+            cardOutline.effectColor = BORDER_CYAN;
+            cardOutline.effectDistance = new Vector2(2, -2);
 
             // 카드 내부 레이아웃
             var vertLayout = cardGo.AddComponent<VerticalLayoutGroup>();
