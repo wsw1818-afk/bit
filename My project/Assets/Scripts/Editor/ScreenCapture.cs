@@ -48,7 +48,19 @@ namespace AIBeat.Editor
             string fileName = $"AIBeat_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
             string fullPath = Path.Combine(dir, fileName);
 
-            // Camera.Render 방식으로 즉시 저장 (포커스 상관없이 동작)
+            // Play 모드에서는 ScreenshotHelper를 사용 (Overlay UI 포함)
+            if (EditorApplication.isPlaying)
+            {
+                var helper = Utils.ScreenshotHelper.Instance;
+                if (helper != null)
+                {
+                    helper.CaptureAfterFrame(fullPath);
+                    Debug.Log($"[ScreenCapture] 스크린샷 캡처 예약됨...");
+                    return;
+                }
+            }
+
+            // Edit 모드에서는 Camera.Render 방식으로 즉시 저장
             Camera cam = Camera.main;
             if (cam != null)
             {

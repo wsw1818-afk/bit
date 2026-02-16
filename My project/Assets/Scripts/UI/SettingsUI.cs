@@ -50,6 +50,18 @@ namespace AIBeat.UI
             if (mainMenuUI == null)
                 mainMenuUI = FindFirstObjectByType<MainMenuUI>();
 
+            // RectTransform 확인 - 없으면 Transform을 RectTransform으로 변환
+            var rectTransform = GetComponent<RectTransform>();
+            if (rectTransform == null)
+            {
+                // Canvas 하위에서 RectTransform이 필요함
+                // gameObject를 재생성하지 않고 직접 추가는 불가능하므로 로그 출력
+                Debug.LogWarning("[SettingsUI] RectTransform이 없습니다. UI가 올바르게 표시되지 않을 수 있습니다.");
+            }
+
+            // UI 레이어 설정
+            gameObject.layer = LayerMask.NameToLayer("UI");
+
             // CalibrationManager 확보
             calibrationManager = FindFirstObjectByType<CalibrationManager>();
             if (calibrationManager == null)
@@ -137,7 +149,7 @@ namespace AIBeat.UI
             float currentDim = settings != null ? settings.BackgroundDim : 0.5f;
 
             // 게임플레이 섹션 헤더
-            CreateSectionHeader(contentGo.transform, "🎮 게임플레이");
+            CreateSectionHeader(contentGo.transform, "▶ 게임플레이");
 
             // 노트 속도 슬라이더 (1.0 ~ 10.0, 0.5 단위)
             noteSpeedSlider = CreateSliderRow(contentGo.transform, "노트 속도",
@@ -174,7 +186,7 @@ namespace AIBeat.UI
             CreateSeparator(contentGo.transform);
 
             // 오디오 섹션 헤더
-            CreateSectionHeader(contentGo.transform, "🔊 오디오");
+            CreateSectionHeader(contentGo.transform, "♪ 오디오");
 
             // BGM 볼륨 슬라이더
             bgmVolumeSlider = CreateSliderRow(contentGo.transform, "배경음악 볼륨",
@@ -202,7 +214,7 @@ namespace AIBeat.UI
             CreateSeparator(contentGo.transform);
 
             // 비주얼 섹션 헤더
-            CreateSectionHeader(contentGo.transform, "🎨 비주얼");
+            CreateSectionHeader(contentGo.transform, "◆ 비주얼");
 
             // 배경 밝기 슬라이더
             backgroundDimSlider = CreateSliderRow(contentGo.transform, "배경 어둡게",
@@ -525,7 +537,7 @@ namespace AIBeat.UI
             btnTextRect.offsetMax = Vector2.zero;
 
             var btnTmp = btnTextGo.AddComponent<TextMeshProUGUI>();
-            btnTmp.text = "🎯 자동 조정";
+            btnTmp.text = "● 자동 조정";
             btnTmp.fontSize = 20;
             btnTmp.fontStyle = FontStyles.Bold;
             btnTmp.color = Color.white;

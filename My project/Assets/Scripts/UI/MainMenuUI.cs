@@ -453,16 +453,34 @@ namespace AIBeat.UI
                 if (existing != null)
                 {
                     settingsPanel = existing.gameObject;
+                    // RectTransform이 없으면 추가
+                    var existingRect = settingsPanel.GetComponent<RectTransform>();
+                    if (existingRect == null)
+                    {
+                        // Transform을 가진 오브젝트는 RectTransform으로 변환 불가
+                        // 새로 생성하고 기존 오브젝트 삭제
+                        Destroy(settingsPanel);
+                        settingsPanel = new GameObject("SettingsPanel", typeof(RectTransform));
+                        settingsPanel.transform.SetParent(transform, false);
+                        var rect = settingsPanel.GetComponent<RectTransform>();
+                        rect.anchorMin = Vector2.zero;
+                        rect.anchorMax = Vector2.one;
+                        rect.offsetMin = Vector2.zero;
+                        rect.offsetMax = Vector2.zero;
+                        settingsPanel.layer = LayerMask.NameToLayer("UI");
+                        settingsPanel.SetActive(false);
+                    }
                 }
                 else
                 {
-                    settingsPanel = new GameObject("SettingsPanel");
+                    settingsPanel = new GameObject("SettingsPanel", typeof(RectTransform));
                     settingsPanel.transform.SetParent(transform, false);
-                    var rect = settingsPanel.AddComponent<RectTransform>();
+                    var rect = settingsPanel.GetComponent<RectTransform>();
                     rect.anchorMin = Vector2.zero;
                     rect.anchorMax = Vector2.one;
                     rect.offsetMin = Vector2.zero;
                     rect.offsetMax = Vector2.zero;
+                    settingsPanel.layer = LayerMask.NameToLayer("UI");
                     settingsPanel.SetActive(false);
                 }
             }

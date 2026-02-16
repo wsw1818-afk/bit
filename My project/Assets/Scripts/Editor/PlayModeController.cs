@@ -39,5 +39,73 @@ namespace AIBeat.Editor
                 Debug.Log("[PlayModeController] Not in Play Mode");
             }
         }
+
+        [MenuItem("Tools/A.I. BEAT/Open Settings Panel")]
+        public static void OpenSettingsPanel()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[PlayModeController] Play 모드에서만 사용 가능합니다.");
+                return;
+            }
+
+            var mainMenuUI = Object.FindFirstObjectByType<UI.MainMenuUI>();
+            if (mainMenuUI == null)
+            {
+                Debug.LogWarning("[PlayModeController] MainMenuUI를 찾을 수 없습니다.");
+                return;
+            }
+
+            // settingsPanel 필드에 접근
+            var settingsPanelField = typeof(UI.MainMenuUI).GetField("settingsPanel",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (settingsPanelField != null)
+            {
+                var settingsPanel = settingsPanelField.GetValue(mainMenuUI) as GameObject;
+                if (settingsPanel != null)
+                {
+                    settingsPanel.SetActive(true);
+
+                    // SettingsUI 컴포넌트 추가/확인
+                    if (settingsPanel.GetComponent<UI.SettingsUI>() == null)
+                    {
+                        settingsPanel.AddComponent<UI.SettingsUI>();
+                    }
+
+                    Debug.Log("[PlayModeController] Settings Panel 열림");
+                }
+            }
+        }
+
+        [MenuItem("Tools/A.I. BEAT/Close Settings Panel")]
+        public static void CloseSettingsPanel()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[PlayModeController] Play 모드에서만 사용 가능합니다.");
+                return;
+            }
+
+            var mainMenuUI = Object.FindFirstObjectByType<UI.MainMenuUI>();
+            if (mainMenuUI == null)
+            {
+                Debug.LogWarning("[PlayModeController] MainMenuUI를 찾을 수 없습니다.");
+                return;
+            }
+
+            var settingsPanelField = typeof(UI.MainMenuUI).GetField("settingsPanel",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (settingsPanelField != null)
+            {
+                var settingsPanel = settingsPanelField.GetValue(mainMenuUI) as GameObject;
+                if (settingsPanel != null)
+                {
+                    settingsPanel.SetActive(false);
+                    Debug.Log("[PlayModeController] Settings Panel 닫힘");
+                }
+            }
+        }
     }
 }
