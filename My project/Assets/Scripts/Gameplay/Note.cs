@@ -20,7 +20,7 @@ namespace AIBeat.Gameplay
         private NoteData noteData;
         private float speed;
         private float judgementLineY;
-        private Vector3 originalScale = new Vector3(2.5f, 0.35f, 1f);  // 기본 스케일 (넓고 얇게)
+        private Vector3 originalScale = new Vector3(1.25f, 0.35f, 1f);  // 기본 스케일 (반으로 줄임)
         private bool scaleInitialized;
 
         public NoteType NoteType => noteData.Type;
