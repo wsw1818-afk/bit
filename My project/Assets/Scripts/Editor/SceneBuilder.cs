@@ -20,15 +20,61 @@ namespace AIBeat.Editor
         [MenuItem("AIBeat/Setup Build Settings")]
         public static void SetupBuildSettings()
         {
-            var scenes = new EditorBuildSettingsScene[]
+            // Unity 6+ Build Profiles 지원
+            var scenePaths = new string[]
             {
-                new EditorBuildSettingsScene("Assets/Scenes/SplashScene.unity", true),
-                new EditorBuildSettingsScene("Assets/Scenes/MainMenuScene.unity", true),
-                new EditorBuildSettingsScene("Assets/Scenes/SongSelectScene.unity", true),
-                new EditorBuildSettingsScene("Assets/Scenes/GameplayScene.unity", true),
+                "Assets/Scenes/SplashScene.unity",
+                "Assets/Scenes/MainMenuScene.unity",
+                "Assets/Scenes/SongSelectScene.unity",
+                "Assets/Scenes/GameplayScene.unity",
             };
-            EditorBuildSettings.scenes = scenes;
-            Debug.Log("[SceneBuilder] Build Settings updated with 4 scenes");
+
+            var sceneList = new System.Collections.Generic.List<EditorBuildSettingsScene>();
+            foreach (var path in scenePaths)
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    sceneList.Add(new EditorBuildSettingsScene(path, true));
+                    Debug.Log($"[SceneBuilder] Added scene: {path}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[SceneBuilder] Scene not found: {path}");
+                }
+            }
+
+            EditorBuildSettings.scenes = sceneList.ToArray();
+
+            // Active Build Profile에도 적용 시도 (Unity 6+)
+            try
+            {
+                var buildProfileType = System.Type.GetType("UnityEditor.Build.Profile.BuildProfile, UnityEditor");
+                if (buildProfileType != null)
+                {
+                    var getActiveMethod = buildProfileType.GetMethod("GetActiveBuildProfile",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (getActiveMethod != null)
+                    {
+                        var activeProfile = getActiveMethod.Invoke(null, null);
+                        if (activeProfile != null)
+                        {
+                            var scenesProperty = buildProfileType.GetProperty("scenes");
+                            if (scenesProperty != null)
+                            {
+                                scenesProperty.SetValue(activeProfile, sceneList.ToArray());
+                                Debug.Log("[SceneBuilder] Active Build Profile updated");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[SceneBuilder] Build Profile update skipped: {e.Message}");
+            }
+
+            Debug.Log($"[SceneBuilder] Build Settings updated with {sceneList.Count} scenes");
+            AssetDatabase.SaveAssets();
         }
 
         [MenuItem("AIBeat/Build All Scenes")]
