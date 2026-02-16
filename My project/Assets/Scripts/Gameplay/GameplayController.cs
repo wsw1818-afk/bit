@@ -723,6 +723,7 @@ namespace AIBeat.Gameplay
 
         private void HandleInput(int lane, InputHandler.InputType inputType)
         {
+            Debug.Log($"[HandleInput] lane={lane} type={inputType} isPlaying={isPlaying}");
             if (!isPlaying) return;
 
             float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
@@ -749,6 +750,7 @@ namespace AIBeat.Gameplay
         private void ProcessNoteHit(int lane, float currentTime)
         {
             Note nearestNote = noteSpawner.GetNearestNote(lane);
+            Debug.Log($"[ProcessNoteHit] lane={lane} time={currentTime:F2} note={(nearestNote != null ? nearestNote.name : "null")}");
             if (nearestNote == null) return;
 
             if (nearestNote.NoteType == NoteType.Long)
