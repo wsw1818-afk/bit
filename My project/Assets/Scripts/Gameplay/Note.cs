@@ -20,7 +20,7 @@ namespace AIBeat.Gameplay
         private NoteData noteData;
         private float speed;
         private float judgementLineY;
-        private readonly Vector3 originalScale = new Vector3(1.8f, 0.4f, 1f);  // 고정 스케일
+        private readonly Vector3 originalScale = new Vector3(0.9f, 0.5f, 1f);  // 고정 스케일 (레인폭에 맞춤)
 
         public NoteType NoteType => noteData.Type;
         public int LaneIndex => noteData.LaneIndex;

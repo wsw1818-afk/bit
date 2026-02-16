@@ -213,8 +213,8 @@ namespace AIBeat.Gameplay
             renderer.sortingOrder = 500; // 높은 sortingOrder
             managedMaterials.Add(mat);
 
-            // 노트 크기: 1.8 x 0.4
-            noteObj.transform.localScale = new Vector3(1.8f, 0.4f, 1f);
+            // 노트 크기: 0.9 x 0.5 (레인폭에 맞춤)
+            noteObj.transform.localScale = new Vector3(0.9f, 0.5f, 1f);
 
             Debug.Log($"[NoteSpawner] Note {name} created: MeshRenderer, shader={shader?.name}, color={color}, scale={noteObj.transform.localScale}");
 
