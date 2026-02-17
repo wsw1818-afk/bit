@@ -71,6 +71,9 @@ namespace AIBeat.Gameplay
             Screen.orientation = ScreenOrientation.Portrait;
             // 세로 모드에서 레인이 화면 너비를 꽉 채우도록 카메라 조정
             AdjustCameraForPortrait();
+            // gameplayUI가 Inspector에서 할당되지 않은 경우 자동 탐색
+            if (gameplayUI == null)
+                gameplayUI = FindFirstObjectByType<GameplayUI>();
             // Music Theme 적용 (Cyberpunk 제거됨)
             Initialize();
             if (inputLoopCoroutine == null)
@@ -1000,6 +1003,7 @@ namespace AIBeat.Gameplay
         {
             isShowingResult = true;
             GameManager.Instance?.ChangeState(GameManager.GameState.Result);
+
             gameplayUI?.ShowResult(result);
 
             // SongLibraryManager에 최고 기록 업데이트

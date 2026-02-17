@@ -761,7 +761,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0ed739ae8349c842a9d5a0c20451c08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AIBeat.UI.SplashController
-  autoTransitionDelay: 120
+  autoTransitionDelay: 3
 --- !u!4 &1894126664
 Transform:
   m_ObjectHideFlags: 0

@@ -165,6 +165,10 @@ namespace AIBeat.UI
             // Result Panel
             if (resultPanel == null)
                 resultPanel = transform.Find("ResultPanel")?.gameObject;
+            if (resultPanel == null)
+            {
+                resultPanel = CreateResultPanel();
+            }
             if (resultPanel != null)
             {
                 var rp = resultPanel.transform;
@@ -196,9 +200,7 @@ namespace AIBeat.UI
             judgementSystem = FindFirstObjectByType<JudgementSystem>();
             gameplayController = FindFirstObjectByType<GameplayController>();
 
-#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] AutoSetup - Score:{scoreText != null}, Combo:{comboText != null}, Judgement:{judgementText != null}, ResultPanel:{resultPanel != null}");
-#endif
             
             // Setup Effect Controller Prefab
             if (effectControllerPrefab == null)
@@ -1106,11 +1108,164 @@ namespace AIBeat.UI
                 pauseButton.gameObject.SetActive(!show);
         }
 
+        /// <summary>
+        /// ResultPanel이 없을 때 동적으로 생성
+        /// </summary>
+        private GameObject CreateResultPanel()
+        {
+            var panelGo = new GameObject("ResultPanel");
+            panelGo.transform.SetParent(transform, false);
+
+            var rect = panelGo.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            // 배경
+            var bg = panelGo.AddComponent<Image>();
+            bg.color = UIColorPalette.BG_DEEP.WithAlpha(0.96f);
+            bg.raycastTarget = true;
+
+            var korFont = KoreanFontManager.KoreanFont;
+            float yPos = 0.88f;
+
+            // 랭크 텍스트
+            resultRankText = CreateResultText(panelGo.transform, "ResultRankText", "", 72,
+                new Vector2(0.1f, yPos - 0.02f), new Vector2(0.9f, yPos + 0.08f), korFont);
+            resultRankText.alignment = TextAlignmentOptions.Center;
+            yPos -= 0.12f;
+
+            // 점수 텍스트
+            resultScoreText = CreateResultText(panelGo.transform, "ResultScoreText", "0", 40,
+                new Vector2(0.1f, yPos), new Vector2(0.9f, yPos + 0.06f), korFont);
+            resultScoreText.alignment = TextAlignmentOptions.Center;
+            resultScoreText.color = UIColorPalette.NEON_CYAN;
+            yPos -= 0.08f;
+
+            // 콤보
+            resultComboText = CreateResultText(panelGo.transform, "ResultComboText", "", 22,
+                new Vector2(0.1f, yPos), new Vector2(0.9f, yPos + 0.04f), korFont);
+            yPos -= 0.05f;
+
+            // 정확도
+            resultAccuracyText = CreateResultText(panelGo.transform, "ResultAccuracyText", "", 22,
+                new Vector2(0.1f, yPos), new Vector2(0.9f, yPos + 0.04f), korFont);
+            yPos -= 0.07f;
+
+            // 구분선
+            var divider = new GameObject("Divider");
+            divider.transform.SetParent(panelGo.transform, false);
+            var divRect = divider.AddComponent<RectTransform>();
+            divRect.anchorMin = new Vector2(0.15f, yPos + 0.02f);
+            divRect.anchorMax = new Vector2(0.85f, yPos + 0.025f);
+            divRect.offsetMin = Vector2.zero;
+            divRect.offsetMax = Vector2.zero;
+            var divImg = divider.AddComponent<Image>();
+            divImg.color = UIColorPalette.NEON_CYAN.WithAlpha(0.3f);
+            divImg.raycastTarget = false;
+            yPos -= 0.02f;
+
+            // 판정별 카운트
+            resultPerfectText = CreateResultText(panelGo.transform, "PerfectText", "", 20,
+                new Vector2(0.15f, yPos), new Vector2(0.85f, yPos + 0.035f), korFont);
+            resultPerfectText.color = UIColorPalette.JUDGE_PERFECT;
+            yPos -= 0.04f;
+
+            resultGreatText = CreateResultText(panelGo.transform, "GreatText", "", 20,
+                new Vector2(0.15f, yPos), new Vector2(0.85f, yPos + 0.035f), korFont);
+            resultGreatText.color = UIColorPalette.JUDGE_GREAT;
+            yPos -= 0.04f;
+
+            resultGoodText = CreateResultText(panelGo.transform, "GoodText", "", 20,
+                new Vector2(0.15f, yPos), new Vector2(0.85f, yPos + 0.035f), korFont);
+            resultGoodText.color = UIColorPalette.JUDGE_GOOD;
+            yPos -= 0.04f;
+
+            resultBadText = CreateResultText(panelGo.transform, "BadText", "", 20,
+                new Vector2(0.15f, yPos), new Vector2(0.85f, yPos + 0.035f), korFont);
+            resultBadText.color = UIColorPalette.JUDGE_BAD;
+            yPos -= 0.04f;
+
+            resultMissText = CreateResultText(panelGo.transform, "MissText", "", 20,
+                new Vector2(0.15f, yPos), new Vector2(0.85f, yPos + 0.035f), korFont);
+            resultMissText.color = new Color(0.6f, 0.6f, 0.6f);
+            yPos -= 0.08f;
+
+            // 다시하기 버튼
+            retryButton = CreateResultButton(panelGo.transform, "RetryButton", "다시하기",
+                new Vector2(0.1f, yPos), new Vector2(0.48f, yPos + 0.06f), korFont);
+            retryButton.onClick.AddListener(() => GameManager.Instance?.LoadScene("Gameplay"));
+
+            // 메뉴 버튼
+            menuButton = CreateResultButton(panelGo.transform, "MenuButton", "메뉴로",
+                new Vector2(0.52f, yPos), new Vector2(0.9f, yPos + 0.06f), korFont);
+            menuButton.onClick.AddListener(() => GameManager.Instance?.LoadScene("MainMenuScene"));
+
+            panelGo.SetActive(false);
+
+            Debug.Log("[GameplayUI] ResultPanel 동적 생성 완료");
+            return panelGo;
+        }
+
+        private TMP_Text CreateResultText(Transform parent, string name, string text, float fontSize,
+            Vector2 anchorMin, Vector2 anchorMax, TMP_FontAsset font)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.Left;
+            tmp.raycastTarget = false;
+            if (font != null) tmp.font = font;
+            return tmp;
+        }
+
+        private Button CreateResultButton(Transform parent, string name, string label,
+            Vector2 anchorMin, Vector2 anchorMax, TMP_FontAsset font)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var img = go.AddComponent<Image>();
+            img.color = UIColorPalette.NEON_MAGENTA.WithAlpha(0.8f);
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(go.transform, false);
+            var textRect = textGo.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+            var tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = label;
+            tmp.fontSize = 22;
+            tmp.color = Color.white;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.raycastTarget = false;
+            if (font != null) tmp.font = font;
+
+            return btn;
+        }
+
         public void ShowResult(GameResult result)
         {
-#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] ShowResult called - resultPanel:{resultPanel != null}, Score:{result.Score}, Rank:{result.Rank}, Miss:{result.MissCount}");
-#endif
 
             // 통계 HUD + 일시정지 버튼 숨기기
             if (statsPanel != null) statsPanel.SetActive(false);
@@ -1118,7 +1273,12 @@ namespace AIBeat.UI
 
             if (resultPanel == null)
             {
-                Debug.LogWarning("[GameplayUI] ResultPanel is NULL! Result screen cannot be shown.");
+                Debug.LogError("[GameplayUI] ResultPanel is NULL! Attempting dynamic creation...");
+                resultPanel = CreateResultPanel();
+            }
+            if (resultPanel == null)
+            {
+                Debug.LogError("[GameplayUI] ResultPanel creation FAILED! Cannot show result.");
                 return;
             }
 
@@ -1175,9 +1335,11 @@ namespace AIBeat.UI
             // NEW RECORD 체크 및 표시
             CheckAndShowNewRecord(result);
 
-            // 결과 패널 애니메이션
-            resultPanel.transform.localScale = Vector3.zero;
-            UIAnimator.ScaleTo(this, resultPanel, Vector3.one, 0.5f);
+            // 최상위 렌더링 보장
+            resultPanel.transform.SetAsLastSibling();
+            resultPanel.transform.localScale = Vector3.one;
+
+            Debug.Log($"[GameplayUI] ResultPanel shown - active:{resultPanel.activeSelf}, scale:{resultPanel.transform.localScale}, siblingIndex:{resultPanel.transform.GetSiblingIndex()}");
         }
 
         /// <summary>
