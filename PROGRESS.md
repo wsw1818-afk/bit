@@ -459,5 +459,25 @@ private void CreateFloatingSettingsButton()
 
 ---
 
+### 🖼️ AI 생성 이미지 적용 가이드 (Assets/Resources/AIBeat_Design)
+> **다음 작업자(Claude)를 위한 리소스 매핑 가이드**
+
+#### 1. 배경 이미지 (Backgrounds)
+| 파일 경로 | 적용 대상 | 비고 |
+|-----------|-----------|------|
+| `UI/Backgrounds/Menu_BG.png` | **MainMenuScene** | 메인 메뉴 배경 (Canvas 하위 가장 뒤쪽 Image) |
+| `UI/Backgrounds/SongSelect_BG.png` | **SongSelectScene** | 곡 선택 화면 배경 |
+| `UI/Backgrounds/Gameplay_BG.jpg` | **GameplayScene** | 게임 플레이 배경 (노트 레인 뒤쪽, `GameplayUI.cs`에서 로드) |
+| `UI/Backgrounds/Splash_BG.png` | **SplashScene** | 앱 실행 시 로고와 함께 표시되는 배경 |
+
+#### 2. UI 요소 (UI Elements)
+| 파일 경로 | 적용 대상 | 비고 |
+|-----------|-----------|------|
+| `UI/Default_Album_Art.jpg` | **SongLibraryUI** | 앨범 아트가 없는 곡의 기본 커버 이미지 (SongCard 좌측) |
+| `Illustrations/Cyberpunk_guitarist...` | **Result Screen** | (추후 적용) 결과 화면에서 랭크(S/A) 달성 시 등어장하는 캐릭터 |
+| `Illustrations/Cyberpunk_keyboardist...` | **Character Select** | (추후 적용) 메인 메뉴에서 3D 캐릭터 대신 표시 가능한 2D 일러스트 |
+
+---
+
 **마지막 업데이트**: 2026-02-17
 **다음 검토일**: 2026-02-18

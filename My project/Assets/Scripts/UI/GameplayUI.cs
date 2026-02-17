@@ -105,7 +105,7 @@ namespace AIBeat.UI
             CreatePausePanel();
             CreateCountdownPanel();
             // CreateLoadingVideoPanel(); // 필요할 때만 생성 (ShowLoadingVideo(true) 호출 시)
-            // CreateGameplayBackground(); // Cyberpunk 배경 활성화 (LaneBackground 가리므로 비활성)
+            CreateGameplayBackground(); // Cyberpunk 배경 활성화
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기 (loadingVideoPanel은 더 이상 Awake에서 생성 안 함)
@@ -213,10 +213,7 @@ namespace AIBeat.UI
 
 
         /// <summary>
-        /// 배경 이미지 — 현재 비활성 (노트 레인과 겹침 문제로 제거)
-        /// </summary>
-        /// <summary>
-        /// 배경 이미지 (Procedural Cyberpunk)
+        /// 배경 이미지 (Asset Load or Procedural Fallback)
         /// </summary>
         private void CreateGameplayBackground()
         {
@@ -235,9 +232,31 @@ namespace AIBeat.UI
 
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
-            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
-            img.type = Image.Type.Sliced;
-            img.color = new Color(0.6f, 0.6f, 0.6f, 1f); // Slightly dimmed
+
+            // 로드 시도
+            Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Gameplay_BG");
+            if (bgSprite != null)
+            {
+                img.sprite = bgSprite;
+                img.type = Image.Type.Simple;
+                img.preserveAspect = false; // 꽉 채우기
+                img.color = new Color(0.4f, 0.4f, 0.4f, 1f); // 배경 어둡게 (노트 가시성 확보)
+            }
+            else
+            {
+                // Fallback
+                img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+                img.type = Image.Type.Sliced;
+                img.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+            }
+            
+            // Aspect Ratio Fitter 추가 (이미지 비율 유지하면서 꽉 채우기 - Envelope)
+            if (bgSprite != null)
+            {
+                var fitter = bgGo.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = (float)bgSprite.texture.width / bgSprite.texture.height;
+            }
         }
 
         /// <summary>

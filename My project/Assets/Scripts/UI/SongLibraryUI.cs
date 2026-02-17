@@ -31,12 +31,18 @@ namespace AIBeat.UI
         private List<GameObject> songItems = new List<GameObject>();
         private List<SongRecord> displayedSongs = new List<SongRecord>();
 
+        // 앨범 아트 기본값
+        private Sprite defaultAlbumArt;
+
         // 삭제 확인 상태
         private int deleteConfirmIndex = -1;
 
         public void Initialize(RectTransform parentPanel)
         {
             if (rootPanel != null) return;
+
+            // 기본 앨범 아트 로드
+            defaultAlbumArt = Resources.Load<Sprite>("AIBeat_Design/UI/Default_Album_Art");
 
             CreateLibraryUI(parentPanel);
             KoreanFontManager.ApplyFontToAll(rootPanel);
@@ -226,7 +232,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 곡 카드 생성 - 컴팩트 2행 구조
+        /// 곡 카드 생성 - 컴팩트 2행 구조 + 앨범 아트
         /// </summary>
         private void CreateSongCard(SongRecord song, int index)
         {
@@ -260,6 +266,26 @@ namespace AIBeat.UI
             hLayout.childControlHeight = true;
             hLayout.childForceExpandWidth = false;
             hLayout.childForceExpandHeight = true;
+
+            // 1. 앨범 아트 (좌측)
+            var artGo = new GameObject("AlbumArt");
+            artGo.transform.SetParent(card.transform, false);
+            var artLayout = artGo.AddComponent<LayoutElement>();
+            artLayout.preferredWidth = 120;
+            artLayout.preferredHeight = 120;
+            
+            var artImg = artGo.AddComponent<Image>();
+            artImg.sprite = defaultAlbumArt;
+            artImg.color = Color.white;
+            artImg.preserveAspect = true;
+
+            // 앨범 아트 테두리
+            var artOutline = artGo.AddComponent<Outline>();
+            artOutline.effectColor = new Color(0f, 1f, 1f, 0.5f);
+            artOutline.effectDistance = new Vector2(1, -1);
+
+            var artMask = artGo.AddComponent<Mask>(); // (Optional) Rounded Mask could be better
+            artMask.showMaskGraphic = true;
 
             // 좌측 정보 패널
             var infoPanel = new GameObject("InfoPanel");

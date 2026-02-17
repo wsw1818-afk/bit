@@ -250,21 +250,23 @@ namespace AIBeat.UI
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
             
-            // Resources에서 배경 이미지 로드 시도 (BIT.jpg 사용)
-            Sprite bgSprite = Resources.Load<Sprite>("UI/BIT");
+            // AI 디자인 배경 이미지 로드 (Menu_BG.png)
+            Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Menu_BG");
+            if (bgSprite == null)
+                bgSprite = Resources.Load<Sprite>("UI/BIT"); // fallback
+
             if (bgSprite != null)
             {
                 img.sprite = bgSprite;
                 img.type = Image.Type.Simple;
                 img.preserveAspect = false;
-                Debug.Log("[MainMenuUI] Loaded BIT.jpg as background");
+                Debug.Log("[MainMenuUI] Loaded Menu_BG as background");
             }
             else
             {
-                // Procedural Generation 호출 (fallback)
                 img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
                 img.type = Image.Type.Sliced;
-                Debug.Log("[MainMenuUI] Using procedural background (BIT.jpg not found)");
+                Debug.Log("[MainMenuUI] Using procedural background (fallback)");
             }
             
             // 어두운 오버레이 (숨쉬기 효과 대상)
@@ -860,6 +862,28 @@ namespace AIBeat.UI
                 titleRect.anchorMax = new Vector2(1, 0.68f);
                 titleRect.offsetMin = new Vector2(15, 0);
                 titleRect.offsetMax = new Vector2(-15, 0);
+            }
+
+            // 로고 이미지가 있으면 텍스트 대신 로고 표시
+            var logoSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Logo/MainLogo");
+            if (logoSprite != null)
+            {
+                var logoGo = new GameObject("LogoImage");
+                logoGo.transform.SetParent(transform, false);
+                var logoRect = logoGo.AddComponent<RectTransform>();
+                logoRect.anchorMin = new Vector2(0.1f, 0.56f);
+                logoRect.anchorMax = new Vector2(0.9f, 0.72f);
+                logoRect.offsetMin = Vector2.zero;
+                logoRect.offsetMax = Vector2.zero;
+                var logoImg = logoGo.AddComponent<Image>();
+                logoImg.sprite = logoSprite;
+                logoImg.preserveAspect = true;
+                logoImg.raycastTarget = false;
+                logoGo.transform.localScale = Vector3.zero;
+                UIAnimator.ScaleTo(this, logoGo.transform, Vector3.one, 0.5f);
+                // 텍스트 타이틀 숨김
+                titleText.gameObject.SetActive(false);
+                Debug.Log("[MainMenuUI] Loaded MainLogo image");
             }
 
             titleText.fontSize = 64;

@@ -95,8 +95,22 @@ namespace AIBeat.UI
 
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
-            // 단색 어두운 보라 배경 (격자 없음)
-            img.color = new Color(0.04f, 0.02f, 0.08f, 1f);
+
+            // AI 디자인 배경 이미지 로드 (SongSelect_BG.png)
+            Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/SongSelect_BG");
+            if (bgSprite != null)
+            {
+                img.sprite = bgSprite;
+                img.type = Image.Type.Simple;
+                img.preserveAspect = false;
+                img.color = new Color(0.5f, 0.5f, 0.5f, 1f); // 약간 어둡게 (가독성 확보)
+                Debug.Log("[SongSelectUI] Loaded SongSelect_BG as background");
+            }
+            else
+            {
+                // fallback: 단색 어두운 보라 배경
+                img.color = new Color(0.04f, 0.02f, 0.08f, 1f);
+            }
         }
 
         /// <summary>

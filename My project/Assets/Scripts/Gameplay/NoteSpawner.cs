@@ -196,11 +196,23 @@ namespace AIBeat.Gameplay
             var mat = new Material(shader);
             mat.color = color;
 
-            // 텍스처 생성 시도
+            // AI 디자인 노트 텍스처 우선 로드, 없으면 ProceduralImageGenerator 폴백
             Texture2D tex = null;
-            if (name == "TapNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Tap);
-            else if (name == "LongNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Long);
-            else if (name == "ScratchNote") tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Scratch);
+            if (name == "TapNote")
+            {
+                tex = Resources.Load<Texture2D>("AIBeat_Design/Notes/NormalNote");
+                if (tex == null) tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Tap);
+            }
+            else if (name == "LongNote")
+            {
+                tex = Resources.Load<Texture2D>("AIBeat_Design/Notes/LongNote");
+                if (tex == null) tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Long);
+            }
+            else if (name == "ScratchNote")
+            {
+                tex = Resources.Load<Texture2D>("AIBeat_Design/Notes/ScratchNote");
+                if (tex == null) tex = ProceduralImageGenerator.CreateNoteTexture(NoteType.Scratch);
+            }
 
             if (tex != null)
             {
