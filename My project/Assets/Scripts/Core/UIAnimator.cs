@@ -277,5 +277,82 @@ namespace AIBeat.Core
         }
 
         #endregion
+
+        #region Camera Shake
+
+        /// <summary>
+        /// 카메라 쉐이크 — Perfect 판정, 콤보 마일스톤에 사용
+        /// </summary>
+        public static Coroutine CameraShake(MonoBehaviour host, float intensity = 0.05f, float duration = 0.15f)
+        {
+            var cam = Camera.main;
+            if (cam == null) return null;
+            return host.StartCoroutine(CameraShakeCoroutine(cam.transform, intensity, duration));
+        }
+
+        private static IEnumerator CameraShakeCoroutine(Transform camTransform, float intensity, float duration)
+        {
+            Vector3 originalPos = camTransform.localPosition;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float decay = 1f - (elapsed / duration);
+                float x = UnityEngine.Random.Range(-1f, 1f) * intensity * decay;
+                float y = UnityEngine.Random.Range(-1f, 1f) * intensity * decay;
+                camTransform.localPosition = originalPos + new Vector3(x, y, 0f);
+                yield return null;
+            }
+
+            camTransform.localPosition = originalPos;
+        }
+
+        #endregion
+
+        #region Screen Flash
+
+        /// <summary>
+        /// 화면 테두리 번쩍 효과 — 콤보 마일스톤에 사용
+        /// </summary>
+        public static Coroutine ScreenBorderFlash(MonoBehaviour host, Transform parent, Color flashColor, float duration = 0.3f)
+        {
+            return host.StartCoroutine(ScreenBorderFlashCoroutine(parent, flashColor, duration));
+        }
+
+        private static IEnumerator ScreenBorderFlashCoroutine(Transform parent, Color flashColor, float duration)
+        {
+            var go = new GameObject("ScreenFlash");
+            go.transform.SetParent(parent, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var img = go.AddComponent<Image>();
+            img.color = flashColor;
+            img.raycastTarget = false;
+
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = flashColor;
+            outline.effectDistance = new Vector2(4, 4);
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                float alpha = Mathf.Lerp(flashColor.a, 0f, t);
+                img.color = new Color(flashColor.r, flashColor.g, flashColor.b, alpha * 0.15f);
+                outline.effectColor = new Color(flashColor.r, flashColor.g, flashColor.b, alpha);
+                yield return null;
+            }
+
+            UnityEngine.Object.Destroy(go);
+        }
+
+        #endregion
     }
 }

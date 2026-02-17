@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using AIBeat.Core;
+using AIBeat.Utils;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -147,7 +148,7 @@ namespace AIBeat.UI
                 var image = child.GetComponent<Image>();
                 if (image == null) continue;
 
-                var sprite = Resources.Load<Sprite>(spritePath);
+                var sprite = ResourceHelper.LoadSpriteFromResources(spritePath);
                 if (sprite != null)
                 {
                     image.sprite = sprite;
@@ -251,9 +252,9 @@ namespace AIBeat.UI
             img.raycastTarget = false;
             
             // AI 디자인 배경 이미지 로드 (Menu_BG.png)
-            Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Menu_BG");
+            Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Menu_BG");
             if (bgSprite == null)
-                bgSprite = Resources.Load<Sprite>("UI/BIT"); // fallback
+                bgSprite = ResourceHelper.LoadSpriteFromResources("UI/BIT"); // fallback
 
             if (bgSprite != null)
             {
@@ -592,9 +593,9 @@ namespace AIBeat.UI
             vLayout.padding = new RectOffset(0, 0, 0, 0);
 
             // 디자인 에셋에서 버튼 스프라이트 로드
-            var normalSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Normal");
-            var hoverSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Hover");
-            var pressedSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Pressed");
+            var normalSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Buttons/Btn_Normal");
+            var hoverSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Buttons/Btn_Hover");
+            var pressedSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Buttons/Btn_Pressed");
             bool usingSpriteAsset = normalSprite != null;
 
             foreach (var cfg in buttonConfigs)
@@ -865,7 +866,7 @@ namespace AIBeat.UI
             }
 
             // 로고 이미지가 있으면 텍스트 대신 로고 표시
-            var logoSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Logo/MainLogo");
+            var logoSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Logo/MainLogo");
             if (logoSprite != null)
             {
                 var logoGo = new GameObject("LogoImage");

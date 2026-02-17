@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using AIBeat.Core;
 using AIBeat.Data;
+using AIBeat.Utils;
 
 namespace AIBeat.UI
 {
@@ -42,7 +43,7 @@ namespace AIBeat.UI
             if (rootPanel != null) return;
 
             // 기본 앨범 아트 로드
-            defaultAlbumArt = Resources.Load<Sprite>("AIBeat_Design/UI/Default_Album_Art");
+            defaultAlbumArt = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Default_Album_Art");
 
             CreateLibraryUI(parentPanel);
             KoreanFontManager.ApplyFontToAll(rootPanel);
@@ -184,7 +185,7 @@ namespace AIBeat.UI
             emptyText = emptyGo.AddComponent<TextMeshProUGUI>();
             emptyText.text = "\n\n<size=52>음악을 추가해보세요!</size>\n\n<size=30>핸드폰의 Music 또는\nDownloads 폴더에\nMP3 파일을 넣으면\n자동으로 인식됩니다</size>\n\n<size=26><color=#00D9FF>Suno AI로 만든 음악도\n바로 플레이 가능!</color></size>";
             emptyText.fontSize = 40;
-            emptyText.color = new Color(0.5f, 0.5f, 0.6f);
+            emptyText.color = new Color(0.7f, 0.7f, 0.8f);
             emptyText.alignment = TextAlignmentOptions.Center;
             emptyText.richText = true;
         }
@@ -329,7 +330,7 @@ namespace AIBeat.UI
             string scoreDisplay = song.BestScore > 0 ? song.BestScore.ToString("N0") : "--";
             var rankTmp = CreateTMPText(infoPanel, "RankScore",
                 $"Best: <color=#{ColorUtility.ToHtmlStringRGB(GetRankColor(song.BestRank))}>{rankDisplay}</color> · {scoreDisplay}",
-                22, new Color(0.55f, 0.55f, 0.65f), TextAlignmentOptions.MidlineLeft);
+                22, new Color(0.75f, 0.75f, 0.85f), TextAlignmentOptions.MidlineLeft);
             rankTmp.richText = true;
 
             // 우측 플레이 아이콘

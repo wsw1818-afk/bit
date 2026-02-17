@@ -1,10 +1,20 @@
 using UnityEngine;
+using AIBeat.Core;
 
 namespace AIBeat.Gameplay
 {
     [RequireComponent(typeof(Renderer))]
     public class NoteVisuals : MonoBehaviour
     {
+        // 4레인 색상 테이블 (GameConstants.LaneCount 기반)
+        private static readonly Color[] LaneColors = new Color[]
+        {
+            new Color(0.58f, 0.29f, 0.98f),  // Lane 0: Purple
+            new Color(0f, 0.8f, 0.82f),      // Lane 1: Teal
+            new Color(1f, 0.84f, 0f),         // Lane 2: Gold
+            new Color(1f, 0.55f, 0f),         // Lane 3: Orange
+        };
+
         private Renderer _renderer;
 
         private void Awake()
@@ -15,7 +25,7 @@ namespace AIBeat.Gameplay
         public void SetLaneColor(int laneIndex)
         {
             Color color = GetLaneColor(laneIndex);
-            
+
             // Apply to all renderers (Head + Body)
             var renderers = GetComponentsInChildren<Renderer>(true);
             foreach (var r in renderers)
@@ -34,24 +44,11 @@ namespace AIBeat.Gameplay
 
         private Color GetLaneColor(int lane)
         {
-            // Music Theme 7-Lane Colors
-            // intensity를 RGB에만 적용 (Alpha는 1.0 유지)
             float intensity = 1.2f;
-            Color baseColor;
+            Color baseColor = (lane >= 0 && lane < LaneColors.Length)
+                ? LaneColors[lane]
+                : Color.white;
 
-            switch (lane)
-            {
-                case 0: baseColor = new Color(1f, 0.55f, 0f);      break; // Orange (Scratch L)
-                case 1: baseColor = new Color(0.58f, 0.29f, 0.98f); break; // Purple
-                case 2: baseColor = new Color(0f, 0.8f, 0.82f);    break; // Teal
-                case 3: baseColor = new Color(1f, 0.84f, 0f);      break; // Gold (Center)
-                case 4: baseColor = new Color(0f, 0.8f, 0.82f);    break; // Teal
-                case 5: baseColor = new Color(0.58f, 0.29f, 0.98f); break; // Purple
-                case 6: baseColor = new Color(1f, 0.55f, 0f);      break; // Orange (Scratch R)
-                default: return Color.white;
-            }
-
-            // RGB에만 intensity 적용, Alpha는 1.0 유지
             return new Color(
                 Mathf.Min(baseColor.r * intensity, 1f),
                 Mathf.Min(baseColor.g * intensity, 1f),

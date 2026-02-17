@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using AIBeat.Core;
 using AIBeat.Data;
+using AIBeat.Utils;
 #if UNITY_ANDROID && !UNITY_EDITOR
 using UnityEngine.Android;
 #endif
@@ -97,7 +98,7 @@ namespace AIBeat.UI
             img.raycastTarget = false;
 
             // AI 디자인 배경 이미지 로드 (SongSelect_BG.png)
-            Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/SongSelect_BG");
+            Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/SongSelect_BG");
             if (bgSprite != null)
             {
                 img.sprite = bgSprite;

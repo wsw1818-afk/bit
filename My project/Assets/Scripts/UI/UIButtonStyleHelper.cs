@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using AIBeat.Core;
+using AIBeat.Utils;
 
 namespace AIBeat.UI
 {
@@ -24,9 +25,9 @@ namespace AIBeat.UI
         {
             if (_spritesLoaded) return;
 
-            _normalSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Normal");
-            _hoverSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Hover");
-            _pressedSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Buttons/Btn_Pressed");
+            _normalSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Buttons/Btn_Normal");
+            _hoverSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Buttons/Btn_Hover");
+            _pressedSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Buttons/Btn_Pressed");
 
             _spritesLoaded = true;
 

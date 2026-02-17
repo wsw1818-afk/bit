@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using AIBeat.Core;
+using AIBeat.Utils;
 
 namespace AIBeat.UI
 {
@@ -57,7 +58,7 @@ namespace AIBeat.UI
                 var bgImg = bgGo.AddComponent<Image>();
                 bgImg.raycastTarget = false;
 
-                Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Splash_BG");
+                Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Splash_BG");
                 if (bgSprite != null)
                 {
                     bgImg.sprite = bgSprite;
@@ -75,7 +76,7 @@ namespace AIBeat.UI
             var existingLogo = canvas.transform.Find("SplashLogo");
             if (existingLogo == null)
             {
-                Sprite logoSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Logo/MainLogo");
+                Sprite logoSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Logo/MainLogo");
                 if (logoSprite != null)
                 {
                     var logoGo = new GameObject("SplashLogo");

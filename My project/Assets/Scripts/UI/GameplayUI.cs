@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AIBeat.Data;
 using AIBeat.Core;
 using AIBeat.Gameplay;
+using AIBeat.Utils;
 
 namespace AIBeat.UI
 {
@@ -106,6 +107,7 @@ namespace AIBeat.UI
             CreateCountdownPanel();
             // CreateLoadingVideoPanel(); // 필요할 때만 생성 (ShowLoadingVideo(true) 호출 시)
             CreateGameplayBackground(); // Cyberpunk 배경 활성화
+            CreateHUDFrameOverlay();    // HUD 프레임 오버레이 (배경 위, HUD 아래)
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기 (loadingVideoPanel은 더 이상 Awake에서 생성 안 함)
@@ -122,6 +124,11 @@ namespace AIBeat.UI
 
             // 한국어 폰트 적용 (□□□ 방지)
             KoreanFontManager.ApplyFontToAll(gameObject);
+
+            // HUD 프레임 오버레이 sibling 순서 조정: 배경(0) 바로 위, TopBar/StatsBar 아래
+            var hudFrame = transform.Find("HUD_Frame_Overlay");
+            if (hudFrame != null)
+                hudFrame.SetSiblingIndex(1); // 0=배경, 1=프레임, 2+=HUD 요소들
 
             EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
 
@@ -202,20 +209,20 @@ namespace AIBeat.UI
 
             Debug.Log($"[GameplayUI] AutoSetup - Score:{scoreText != null}, Combo:{comboText != null}, Judgement:{judgementText != null}, ResultPanel:{resultPanel != null}");
             
-            // Setup Effect Controller Prefab
+            // Setup Effect Controller Prefab (UI Image 기반 — Canvas 내부)
             if (effectControllerPrefab == null)
             {
                 var go = new GameObject("JudgementEffect_Prefab");
-                go.AddComponent<SpriteRenderer>();
+                go.AddComponent<RectTransform>();
                 effectControllerPrefab = go.AddComponent<JudgementEffectController>();
                 go.SetActive(false);
-                go.transform.SetParent(transform.parent); // Put in scene root or NoteArea logic
+                go.transform.SetParent(transform, false); // Canvas 내부에 배치
             }
         }
 
 
         /// <summary>
-        /// 배경 이미지 (Asset Load or Procedural Fallback)
+        /// 배경 이미지 (절차적 Cyberpunk 배경 — Gameplay_BG는 HUD 프레임으로 분리)
         /// </summary>
         private void CreateGameplayBackground()
         {
@@ -235,30 +242,81 @@ namespace AIBeat.UI
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
 
-            // 로드 시도
-            Sprite bgSprite = Resources.Load<Sprite>("AIBeat_Design/UI/Backgrounds/Gameplay_BG");
-            if (bgSprite != null)
-            {
-                img.sprite = bgSprite;
-                img.type = Image.Type.Simple;
-                img.preserveAspect = false; // 꽉 채우기
-                img.color = new Color(0.4f, 0.4f, 0.4f, 1f); // 배경 어둡게 (노트 가시성 확보)
-            }
-            else
-            {
-                // Fallback
-                img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
-                img.type = Image.Type.Sliced;
-                img.color = new Color(0.6f, 0.6f, 0.6f, 1f);
-            }
-            
-            // Aspect Ratio Fitter 추가 (이미지 비율 유지하면서 꽉 채우기 - Envelope)
-            if (bgSprite != null)
-            {
-                var fitter = bgGo.AddComponent<AspectRatioFitter>();
-                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-                fitter.aspectRatio = (float)bgSprite.texture.width / bgSprite.texture.height;
-            }
+            // 절차적 배경 사용 (Gameplay_BG.jpg는 HUD 프레임이므로 별도 오버레이로 처리)
+            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+        }
+
+        /// <summary>
+        /// HUD 네온 테두리 오버레이 — 프로그래밍으로 생성
+        /// (Gameplay_BG.jpg는 JPG로 투명도 미지원 → 체크보드 문제 발생하므로 사용하지 않음)
+        /// </summary>
+        private void CreateHUDFrameOverlay()
+        {
+            var existing = transform.Find("HUD_Frame_Overlay");
+            if (existing != null) return;
+
+            var frameGo = new GameObject("HUD_Frame_Overlay");
+            frameGo.transform.SetParent(transform, false);
+
+            var rect = frameGo.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            // 4개 네온 테두리 라인 (상/하/좌/우)
+            Color neonCyan = new Color(0f, 0.85f, 0.9f, 0.5f);
+            float borderWidth = 3f;
+
+            CreateBorderLine(frameGo.transform, "TopBorder", neonCyan, borderWidth,
+                new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), Vector2.zero, new Vector2(0, borderWidth));
+            CreateBorderLine(frameGo.transform, "BottomBorder", neonCyan, borderWidth,
+                new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), Vector2.zero, new Vector2(0, borderWidth));
+            CreateBorderLine(frameGo.transform, "LeftBorder", neonCyan, borderWidth,
+                new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(borderWidth, 0));
+            CreateBorderLine(frameGo.transform, "RightBorder", neonCyan, borderWidth,
+                new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), Vector2.zero, new Vector2(borderWidth, 0));
+
+            // 코너 글로우 (4개 모서리에 약간의 발광 효과)
+            CreateCornerGlow(frameGo.transform, "TopLeftGlow", neonCyan, new Vector2(0, 1), new Vector2(0, 1));
+            CreateCornerGlow(frameGo.transform, "TopRightGlow", neonCyan, new Vector2(1, 1), new Vector2(1, 1));
+            CreateCornerGlow(frameGo.transform, "BottomLeftGlow", neonCyan, new Vector2(0, 0), new Vector2(0, 0));
+            CreateCornerGlow(frameGo.transform, "BottomRightGlow", neonCyan, new Vector2(1, 0), new Vector2(1, 0));
+        }
+
+        private void CreateBorderLine(Transform parent, string name, Color color, float width,
+            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var r = go.AddComponent<RectTransform>();
+            r.anchorMin = anchorMin;
+            r.anchorMax = anchorMax;
+            r.pivot = pivot;
+            r.anchoredPosition = anchoredPos;
+            r.sizeDelta = sizeDelta;
+
+            var img = go.AddComponent<Image>();
+            img.color = color;
+            img.raycastTarget = false;
+        }
+
+        private void CreateCornerGlow(Transform parent, string name, Color color, Vector2 anchor, Vector2 pivot)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var r = go.AddComponent<RectTransform>();
+            r.anchorMin = anchor;
+            r.anchorMax = anchor;
+            r.pivot = pivot;
+            r.sizeDelta = new Vector2(30, 30);
+            r.anchoredPosition = Vector2.zero;
+
+            var img = go.AddComponent<Image>();
+            img.color = new Color(color.r, color.g, color.b, 0.3f);
+            img.raycastTarget = false;
         }
 
         /// <summary>
@@ -968,12 +1026,22 @@ namespace AIBeat.UI
                     comboText.color = Color.white;
                 }
 
-                // 10콤보 마일스톤: 큰 펄스
-                if (combo > 0 && combo % 50 == 0)
+                // 100콤보 마일스톤: 최대 펄스 + 화면 플래시 + 카메라 쉐이크
+                if (combo > 0 && combo % 100 == 0)
+                {
+                    comboText.transform.localScale = Vector3.one * 1.8f;
+                    UIAnimator.ScaleTo(this, comboText.gameObject, Vector3.one, 0.4f);
+                    UIAnimator.CameraShake(this, 0.08f, 0.25f);
+                    UIAnimator.ScreenBorderFlash(this, transform, comboText.color, 0.4f);
+                }
+                // 50콤보 마일스톤: 큰 펄스 + 카메라 쉐이크
+                else if (combo > 0 && combo % 50 == 0)
                 {
                     comboText.transform.localScale = Vector3.one * 1.5f;
                     UIAnimator.ScaleTo(this, comboText.gameObject, Vector3.one, 0.35f);
+                    UIAnimator.CameraShake(this, 0.05f, 0.15f);
                 }
+                // 10콤보 마일스톤: 중간 펄스
                 else if (combo > 0 && combo % 10 == 0)
                 {
                     comboText.transform.localScale = Vector3.one * 1.25f;
@@ -1062,6 +1130,12 @@ namespace AIBeat.UI
             {
                 string assetName = result.ToString(); // "Perfect", "Great", ...
                 SpawnEffect(assetName);
+            }
+
+            // Camera Shake — Perfect 판정 시 미세한 흔들림
+            if (result == JudgementResult.Perfect)
+            {
+                UIAnimator.CameraShake(this, 0.03f, 0.08f);
             }
 
         }
@@ -1533,18 +1607,18 @@ namespace AIBeat.UI
             JudgementEffectController available = null;
             foreach(var eff in effectPool)
             {
-                if (!eff.gameObject.activeSelf)
+                if (eff != null && !eff.gameObject.activeSelf)
                 {
                     available = eff;
                     break;
                 }
             }
-            
+
             if (available == null)
             {
-                if (effectControllerPrefab != null) 
+                if (effectControllerPrefab != null)
                 {
-                    var obj = Instantiate(effectControllerPrefab.gameObject, transform.parent);
+                    var obj = Instantiate(effectControllerPrefab.gameObject, transform);
                     available = obj.GetComponent<JudgementEffectController>();
                     effectPool.Add(available);
                 }
@@ -1552,11 +1626,15 @@ namespace AIBeat.UI
 
             if (available != null)
             {
-                // Position: Center Center (or adjust based on lane if passed)
-                // For now, center of screen/judgement line
-                // JudgementLine is usually at Y ~ -something.
-                // Let's spawn it at (0, -2.5, -2) to be above the notes/judgement line but visible.
-                available.Play(type, new Vector3(0, -2.5f, -2f)); 
+                // UI 기반: Canvas 내부 RectTransform 위치 (판정선 위, 화면 하단 30% 지점)
+                var rect = available.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    rect.anchorMin = new Vector2(0.5f, 0.25f);
+                    rect.anchorMax = new Vector2(0.5f, 0.25f);
+                    rect.anchoredPosition = Vector2.zero;
+                }
+                available.Play(type);
             }
         }
 
