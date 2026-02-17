@@ -1,1 +1,1 @@
-🎵 Android 로컬 음악 스캔 기능 추가 (MediaStore API + 녹음 필터링 + 권한 관리)
+🐛 Android 앱 실행 수정 (UnityPlayerGameActivity + AppCompat 테마 + NullRef 방지)

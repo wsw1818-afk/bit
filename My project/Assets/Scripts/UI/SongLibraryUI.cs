@@ -464,6 +464,8 @@ namespace AIBeat.UI
         {
             yield return new WaitForSecondsRealtime(delay);
 
+            if (rect == null || cg == null) yield break;
+
             float duration = 0.2f;
             float elapsed = 0f;
 
@@ -472,6 +474,8 @@ namespace AIBeat.UI
 
             while (elapsed < duration)
             {
+                if (rect == null || cg == null) yield break;
+
                 elapsed += Time.unscaledDeltaTime;
                 float t = elapsed / duration;
                 float overshoot = 1.3f;
@@ -482,8 +486,8 @@ namespace AIBeat.UI
                 yield return null;
             }
 
-            rect.localScale = endScale;
-            cg.alpha = 1f;
+            if (rect != null) rect.localScale = endScale;
+            if (cg != null) cg.alpha = 1f;
         }
 
         private void UpdateEmptyState(bool isEmpty)
