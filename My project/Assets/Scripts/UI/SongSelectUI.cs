@@ -490,8 +490,8 @@ namespace AIBeat.UI
             iconRect.offsetMax = Vector2.zero;
 
             var iconText = iconGo.AddComponent<TextMeshProUGUI>();
-            iconText.text = "\u2699"; // ⚙ 기어 유니코드
-            iconText.fontSize = 40;
+            iconText.text = "설정"; // 한국어 폰트 호환
+            iconText.fontSize = 22;
             iconText.color = Color.white;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;

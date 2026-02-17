@@ -223,7 +223,7 @@ namespace AIBeat.Gameplay
                     bodySprite = Sprite.Create(tex, new Rect(0,0,tex.width,tex.height), new Vector2(0.5f, 0.5f));
                 }
                 bodyRenderer.sprite = bodySprite;
-                bodyRenderer.drawMode = SpriteDrawMode.Sliced; // Or Tiled if configured 
+                bodyRenderer.drawMode = SpriteDrawMode.Simple; // localScale 사용으로 Simple 충분
             }
 
             bodyRenderer.gameObject.SetActive(true);

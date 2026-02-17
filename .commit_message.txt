@@ -1,1 +1,1 @@
-🎨 AI 디자인 이미지 적용 (Menu_BG + SongSelect_BG + Splash_BG + MainLogo + 노트 텍스처)
+🎨 AI 디자인 이미지 적용 + LongNote Sprite Tiling 경고 수정 + 설정아이콘 폰트 호환 수정
