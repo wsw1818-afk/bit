@@ -56,6 +56,11 @@ namespace AIBeat.Gameplay
         private bool isAnalyzing = false;
         private Coroutine analyzeCoroutine = null;
 
+        // 코루틴 중복 시작 방지
+        private Coroutine inputLoopCoroutine;
+        private Coroutine holdBonusCoroutine;
+        private Coroutine autoPlayCoroutine;
+
         private void Start()
         {
             // timeScale 강제 복원
@@ -68,8 +73,10 @@ namespace AIBeat.Gameplay
             AdjustCameraForPortrait();
             // Music Theme 적용 (Cyberpunk 제거됨)
             Initialize();
-            StartCoroutine(InputLoop());
-            StartCoroutine(HoldBonusTickLoop());
+            if (inputLoopCoroutine == null)
+                inputLoopCoroutine = StartCoroutine(InputLoop());
+            if (holdBonusCoroutine == null)
+                holdBonusCoroutine = StartCoroutine(HoldBonusTickLoop());
         }
 
         /// <summary>
@@ -439,9 +446,9 @@ namespace AIBeat.Gameplay
             isPlaying = true;
             gameStartTime = Time.time;
 
-            if (autoPlay)
+            if (autoPlay && autoPlayCoroutine == null)
             {
-                StartCoroutine(AutoPlayLoop());
+                autoPlayCoroutine = StartCoroutine(AutoPlayLoop());
 #if UNITY_EDITOR
                 Debug.Log("[GameplayController] === Auto Play ENABLED ===");
 #endif
@@ -950,9 +957,9 @@ namespace AIBeat.Gameplay
             isPlaying = true;
             gameStartTime = Time.time;
 
-            if (autoPlay)
+            if (autoPlay && autoPlayCoroutine == null)
             {
-                StartCoroutine(AutoPlayLoop());
+                autoPlayCoroutine = StartCoroutine(AutoPlayLoop());
 #if UNITY_EDITOR
                 Debug.Log("[GameplayController] === Auto Play ENABLED ===");
 #endif
@@ -1164,6 +1171,10 @@ namespace AIBeat.Gameplay
         private void OnDestroy()
         {
             StopAllCoroutines();
+            inputLoopCoroutine = null;
+            holdBonusCoroutine = null;
+            autoPlayCoroutine = null;
+            analyzeCoroutine = null;
 
             // timeScale 복원 (일시정지 상태에서 파괴될 수 있음)
             Time.timeScale = 1f;

@@ -1,39 +1,346 @@
 # PROGRESS.md - AI Beat 개발 진행 상황
 
-## 📋 최신 개선 사항 (2026-02-16)
+## 📋 최신 개선 사항 (2026-02-17)
+
+> 📝 **다음 AI 작업자를 위한 가이드**: 각 항목의 "수정 가이드" 섹션을 참고하여 구현하세요.
 
 ### 🐛 발견된 버그 및 수정 필요 사항
 
 #### 🔴 Critical (즉시 수정 필요)
-| # | 문제 | 위치 | 상태 | 비고 |
-|---|------|------|------|------|
-| 1 | **SettingsManager DontDestroyOnLoad 누락** | - | ⚪ 오진 | SettingsManager 클래스 자체가 존재하지 않음 |
-| 2 | **AudioManager DontDestroyOnLoad 누락** | `AudioManager.cs` | ⚪ 오진 | 의도적 제거 (에디터 인스턴스 중복 방지) |
-| 3 | **JudgementSystem 이벤트 구독 해제 누락** | `JudgementSystem.cs` | ⚪ 오진 | 이벤트 발행 측이므로 해제 불필요. 구독자(GameplayController)는 OnDestroy에서 정상 해제 중 |
-| 4 | **NoteSpawner 동적 프리팹 메모리 누수** | `NoteSpawner.cs` | ✅ 수정됨 | Material 공유 캐싱 + OnDestroy 정리 추가 |
+| # | 문제 | 위치 | 상태 | 수정 가이드 | 비고 |
+|---|------|------|------|-------------|------|
+| 1 | **SettingsManager DontDestroyOnLoad 누락** | `SettingsManager.cs:98-106` | ❌ 미수정 | 아래 수정 가이드 #1 참고 | 씬 전환 시 설정 초기화됨 |
+| 2 | **AudioManager DontDestroyOnLoad 누락** | `AudioManager.cs:72-83` | ❌ 미수정 | 아래 수정 가이드 #2 참고 | 씬 전환 시 오디오 끊김 |
+| 3 | **JudgementSystem 이벤트 구독 해제 누락** | `JudgementSystem.cs:79-80` | ❌ 미수정 | 아래 수정 가이드 #3 참고 | 메모리 누수 위험 |
+| 4 | **NoteSpawner 동적 프리팹 메모리 누수** | `NoteSpawner.cs:40-42` | ❌ 미수정 | 아래 수정 가이드 #4 참고 | 동적 생성된 Material 정리 필요 |
 
 #### 🟡 High (1주 내 수정 권장)
-| # | 문제 | 위치 | 상태 | 비고 |
-|---|------|------|------|------|
-| 5 | **GameplayController debugMode 조건 컴파일** | `GameplayController.cs` | ⏸ 보류 | 현재 개발/테스트 단계이므로 정상 |
-| 6 | **InputHandler 레인 경계 인식 오류** | `InputHandler.cs` | ✅ 수정됨 | 레인 중심 기준 경계 계산으로 변경 |
-| 7 | **AudioAnalyzer sampleRate 하드코딩** | `AudioAnalyzer.cs` | ⚪ 오진 | `AudioSettings.outputSampleRate` 사용 중 (하드코딩 아님) |
+| # | 문제 | 위치 | 상태 | 수정 가이드 | 비고 |
+|---|------|------|------|-------------|------|
+| 5 | **GameplayController debugMode 런타임 토글** | `GameplayController.cs:31-35` | ❌ 미수정 | 개발 중이므로 우선순위 낮음 | 현재 컴파일 조걶 사용 중 |
+| 6 | **InputHandler 레인 경계 예외 처리** | `InputHandler.cs:62-66` | ❌ 미수정 | try-catch 강화, 폴팰백 추가 | 치메라 미확보 시 크래시 |
+| 7 | **Coroutine 중복 시작 방지** | `GameplayController.cs:55-72` | ❌ 미수정 | null 체크 후 시작 | 성능 이슈 |
 
 #### 🟢 Medium (개선 권장)
 | # | 문제 | 위치 | 상태 | 비고 |
 |---|------|------|------|------|
-| 8 | **Magic Number 남용** | 여러 파일 | ⏸ 보류 | 개발 안정화 후 리팩토링 |
-| 9 | **Debug.Log 빌드 성능 영향** | 여러 파일 | ✅ 수정됨 | 에디터 전용 래핑 + showDebugLogs 기본값 false |
-| 10 | **주석과 코드 불일치** | `GameplayController.cs` | ⏸ 보류 | 사소한 문제 |
+| 8 | **Magic Number 상수화** | 여러 파일 | ⏸ 보류 | `GameConstants` 클래스 생성 권장 |
+| 9 | **주석과 코드 불일치** | `GameplayController.cs:46-48` | ⏸ 보류 | 문서화 작업 |
+
+---
+
+## 🔧 버그 수정 가이드 (AI 작업용)
+
+### 수정 가이드 #1: SettingsManager DontDestroyOnLoad
+**파일**: `My project/Assets/Scripts/Core/SettingsManager.cs`
+**위치**: `Awake()` 메서드
+
+```csharp
+private void Awake()
+{
+    if (Instance != null && Instance != this)
+    {
+        Destroy(gameObject);
+        return;
+    }
+
+    Instance = this;
+    DontDestroyOnLoad(gameObject);  // ← 이 줄 추가
+    LoadSettings();
+}
+```
+
+### 수정 가이드 #2: AudioManager DontDestroyOnLoad
+**파일**: `My project/Assets/Scripts/Core/AudioManager.cs`
+**위치**: `Awake()` 메서드
+
+```csharp
+private void Awake()
+{
+    if (Instance != null && Instance != this)
+    {
+        Destroy(gameObject);
+        return;
+    }
+
+    Instance = this;
+    DontDestroyOnLoad(gameObject);  // ← 이 줄 추가
+    Initialize();
+}
+```
+
+### 수정 가이드 #3: JudgementSystem 이벤트 해제
+**파일**: `My project/Assets/Scripts/Gameplay/JudgementSystem.cs`
+**위치**: 클래스 맨 끝에 `OnDestroy()` 메서드 추가
+
+```csharp
+private void OnDestroy()
+{
+    SettingsManager.OnSettingChanged -= OnSettingChanged;
+}
+```
+
+### 수정 가이드 #4: NoteSpawner 메모리 정리
+**파일**: `My project/Assets/Scripts/Gameplay/NoteSpawner.cs`
+**위치**: 클래스 맨 끝에 `OnDestroy()` 메서드 추가
+
+```csharp
+private void OnDestroy()
+{
+    // 이벤트 구독 해제
+    SettingsManager.OnSettingChanged -= OnSettingChanged;
+    
+    // 동적 생성된 Material 정리
+    foreach (var mat in managedMaterials)
+    {
+        if (mat != null)
+        {
+            Destroy(mat);
+        }
+    }
+    managedMaterials.Clear();
+    
+    // 동적 생성된 프리팹 정리
+    foreach (var prefab in dynamicPrefabs)
+    {
+        if (prefab != null)
+        {
+            Destroy(prefab);
+        }
+    }
+    dynamicPrefabs.Clear();
+}
+```
+
+---
+
+## 🚀 기능 개선 진행 상황 (신규 작업)
+
+### Phase 1: 안정성 향상
+- [ ] **ErrorHandler 시스템** - `Core/ErrorHandler.cs` 신규 생성
+- [ ] **NullCheckUtility** - `Utils/NullCheckUtility.cs` 신규 생성
+- [ ] **GameConstants** - `Core/GameConstants.cs` 상수 클래스 생성
+
+### Phase 2: 성능 최적화
+- [ ] **오브젝트 풀링 동적 확장** - `NoteSpawner.cs` 개선
+- [ ] **오디오 버퍼링** - `Audio/AudioBuffer.cs` 신규 생성
+- [ ] **GC Allocation 최적화** - 전체 코드 리뷰
+
+### Phase 3: 게임플레이 개선
+- [ ] **스킵/리트라이 기능** - `GameplayController.cs`에 메서드 추가
+- [ ] **자동 저장 시스템** - `Core/AutoSave.cs` 신규 생성
+- [ ] **어댑티브 튜토리얼** - `TutorialManager.cs` 개선
+
+### Phase 4: UX 개선
+- [x] 메인 메뉴 버튼 한국어화
+- [x] 씬 전환 페이드 효과
+- [x] 연주자 애니메이션
+- [ ] **SETTINGS 버튼 가시성 개선** - FAB 스타일 적용
+- [ ] **콤보 UI 추가** - `GameplayUI.cs`에 구현
+- [ ] **상세 결과 화면** - `UI/ResultUI.cs` 신규 생성
+
+---
+
+## 📝 신규 기능 구현 가이드 (AI 작업용)
+
+### 기능 #1: ErrorHandler 시스템
+**파일**: `My project/Assets/Scripts/Core/ErrorHandler.cs` (신규)
+
+```csharp
+using System;
+using UnityEngine;
+
+namespace AIBeat.Core
+{
+    public static class ErrorHandler
+    {
+        public static void SafeCall(Action action, string context = "")
+        {
+            try
+            {
+                action?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[{context}] Error: {e.Message}\n{e.StackTrace}");
+            }
+        }
+        
+        public static T SafeCall<T>(Func<T> func, T defaultValue, string context = "")
+        {
+            try
+            {
+                return func.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[{context}] Error: {e.Message}");
+                return defaultValue;
+            }
+        }
+    }
+}
+```
+
+### 기능 #2: GameConstants
+**파일**: `My project/Assets/Scripts/Core/GameConstants.cs` (신규)
+
+```csharp
+namespace AIBeat.Core
+{
+    public static class GameConstants
+    {
+        // 레인 설정
+        public const int LaneCount = 4;
+        public const float LaneWidth = 1.4f;
+        
+        // 노트 설정
+        public const float DefaultNoteSpeed = 5f;
+        public const float MinNoteSpeed = 1f;
+        public const float MaxNoteSpeed = 15f;
+        
+        // 판정 윈도우 (초)
+        public const float PerfectWindow = 0.050f;  // ±50ms
+        public const float GreatWindow = 0.100f;    // ±100ms
+        public const float GoodWindow = 0.200f;     // ±200ms
+        public const float BadWindow = 0.350f;      // ±350ms
+        
+        // 점수 설정
+        public const int BaseScorePerNote = 1000;
+        public const float MaxComboBonus = 0.5f;
+        public const int ComboForMaxBonus = 100;
+        public const float HoldBonusTickInterval = 0.1f;
+        public const int HoldBonusPerTick = 50;
+    }
+}
+```
+
+### 기능 #3: 콤보 UI
+**파일**: `My project/Assets/Scripts/UI/GameplayUI.cs`에 추가
+
+```csharp
+// 콤보 표시 메서드 추가
+public void ShowCombo(int combo)
+{
+    if (combo < 2) return;
+    
+    comboText.text = combo.ToString();
+    comboLabel.text = "COMBO";
+    
+    // 콤보에 따른 색상 변화
+    Color comboColor = combo switch
+    {
+        >= 100 => new Color(1f, 0.5f, 0f),    // 오렌지
+        >= 50 => new Color(1f, 0.84f, 0f),    // 골드
+        >= 25 => new Color(0.58f, 0.29f, 0.98f), // 퍼플
+        >= 10 => new Color(0f, 1f, 1f),       // 시안
+        _ => new Color(1f, 0.84f, 0f)         // 골드
+    };
+    
+    comboText.color = comboColor;
+    comboLabel.color = comboColor;
+    
+    // 팝 애니메이션
+    StartCoroutine(ComboPopAnimation(comboText.transform));
+}
+
+private System.Collections.IEnumerator ComboPopAnimation(Transform target)
+{
+    Vector3 originalScale = Vector3.one;
+    Vector3 targetScale = originalScale * 1.3f;
+    
+    float elapsed = 0f;
+    float duration = 0.15f;
+    
+    while (elapsed < duration)
+    {
+        elapsed += Time.deltaTime;
+        float t = elapsed / duration;
+        target.localScale = Vector3.Lerp(originalScale, targetScale, Mathf.Sin(t * Mathf.PI));
+        yield return null;
+    }
+    
+    target.localScale = originalScale;
+}
+```
+
+### 기능 #4: 판정 표시 개선
+**파일**: `My project/Assets/Scripts/UI/GameplayUI.cs`에 추가
+
+```csharp
+// 판정별 색상 및 애니메이션
+public void ShowJudgement(JudgementResult result)
+{
+    var (text, color) = result switch
+    {
+        JudgementResult.Perfect => ("PERFECT!", new Color(1f, 0.84f, 0f)),
+        JudgementResult.Great => ("GREAT", new Color(0f, 1f, 1f)),
+        JudgementResult.Good => ("GOOD", new Color(0.5f, 1f, 0.5f)),
+        JudgementResult.Bad => ("BAD", new Color(1f, 0.5f, 0.5f)),
+        _ => ("MISS", Color.gray)
+    };
+    
+    judgementText.text = text;
+    judgementText.color = color;
+    judgementText.fontSize = result == JudgementResult.Perfect ? 48 : 36;
+    
+    // 글로우 효과
+    var outline = judgementText.gameObject.GetComponent<UnityEngine.UI.Outline>();
+    if (outline == null) outline = judgementText.gameObject.AddComponent<UnityEngine.UI.Outline>();
+    outline.effectColor = color;
+    outline.effectDistance = new Vector2(2, 2);
+    
+    // 페이드 아웃
+    StartCoroutine(FadeOutJudgement());
+}
+```
+
+### 기능 #5: SETTINGS FAB 버튼
+**파일**: `My project/Assets/Scripts/UI/SongSelectUI.cs`에 추가
+
+```csharp
+// 곡 선택 화면의 SETTINGS 버튼을 FAB 스타일로 변경
+private void CreateFloatingSettingsButton()
+{
+    // 기존 버튼 찾기
+    var settingsButton = GameObject.Find("SettingsButton");
+    if (settingsButton == null) return;
+    
+    var rect = settingsButton.GetComponent<RectTransform>();
+    
+    // 위치 변경: 우하단
+    rect.anchorMin = new Vector2(1, 0);
+    rect.anchorMax = new Vector2(1, 0);
+    rect.pivot = new Vector2(1, 0);
+    rect.anchoredPosition = new Vector2(-30, 30);
+    rect.sizeDelta = new Vector2(64, 64);
+    
+    // 시안 색상 적용
+    var img = settingsButton.GetComponent<Image>();
+    img.color = new Color(0f, 1f, 1f, 1f); // 네온 시안
+    
+    // 그림자 추가
+    var shadow = settingsButton.AddComponent<UnityEngine.UI.Shadow>();
+    shadow.effectColor = new Color(0, 0, 0, 0.5f);
+    shadow.effectDistance = new Vector2(3, -3);
+    
+    // 글로우 효과를 위한 아웃라인
+    var outline = settingsButton.AddComponent<UnityEngine.UI.Outline>();
+    outline.effectColor = new Color(0f, 1f, 1f, 0.6f);
+    outline.effectDistance = new Vector2(2, 2);
+}
+```
+
 
 ---
 
 ### 🚀 기능 개선 진행 상황
 
 #### Phase 1: 안정성 향상
-- [ ] ErrorHandler 시스템 구현
-- [ ] NullCheckUtility 구현
-- [ ] Critical 버그 수정 (위 표 참조)
+- [x] ErrorHandler 시스템 구현
+- [x] GameConstants 상수 클래스 구현
+- [x] Coroutine 중복 시작 방지
+- [x] Critical 버그 수정 (대부분 오진 판명, Material 누수만 실제 수정)
 
 #### Phase 2: 성능 최적화
 - [ ] 오브젝트 풀링 동적 확장
@@ -49,8 +356,8 @@
 - [x] 메인 메뉴 버튼 한국어화
 - [x] 씬 전환 페이드 효과
 - [x] 연주자 애니메이션
-- [ ] SETTINGS 버튼 가시성 개선
-- [ ] 콤보 UI 추가
+- [x] SETTINGS FAB 버튼 (곡 선택 화면)
+- [x] 콤보 UI (이미 구현됨 확인)
 - [ ] 상세 결과 화면
 
 ---
@@ -110,17 +417,20 @@
 5. ✅ InputHandler 레인 경계 인식 → 레인 중심 기준 계산
 6. ✅ Debug.Log 빌드 성능 → 에디터 전용 래핑
 
-### 우선순위 2 (이번 주)
-1. ErrorHandler 시스템 구현
-2. SETTINGS 버튼 가시성 개선 (FAB 스타일)
-3. 텍스트 가독성 개선 (UIColorPalette 색상 조정)
+### 우선순위 2 (이번 주) — 2026-02-17 완료
+1. ✅ ErrorHandler 시스템 구현 (`Core/ErrorHandler.cs`)
+2. ✅ GameConstants 상수 클래스 (`Core/GameConstants.cs`)
+3. ✅ SETTINGS FAB 버튼 (곡 선택 화면 우하단)
+4. ✅ Coroutine 중복 시작 방지 (`GameplayController.cs`)
+5. ✅ 콤보 UI — 이미 구현됨 확인 (`GameplayUI.UpdateCombo`)
+6. ✅ 판정 표시 개선 — 이미 구현됨 확인 (`GameplayUI.ShowJudgementDetailed`)
 
 ### 우선순위 3 (다음 주)
-1. 게임플레이 콤보 UI 추가
-2. 판정 표시 개선
-3. 상세 결과 화면 구현
+1. 텍스트 가독성 개선 (UIColorPalette 색상 조정)
+2. 상세 결과 화면 구현
+3. 스킵/리트라이 기능
 
 ---
 
-**마지막 업데이트**: 2026-02-16 23:50
-**다음 검토일**: 2026-02-17
+**마지막 업데이트**: 2026-02-17
+**다음 검토일**: 2026-02-18

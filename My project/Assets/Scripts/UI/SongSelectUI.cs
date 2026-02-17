@@ -204,6 +204,9 @@ namespace AIBeat.UI
             songLibraryUI.Initialize(parentRect);
             songLibraryUI.Show(true);
 
+            // 설정 FAB 버튼 생성 (우하단)
+            CreateSettingsFAB();
+
             // 한국어 폰트 적용 (□□□ 방지)
             KoreanFontManager.ApplyFontToAll(gameObject);
         }
@@ -424,6 +427,275 @@ namespace AIBeat.UI
         private void OnBackClicked()
         {
             GameManager.Instance?.ReturnToMenu();
+        }
+
+        // 설정 패널/FAB 참조
+        private GameObject settingsFAB;
+        private GameObject settingsPanel;
+
+        /// <summary>
+        /// 설정 FAB 버튼 (우하단 플로팅 액션 버튼)
+        /// 이퀄라이저 바 위에 배치, 네온 시안 색상
+        /// </summary>
+        private void CreateSettingsFAB()
+        {
+            var existing = transform.Find("SettingsFAB");
+            if (existing != null) DestroyImmediate(existing.gameObject);
+
+            settingsFAB = new GameObject("SettingsFAB");
+            settingsFAB.transform.SetParent(transform, false);
+
+            var rect = settingsFAB.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1, 0);
+            rect.anchorMax = new Vector2(1, 0);
+            rect.pivot = new Vector2(1, 0);
+            rect.anchoredPosition = new Vector2(-25, 140); // 이퀄라이저(120px) 위
+            rect.sizeDelta = new Vector2(70, 70);
+
+            // 원형 배경 (시안)
+            var bg = settingsFAB.AddComponent<Image>();
+            bg.color = UIColorPalette.NEON_CYAN;
+
+            // 그림자
+            var shadow = settingsFAB.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0, 0, 0, 0.5f);
+            shadow.effectDistance = new Vector2(3, -3);
+
+            // 글로우 아웃라인
+            var outline = settingsFAB.AddComponent<Outline>();
+            outline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.6f);
+            outline.effectDistance = new Vector2(2, 2);
+
+            // 기어 아이콘
+            var iconGo = new GameObject("SettingsIcon");
+            iconGo.transform.SetParent(settingsFAB.transform, false);
+            var iconRect = iconGo.AddComponent<RectTransform>();
+            iconRect.anchorMin = Vector2.zero;
+            iconRect.anchorMax = Vector2.one;
+            iconRect.offsetMin = Vector2.zero;
+            iconRect.offsetMax = Vector2.zero;
+
+            var iconText = iconGo.AddComponent<TextMeshProUGUI>();
+            iconText.text = "\u2699"; // ⚙ 기어 유니코드
+            iconText.fontSize = 40;
+            iconText.color = Color.white;
+            iconText.alignment = TextAlignmentOptions.Center;
+            iconText.fontStyle = FontStyles.Bold;
+            iconText.raycastTarget = false;
+
+            // 버튼 컴포넌트
+            var btn = settingsFAB.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            btn.onClick.AddListener(ToggleSettingsPanel);
+        }
+
+        /// <summary>
+        /// 설정 패널 표시/숨기기 토글
+        /// </summary>
+        private void ToggleSettingsPanel()
+        {
+            if (settingsPanel == null)
+                CreateSettingsPanel();
+
+            bool isActive = settingsPanel.activeSelf;
+            settingsPanel.SetActive(!isActive);
+
+            if (!isActive)
+            {
+                // 열기 애니메이션
+                settingsPanel.transform.localScale = Vector3.zero;
+                UIAnimator.ScaleTo(this, settingsPanel, Vector3.one, 0.25f);
+            }
+        }
+
+        /// <summary>
+        /// 인라인 설정 패널 (노트 속도, 판정 오프셋, 배경 밝기)
+        /// </summary>
+        private void CreateSettingsPanel()
+        {
+            settingsPanel = new GameObject("SettingsPanel");
+            settingsPanel.transform.SetParent(transform, false);
+
+            var panelRect = settingsPanel.AddComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            // 반투명 배경 (터치 차단)
+            var overlay = settingsPanel.AddComponent<Image>();
+            overlay.color = new Color(0f, 0f, 0.02f, 0.85f);
+            overlay.raycastTarget = true;
+
+            // 설정 카드 (가운데)
+            var card = new GameObject("SettingsCard");
+            card.transform.SetParent(settingsPanel.transform, false);
+            var cardRect = card.AddComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.08f, 0.2f);
+            cardRect.anchorMax = new Vector2(0.92f, 0.8f);
+            cardRect.offsetMin = Vector2.zero;
+            cardRect.offsetMax = Vector2.zero;
+
+            var cardBg = card.AddComponent<Image>();
+            cardBg.color = new Color(0.02f, 0.02f, 0.08f, 0.95f);
+
+            var cardOutline = card.AddComponent<Outline>();
+            cardOutline.effectColor = UIColorPalette.NEON_CYAN;
+            cardOutline.effectDistance = new Vector2(2, -2);
+
+            // 세로 레이아웃
+            var vLayout = card.AddComponent<VerticalLayoutGroup>();
+            vLayout.padding = new RectOffset(30, 30, 25, 25);
+            vLayout.spacing = 20;
+            vLayout.childAlignment = TextAnchor.UpperCenter;
+            vLayout.childControlWidth = true;
+            vLayout.childControlHeight = false;
+            vLayout.childForceExpandWidth = true;
+            vLayout.childForceExpandHeight = false;
+
+            // 타이틀
+            CreateSettingsLabel(card.transform, "설정", 42, UIColorPalette.NEON_CYAN_BRIGHT, 60);
+
+            // 노트 속도 슬라이더
+            float noteSpeed = SettingsManager.Instance != null ? SettingsManager.Instance.NoteSpeed : 5f;
+            CreateSettingsSlider(card.transform, "노트 속도", noteSpeed, 1f, 10f, (val) =>
+            {
+                if (SettingsManager.Instance != null)
+                    SettingsManager.Instance.NoteSpeed = val;
+            });
+
+            // 판정 오프셋 슬라이더
+            float offset = SettingsManager.Instance != null ? SettingsManager.Instance.JudgementOffset * 1000f : 0f;
+            CreateSettingsSlider(card.transform, "판정 오프셋 (ms)", offset, -100f, 100f, (val) =>
+            {
+                if (SettingsManager.Instance != null)
+                    SettingsManager.Instance.JudgementOffset = val / 1000f;
+            });
+
+            // BGM 볼륨
+            float bgmVol = SettingsManager.Instance != null ? SettingsManager.Instance.BGMVolume * 100f : 80f;
+            CreateSettingsSlider(card.transform, "음악 볼륨", bgmVol, 0f, 100f, (val) =>
+            {
+                if (SettingsManager.Instance != null)
+                    SettingsManager.Instance.BGMVolume = val / 100f;
+            });
+
+            // 닫기 버튼
+            var closeBtn = UIButtonStyleHelper.CreateStyledButton(card.transform, "CloseSettingsBtn", "닫기",
+                preferredHeight: 70f, fontSize: 32f);
+            closeBtn.onClick.AddListener(() => settingsPanel.SetActive(false));
+
+            // 최상위 렌더링
+            settingsPanel.transform.SetAsLastSibling();
+
+            // 한국어 폰트 적용
+            KoreanFontManager.ApplyFontToAll(settingsPanel);
+        }
+
+        private void CreateSettingsLabel(Transform parent, string text, float fontSize, Color color, float height)
+        {
+            var go = new GameObject("Label_" + text);
+            go.transform.SetParent(parent, false);
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = height;
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.color = color;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontStyle = FontStyles.Bold;
+        }
+
+        private void CreateSettingsSlider(Transform parent, string label, float value, float min, float max, System.Action<float> onChanged)
+        {
+            var container = new GameObject("Slider_" + label);
+            container.transform.SetParent(parent, false);
+            var containerLE = container.AddComponent<LayoutElement>();
+            containerLE.preferredHeight = 90;
+
+            var vLayout = container.AddComponent<VerticalLayoutGroup>();
+            vLayout.spacing = 5;
+            vLayout.childControlWidth = true;
+            vLayout.childControlHeight = false;
+            vLayout.childForceExpandWidth = true;
+
+            // 라벨 + 값
+            var labelGo = new GameObject("Label");
+            labelGo.transform.SetParent(container.transform, false);
+            var labelLE = labelGo.AddComponent<LayoutElement>();
+            labelLE.preferredHeight = 30;
+            var labelTmp = labelGo.AddComponent<TextMeshProUGUI>();
+            labelTmp.text = $"{label}: {value:F0}";
+            labelTmp.fontSize = 24;
+            labelTmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
+
+            // 슬라이더
+            var sliderGo = new GameObject("Slider");
+            sliderGo.transform.SetParent(container.transform, false);
+            var sliderLE = sliderGo.AddComponent<LayoutElement>();
+            sliderLE.preferredHeight = 40;
+
+            // 슬라이더 배경
+            var sliderBgGo = new GameObject("Background");
+            sliderBgGo.transform.SetParent(sliderGo.transform, false);
+            var sliderBgRect = sliderBgGo.AddComponent<RectTransform>();
+            sliderBgRect.anchorMin = Vector2.zero;
+            sliderBgRect.anchorMax = Vector2.one;
+            sliderBgRect.offsetMin = Vector2.zero;
+            sliderBgRect.offsetMax = Vector2.zero;
+            var sliderBgImg = sliderBgGo.AddComponent<Image>();
+            sliderBgImg.color = new Color(0.05f, 0.05f, 0.12f, 0.9f);
+
+            // 필 영역
+            var fillArea = new GameObject("Fill Area");
+            fillArea.transform.SetParent(sliderGo.transform, false);
+            var fillAreaRect = fillArea.AddComponent<RectTransform>();
+            fillAreaRect.anchorMin = Vector2.zero;
+            fillAreaRect.anchorMax = Vector2.one;
+            fillAreaRect.offsetMin = new Vector2(5, 5);
+            fillAreaRect.offsetMax = new Vector2(-5, -5);
+
+            var fill = new GameObject("Fill");
+            fill.transform.SetParent(fillArea.transform, false);
+            var fillRect = fill.AddComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            var fillImg = fill.AddComponent<Image>();
+            fillImg.color = UIColorPalette.NEON_MAGENTA;
+
+            // 핸들 영역
+            var handleArea = new GameObject("Handle Slide Area");
+            handleArea.transform.SetParent(sliderGo.transform, false);
+            var handleAreaRect = handleArea.AddComponent<RectTransform>();
+            handleAreaRect.anchorMin = Vector2.zero;
+            handleAreaRect.anchorMax = Vector2.one;
+            handleAreaRect.offsetMin = new Vector2(10, 0);
+            handleAreaRect.offsetMax = new Vector2(-10, 0);
+
+            var handle = new GameObject("Handle");
+            handle.transform.SetParent(handleArea.transform, false);
+            var handleRect = handle.AddComponent<RectTransform>();
+            handleRect.sizeDelta = new Vector2(30, 0);
+            var handleImg = handle.AddComponent<Image>();
+            handleImg.color = Color.white;
+
+            // Slider 컴포넌트
+            var slider = sliderGo.AddComponent<Slider>();
+            slider.fillRect = fillRect;
+            slider.handleRect = handleRect;
+            slider.minValue = min;
+            slider.maxValue = max;
+            slider.value = value;
+            slider.wholeNumbers = (max - min > 10); // 범위가 크면 정수
+
+            slider.onValueChanged.AddListener((val) =>
+            {
+                labelTmp.text = $"{label}: {val:F0}";
+                onChanged?.Invoke(val);
+            });
         }
 
         private void EnsureCanvasScaler()

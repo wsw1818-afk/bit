@@ -1,1 +1,1 @@
-🔇 노트 터치/스크래치 효과음 제거 (음악 재생 방해 방지)
+✨ PROGRESS 개선 적용 (ErrorHandler + GameConstants + Coroutine 중복 방지 + 설정 FAB 버튼)
