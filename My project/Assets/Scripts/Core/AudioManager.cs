@@ -247,27 +247,12 @@ namespace AIBeat.Core
         /// </summary>
         public void PlayHitSound(JudgementResult result)
         {
-            AudioClip clip = result switch
-            {
-                JudgementResult.Perfect => perfectSound,
-                JudgementResult.Great => greatSound,
-                JudgementResult.Good => goodSound,
-                JudgementResult.Bad => badSound,
-                _ => null
-            };
-
-            if (clip != null)
-            {
-                sfxSource.PlayOneShot(clip, sfxVolume);
-            }
+            // 노트 터치 효과음 비활성화 - 음악 재생에 방해됨
         }
 
         public void PlayScratchSound()
         {
-            if (scratchSound != null)
-            {
-                sfxSource.PlayOneShot(scratchSound, sfxVolume);
-            }
+            // 스크래치 효과음 비활성화 - 음악 재생에 방해됨
         }
 
         public void PlaySFX(AudioClip clip)

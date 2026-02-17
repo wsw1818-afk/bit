@@ -1,1 +1,1 @@
-🐛 Android 앱 실행 수정 (UnityPlayerGameActivity + AppCompat 테마 + NullRef 방지)
+🔇 노트 터치/스크래치 효과음 제거 (음악 재생 방해 방지)
