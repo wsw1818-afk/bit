@@ -11,4 +11,19 @@
     <!-- Android 13+: 오디오 파일 접근 -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
+    <application>
+        <activity android:name="com.unity3d.player.UnityPlayerActivity"
+            android:theme="@style/UnityThemeSelector"
+            android:configChanges="fontScale|keyboard|keyboardHidden|locale|mnc|mcc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|touchscreen|density|layoutDirection"
+            android:exported="true"
+            android:hardwareAccelerated="false"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+        </activity>
+    </application>
+
 </manifest>
