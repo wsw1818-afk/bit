@@ -717,7 +717,8 @@ namespace AIBeat.Gameplay
                 yield break;
             }
 
-            // 분석 결과로 노트 생성
+            // 난이도 전달 후 노트 생성
+            smartBeatMapper.SetDifficulty(currentSong.Difficulty);
             var notes = smartBeatMapper.GenerateNotes(result);
 
             // SongData에 분석 결과 반영
@@ -957,6 +958,7 @@ namespace AIBeat.Gameplay
             List<NoteData> notes;
             if (result != null)
             {
+                smartBeatMapper.SetDifficulty(currentSong.Difficulty);
                 notes = smartBeatMapper.GenerateNotes(result);
                 if (currentSong.BPM <= 0) currentSong.BPM = result.BPM;
                 currentSong.Sections = smartBeatMapper.ConvertSections(result);

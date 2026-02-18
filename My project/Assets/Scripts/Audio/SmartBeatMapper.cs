@@ -31,6 +31,14 @@ namespace AIBeat.Audio
         private static readonly int[] BAND_TO_LANE = { 0, 1, 1, 2, 2, 1, 3, 3 };
 
         /// <summary>
+        /// 외부에서 난이도 설정 (SongData.Difficulty 연동)
+        /// </summary>
+        public void SetDifficulty(int diff)
+        {
+            difficulty = Mathf.Clamp(diff, 1, 10);
+        }
+
+        /// <summary>
         /// 분석 결과 → NoteData 리스트 변환
         /// </summary>
         public List<NoteData> GenerateNotes(OfflineAudioAnalyzer.AnalysisResult analysis)

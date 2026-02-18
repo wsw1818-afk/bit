@@ -38,6 +38,10 @@ namespace AIBeat.UI
         // 삭제 확인 상태
         private int deleteConfirmIndex = -1;
 
+        // 난이도 선택 팝업
+        private GameObject difficultyPopup;
+        private SongRecord pendingSong;
+
         public void Initialize(RectTransform parentPanel)
         {
             if (rootPanel != null) return;
@@ -377,15 +381,31 @@ namespace AIBeat.UI
             var song = displayedSongs[index];
             Debug.Log($"[SongLibrary] 곡 선택: {song.Title}");
 
-            if (!string.IsNullOrEmpty(song.AudioFileName))
+            // 난이도 선택 팝업 표시
+            pendingSong = song;
+            ShowDifficultyPopup();
+        }
+
+        /// <summary>
+        /// 선택된 난이도로 게임 시작
+        /// </summary>
+        private void StartGameWithDifficulty(int difficultyLevel)
+        {
+            if (pendingSong == null) return;
+
+            pendingSong.DifficultyLevel = difficultyLevel;
+            CloseDifficultyPopup();
+
+            if (!string.IsNullOrEmpty(pendingSong.AudioFileName))
             {
-                StartCoroutine(LoadAudioAndStartGame(song));
+                StartCoroutine(LoadAudioAndStartGame(pendingSong));
             }
             else
             {
-                var songData = CreateSongDataFromRecord(song, null);
+                var songData = CreateSongDataFromRecord(pendingSong, null);
                 GameManager.Instance?.StartGame(songData);
             }
+            pendingSong = null;
         }
 
         private IEnumerator LoadAudioAndStartGame(SongRecord song)
@@ -448,6 +468,209 @@ namespace AIBeat.UI
                     yield return new WaitForSeconds(2f);
                     RefreshSongList();
                 }
+            }
+        }
+
+        /// <summary>
+        /// 난이도 선택 팝업 표시
+        /// </summary>
+        private void ShowDifficultyPopup()
+        {
+            CloseDifficultyPopup();
+
+            // 전체 화면 오버레이
+            difficultyPopup = new GameObject("DifficultyPopup");
+            difficultyPopup.transform.SetParent(rootPanel.transform.parent, false);
+            var popupRect = difficultyPopup.AddComponent<RectTransform>();
+            popupRect.anchorMin = Vector2.zero;
+            popupRect.anchorMax = Vector2.one;
+            popupRect.offsetMin = Vector2.zero;
+            popupRect.offsetMax = Vector2.zero;
+
+            // 반투명 배경 (터치 차단)
+            var bgImage = difficultyPopup.AddComponent<Image>();
+            bgImage.color = new Color(0f, 0f, 0f, 0.85f);
+
+            // 중앙 카드
+            var card = new GameObject("Card");
+            card.transform.SetParent(difficultyPopup.transform, false);
+            var cardRect = card.AddComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.5f, 0.5f);
+            cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.sizeDelta = new Vector2(700f, 650f);
+            cardRect.anchoredPosition = Vector2.zero;
+            var cardImage = card.AddComponent<Image>();
+            cardImage.color = new Color(0.12f, 0.12f, 0.18f, 1f);
+
+            // 곡 제목
+            var titleObj = new GameObject("SongTitle");
+            titleObj.transform.SetParent(card.transform, false);
+            var titleRect = titleObj.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.anchoredPosition = new Vector2(0f, -30f);
+            titleRect.sizeDelta = new Vector2(-40f, 50f);
+            var titleText = titleObj.AddComponent<TextMeshProUGUI>();
+            titleText.text = pendingSong?.Title ?? "곡 선택";
+            titleText.fontSize = 28;
+            titleText.alignment = TextAlignmentOptions.Center;
+            titleText.color = Color.white;
+
+            // "난이도 선택" 라벨
+            var labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(card.transform, false);
+            var labelRect = labelObj.AddComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0f, 1f);
+            labelRect.anchorMax = new Vector2(1f, 1f);
+            labelRect.pivot = new Vector2(0.5f, 1f);
+            labelRect.anchoredPosition = new Vector2(0f, -85f);
+            labelRect.sizeDelta = new Vector2(-40f, 35f);
+            var labelText = labelObj.AddComponent<TextMeshProUGUI>();
+            labelText.text = "난이도를 선택하세요";
+            labelText.fontSize = 22;
+            labelText.alignment = TextAlignmentOptions.Center;
+            labelText.color = new Color(0.7f, 0.7f, 0.7f);
+
+            // 난이도 버튼 3개
+            float btnStartY = -150f;
+            float btnHeight = 120f;
+            float btnSpacing = 15f;
+
+            // 쉬움 (Lv.3)
+            CreateDifficultyButton(card.transform, "쉬움", "노트 적음 · 느린 간격", 3,
+                new Color(0.2f, 0.7f, 0.3f), btnStartY);
+
+            // 보통 (Lv.5)
+            CreateDifficultyButton(card.transform, "보통", "기본 난이도", 5,
+                new Color(0.9f, 0.7f, 0.1f), btnStartY - (btnHeight + btnSpacing));
+
+            // 어려움 (Lv.8)
+            CreateDifficultyButton(card.transform, "어려움", "노트 많음 · 동시타격", 8,
+                new Color(0.9f, 0.2f, 0.2f), btnStartY - 2 * (btnHeight + btnSpacing));
+
+            // 닫기 버튼
+            var closeObj = new GameObject("CloseBtn");
+            closeObj.transform.SetParent(card.transform, false);
+            var closeRect = closeObj.AddComponent<RectTransform>();
+            closeRect.anchorMin = new Vector2(0f, 0f);
+            closeRect.anchorMax = new Vector2(1f, 0f);
+            closeRect.pivot = new Vector2(0.5f, 0f);
+            closeRect.anchoredPosition = new Vector2(0f, 15f);
+            closeRect.sizeDelta = new Vector2(-60f, 50f);
+            var closeBtnImage = closeObj.AddComponent<Image>();
+            closeBtnImage.color = new Color(0.3f, 0.3f, 0.35f);
+            var closeBtn = closeObj.AddComponent<Button>();
+            closeBtn.targetGraphic = closeBtnImage;
+            closeBtn.onClick.AddListener(() => CloseDifficultyPopup());
+
+            var closeTxt = new GameObject("Text");
+            closeTxt.transform.SetParent(closeObj.transform, false);
+            var closeTxtRect = closeTxt.AddComponent<RectTransform>();
+            closeTxtRect.anchorMin = Vector2.zero;
+            closeTxtRect.anchorMax = Vector2.one;
+            closeTxtRect.offsetMin = Vector2.zero;
+            closeTxtRect.offsetMax = Vector2.zero;
+            var closeTmp = closeTxt.AddComponent<TextMeshProUGUI>();
+            closeTmp.text = "취소";
+            closeTmp.fontSize = 22;
+            closeTmp.alignment = TextAlignmentOptions.Center;
+            closeTmp.color = Color.white;
+
+            KoreanFontManager.ApplyFontToAll(difficultyPopup);
+        }
+
+        /// <summary>
+        /// 난이도 버튼 생성
+        /// </summary>
+        private void CreateDifficultyButton(Transform parent, string label, string desc, int level, Color accentColor, float yPos)
+        {
+            var btnObj = new GameObject($"Btn_{label}");
+            btnObj.transform.SetParent(parent, false);
+            var btnRect = btnObj.AddComponent<RectTransform>();
+            btnRect.anchorMin = new Vector2(0f, 1f);
+            btnRect.anchorMax = new Vector2(1f, 1f);
+            btnRect.pivot = new Vector2(0.5f, 1f);
+            btnRect.anchoredPosition = new Vector2(0f, yPos);
+            btnRect.sizeDelta = new Vector2(-60f, 120f);
+
+            var btnImage = btnObj.AddComponent<Image>();
+            btnImage.color = new Color(0.15f, 0.15f, 0.22f);
+            var btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = btnImage;
+
+            // 좌측 액센트 바
+            var accentBar = new GameObject("Accent");
+            accentBar.transform.SetParent(btnObj.transform, false);
+            var accentRect = accentBar.AddComponent<RectTransform>();
+            accentRect.anchorMin = new Vector2(0f, 0f);
+            accentRect.anchorMax = new Vector2(0f, 1f);
+            accentRect.pivot = new Vector2(0f, 0.5f);
+            accentRect.anchoredPosition = Vector2.zero;
+            accentRect.sizeDelta = new Vector2(8f, 0f);
+            var accentImage = accentBar.AddComponent<Image>();
+            accentImage.color = accentColor;
+            accentImage.raycastTarget = false;
+
+            // 난이도 이름
+            var nameObj = new GameObject("Name");
+            nameObj.transform.SetParent(btnObj.transform, false);
+            var nameRect = nameObj.AddComponent<RectTransform>();
+            nameRect.anchorMin = new Vector2(0f, 0.5f);
+            nameRect.anchorMax = new Vector2(0.7f, 1f);
+            nameRect.offsetMin = new Vector2(25f, 0f);
+            nameRect.offsetMax = new Vector2(0f, -10f);
+            var nameTmp = nameObj.AddComponent<TextMeshProUGUI>();
+            nameTmp.text = label;
+            nameTmp.fontSize = 30;
+            nameTmp.fontStyle = FontStyles.Bold;
+            nameTmp.alignment = TextAlignmentOptions.BottomLeft;
+            nameTmp.color = accentColor;
+            nameTmp.raycastTarget = false;
+
+            // 설명
+            var descObj = new GameObject("Desc");
+            descObj.transform.SetParent(btnObj.transform, false);
+            var descRect = descObj.AddComponent<RectTransform>();
+            descRect.anchorMin = new Vector2(0f, 0f);
+            descRect.anchorMax = new Vector2(0.7f, 0.5f);
+            descRect.offsetMin = new Vector2(25f, 10f);
+            descRect.offsetMax = Vector2.zero;
+            var descTmp = descObj.AddComponent<TextMeshProUGUI>();
+            descTmp.text = desc;
+            descTmp.fontSize = 18;
+            descTmp.alignment = TextAlignmentOptions.TopLeft;
+            descTmp.color = new Color(0.6f, 0.6f, 0.6f);
+            descTmp.raycastTarget = false;
+
+            // 우측 레벨 표시
+            var lvObj = new GameObject("Level");
+            lvObj.transform.SetParent(btnObj.transform, false);
+            var lvRect = lvObj.AddComponent<RectTransform>();
+            lvRect.anchorMin = new Vector2(0.7f, 0f);
+            lvRect.anchorMax = new Vector2(1f, 1f);
+            lvRect.offsetMin = Vector2.zero;
+            lvRect.offsetMax = new Vector2(-15f, 0f);
+            var lvTmp = lvObj.AddComponent<TextMeshProUGUI>();
+            lvTmp.text = $"Lv.{level}";
+            lvTmp.fontSize = 26;
+            lvTmp.alignment = TextAlignmentOptions.MidlineRight;
+            lvTmp.color = new Color(0.5f, 0.5f, 0.5f);
+            lvTmp.raycastTarget = false;
+
+            int capturedLevel = level;
+            btn.onClick.AddListener(() => StartGameWithDifficulty(capturedLevel));
+        }
+
+        /// <summary>
+        /// 난이도 팝업 닫기
+        /// </summary>
+        private void CloseDifficultyPopup()
+        {
+            if (difficultyPopup != null)
+            {
+                Destroy(difficultyPopup);
+                difficultyPopup = null;
             }
         }
 

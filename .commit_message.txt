@@ -1,1 +1,1 @@
-🐛 BackgroundDim 셰이더 수정 (Unlit/Color→Sprites/Default, 투명도 지원)
+🎮 난이도 선택 기능 추가 (쉬움/보통/어려움 팝업 + SmartBeatMapper 난이도 전달)
