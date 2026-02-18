@@ -497,6 +497,16 @@ private void CreateFloatingSettingsButton()
 - [x] **ResultPanel 렌더링 안 되는 근본 원인 수정** (아래 상세)
 - [x] Force Capture / Force Show Result 에디터 도구 추가
 - [x] 전체 게임 플로우 MCP 캡처 검증 완료 (Splash→MainMenu→SongSelect→Gameplay→Result)
+- [x] **AI 생성 이미지 적용 검증 완료** (아래 상세)
+
+#### 🖼️ AI 생성 이미지(Gemini) 적용 검증 결과
+| 이미지 | 씬 | 적용 여부 | 검증 방법 | 비고 |
+|--------|-----|----------|-----------|------|
+| **Splash_BG.png** | SplashScene | ✅ 적용됨 | 콘솔: `[SplashController] Loaded Splash_BG` | 보라색 그라데이션 배경 |
+| **Menu_BG.png** | MainMenuScene | ✅ 적용됨 | 콘솔: `[MainMenuUI] Loaded Menu_BG as background` + 캡처 | 어두운 네이비 그라데이션 + DarkOverlay(0.6α) |
+| **SongSelect_BG.png** | SongSelectScene | ✅ 적용됨 | 콘솔: `[SongSelectUI] Loaded SongSelect_BG as background` + 캡처 | 어두운 그레이/블랙 그라데이션 |
+| **Default_Album_Art.jpg** | SongSelectScene | ✅ 적용됨 | 콘솔: `Texture2D→Sprite 폴백 성공 (1024x2048)` + 캡처 | 사이버펑크 DJ 캐릭터, 곡 썸네일에 표시 |
+| **Gameplay_BG.jpg** | GameplayScene | ⚠️ 의도적 미사용 | 코드 주석 + 캡처 확인 | JPG→투명도 미지원→체크보드 문제. 대신 ProceduralImageGenerator 사용 |
 
 #### 🔥 ResultPanel 렌더링 버그 근본 원인 (중요 교훈)
 **증상**: ResultPanel이 `activeSelf: true`인데 화면에 전혀 렌더링 되지 않음 (초록색 디버그 배경도 안 보임)

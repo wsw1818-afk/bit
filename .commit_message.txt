@@ -1,1 +1,1 @@
-🐛 ResultPanel 렌더링 안 되는 근본 원인 수정 (씬 SerializedField가 빈 'New Game Object' 참조 → CreateResultPanel 미호출) + stale 오브젝트 3개 제거 + Force Capture 에디터 도구 추가
+🖼️ AI 생성 이미지(Gemini) 5개 적용 검증 완료 - Splash/Menu/SongSelect/AlbumArt ✅ 정상, Gameplay_BG ⚠️ 의도적 미사용(JPG 투명도 미지원)
