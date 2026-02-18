@@ -29,6 +29,8 @@ namespace AIBeat.Gameplay
 
         [Header("Pool Settings")]
         [SerializeField] private int poolSize = 100;
+        [SerializeField] private int maxPoolSize = 200;
+        [SerializeField] private int poolExpandAmount = 20;
 
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
@@ -40,6 +42,9 @@ namespace AIBeat.Gameplay
         // 메모리 관리: 동적 생성된 프리팹과 머티리얼 추적
         private List<GameObject> dynamicPrefabs = new List<GameObject>();
         private List<Material> managedMaterials = new List<Material>();
+
+        // 풀 동적 확장: 타입별 총 생성 수 추적
+        private Dictionary<NoteType, int> poolTotalCounts = new Dictionary<NoteType, int>();
 
         private float currentMusicTime;
         private bool isSpawning;
@@ -163,6 +168,11 @@ namespace AIBeat.Gameplay
             notePools[NoteType.Tap] = CreatePool(tapNotePrefab, poolSize);
             notePools[NoteType.Long] = CreatePool(longNotePrefab, poolSize / 2);
             notePools[NoteType.Scratch] = CreatePool(scratchNotePrefab, poolSize / 4);
+
+            // 풀 총 개수 추적 초기화
+            poolTotalCounts[NoteType.Tap] = poolSize;
+            poolTotalCounts[NoteType.Long] = poolSize / 2;
+            poolTotalCounts[NoteType.Scratch] = poolSize / 4;
 
 #if UNITY_EDITOR
             Debug.Log($"[NoteSpawner] Pool initialized - Tap:{notePools[NoteType.Tap].Count}, Long:{notePools[NoteType.Long].Count}, Scratch:{notePools[NoteType.Scratch].Count}");
@@ -504,10 +514,20 @@ namespace AIBeat.Gameplay
 
         private void SpawnNote(NoteData data)
         {
-            if (!notePools.TryGetValue(data.Type, out var pool) || pool.Count == 0)
+            if (!notePools.TryGetValue(data.Type, out var pool))
             {
-                Debug.LogWarning($"[NoteSpawner] No available notes in pool for type: {data.Type}");
+                Debug.LogWarning($"[NoteSpawner] No pool for type: {data.Type}");
                 return;
+            }
+
+            // 풀이 비었으면 동적 확장 시도
+            if (pool.Count == 0)
+            {
+                if (!ExpandPool(data.Type))
+                {
+                    Debug.LogWarning($"[NoteSpawner] Pool exhausted for {data.Type} (max={maxPoolSize})");
+                    return;
+                }
             }
 
             var note = pool.Dequeue();
@@ -572,6 +592,67 @@ namespace AIBeat.Gameplay
                     activeNotes.RemoveAt(i);
                 }
             }
+        }
+
+        /// <summary>
+        /// 풀 동적 확장: maxPoolSize까지 poolExpandAmount개씩 추가
+        /// </summary>
+        private bool ExpandPool(NoteType type)
+        {
+            if (!poolTotalCounts.TryGetValue(type, out int currentTotal) || currentTotal >= maxPoolSize)
+                return false;
+
+            GameObject prefab = type switch
+            {
+                NoteType.Tap => tapNotePrefab,
+                NoteType.Long => longNotePrefab,
+                NoteType.Scratch => scratchNotePrefab,
+                _ => null
+            };
+
+            if (prefab == null) return false;
+
+            int toAdd = Mathf.Min(poolExpandAmount, maxPoolSize - currentTotal);
+            var pool = notePools[type];
+
+            for (int i = 0; i < toAdd; i++)
+            {
+                var obj = Instantiate(prefab, transform);
+                obj.SetActive(false);
+
+                var note = obj.GetComponent<Note>();
+                if (note == null) note = obj.AddComponent<Note>();
+
+                var sr = obj.GetComponent<SpriteRenderer>();
+                if (sr == null)
+                {
+                    var mf = obj.GetComponent<MeshFilter>();
+                    if (mf == null) mf = obj.AddComponent<MeshFilter>();
+                    if (mf.sharedMesh == null)
+                    {
+                        mf.sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+                        if (mf.sharedMesh == null)
+                        {
+                            var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                            mf.sharedMesh = tempQuad.GetComponent<MeshFilter>().sharedMesh;
+                            Destroy(tempQuad);
+                        }
+                    }
+
+                    var mr = obj.GetComponent<MeshRenderer>();
+                    if (mr == null) mr = obj.AddComponent<MeshRenderer>();
+                    EnsureUnlitMaterial(mr);
+                }
+
+                pool.Enqueue(note);
+            }
+
+            poolTotalCounts[type] = currentTotal + toAdd;
+
+#if UNITY_EDITOR
+            Debug.Log($"[NoteSpawner] Pool expanded: {type} +{toAdd} (total={poolTotalCounts[type]})");
+#endif
+            return true;
         }
 
         private void ReturnToPool(Note note)

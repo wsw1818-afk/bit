@@ -26,18 +26,18 @@
 | H-3 | ~~동적 프리팹 메모리 누수~~ | `NoteSpawner.cs` | ✅ 수정완료 | C-4와 동일 (OnDestroy에서 정리) |
 
 ### 🚀 기능 개선 (5개)
-- [ ] 오브젝트 풀링 동적 확장
-- [ ] GC Allocation 최적화 (ListPool)
+- [x] 오브젝트 풀링 동적 확장 ✅ NoteSpawner에 ExpandPool 구현 (maxPoolSize=200, 20개씩 확장)
+- [x] GC Allocation 최적화 (ListPool) ✅ `Utils/ListPool.cs` 생성
 - [x] 콤보 UI 강화 ✅ GameplayUI.UpdateCombo 구현됨
 - [x] 판정 표시 개선 (Early/Late) ✅ GameplayUI.ShowJudgementDetailed 구현됨
-- [ ] 스킵/리트라이 기능
+- [x] 스킵/리트라이 기능 ✅ GameplayController.SkipToResult/QuickRestart 구현
 
-### 📁 신규 파일 (5개)
-- [x] `GameConstants.cs` - 상수 정의 ✅ `Scripts/Core/` 에 생성됨
-- [x] `ErrorHandler.cs` - 예외 처리 ✅ `Scripts/Core/` 에 생성됨
-- [ ] `AutoSave.cs` - 자동 저장
-- [ ] `ListPool.cs` - List 풀링
-- [ ] `AudioBuffer.cs` - 오디오 버퍼링
+### 📁 신규 파일 (5개→8개)
+- [x] `GameConstants.cs` - 상수 정의 ✅ `Scripts/Core/`
+- [x] `ErrorHandler.cs` - 예외 처리 ✅ `Scripts/Core/`
+- [x] `AutoSave.cs` - 자동 저장 ✅ `Scripts/Core/`
+- [x] `ListPool.cs` - List 풀링 ✅ `Scripts/Utils/`
+- [x] `AudioBuffer.cs` - 오디오 버퍼링 ✅ `Scripts/Audio/`
 
 ---
 
@@ -165,13 +165,13 @@ private void OnDestroy()
 - [x] **GameConstants** - `Core/GameConstants.cs` ✅ 생성 완료
 
 ### Phase 2: 성능 최적화
-- [ ] **오브젝트 풀링 동적 확장** - `NoteSpawner.cs` 개선
-- [ ] **오디오 버퍼링** - `Audio/AudioBuffer.cs` 신규 생성
-- [ ] **GC Allocation 최적화** - 전체 코드 리뷰
+- [x] **오브젝트 풀링 동적 확장** - ✅ `NoteSpawner.cs` ExpandPool 구현
+- [x] **오디오 버퍼링** - ✅ `Audio/AudioBuffer.cs` 생성
+- [x] **GC Allocation 최적화** - ✅ `Utils/ListPool.cs` 생성
 
 ### Phase 3: 게임플레이 개선
-- [ ] **스킵/리트라이 기능** - `GameplayController.cs`에 메서드 추가
-- [ ] **자동 저장 시스템** - `Core/AutoSave.cs` 신규 생성
+- [x] **스킵/리트라이 기능** - ✅ `GameplayController.cs` SkipToResult/QuickRestart 추가
+- [x] **자동 저장 시스템** - ✅ `Core/AutoSave.cs` 생성
 - [ ] **어댑티브 튜토리얼** - `TutorialManager.cs` 개선
 
 ### Phase 4: UX 개선
@@ -386,13 +386,13 @@ private void CreateFloatingSettingsButton()
 - [x] Critical 버그 수정 (대부분 오진 판명, Material 누수만 실제 수정)
 
 #### Phase 2: 성능 최적화
-- [ ] 오브젝트 풀링 동적 확장
-- [ ] 오디오 버퍼링 구현
-- [ ] GC Allocation 최적화
+- [x] 오브젝트 풀링 동적 확장
+- [x] 오디오 버퍼링 구현
+- [x] GC Allocation 최적화
 
 #### Phase 3: 게임플레이 개선
-- [ ] 스킵/리트라이 기능
-- [ ] 자동 저장 시스템
+- [x] 스킵/리트라이 기능
+- [x] 자동 저장 시스템
 - [ ] 어댑티브 튜토리얼
 
 #### Phase 4: UX 개선
@@ -777,8 +777,8 @@ public static class ErrorHandler
 #### 중우선순위 (다음)
 - [x] **ErrorHandler** 시스템
 - [x] **GameConstants** 상수화
-- [ ] **오브젝트 풀** 동적 확장
-- [ ] **자동 저장** 시스템
+- [x] **오브젝트 풀** 동적 확장
+- [x] **자동 저장** 시스템
 
 ### 6. 📁 신규 파일 목록
 
@@ -817,5 +817,5 @@ public static class ErrorHandler
 
 ---
 
-**마지막 업데이트**: 2026-02-18 (PROGRESS + BUG_FIX_PLAN 전체 일관성 검증 및 업데이트)
+**마지막 업데이트**: 2026-02-18 (미구현 기능 5개 구현: ListPool, ExpandPool, AutoSave, Skip/Retry, AudioBuffer)
 **다음 검토일**: 2026-02-19

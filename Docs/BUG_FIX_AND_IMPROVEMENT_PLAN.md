@@ -432,16 +432,16 @@ namespace AIBeat.Core
 - [x] H-1: InputHandler 예외 처리 검증 → try-catch 구현됨
 - [x] H-3: NoteSpawner 메모리 정리 (C-4와 통합) → 이미 구현됨
 
-### Phase 3: 기능 개선 (2주)
-- [ ] 오브젝트 풀 동적 확장
-- [ ] GC Allocation 최적화
-- [ ] 콤보 UI 강화
-- [ ] 판정 표시 개선
+### Phase 3: 기능 개선 — ✅ 완료
+- [x] 오브젝트 풀 동적 확장 → NoteSpawner.ExpandPool 구현
+- [x] GC Allocation 최적화 → ListPool.cs 생성
+- [x] 콤보 UI 강화 → GameplayUI.UpdateCombo 구현됨
+- [x] 판정 표시 개선 → GameplayUI.ShowJudgementDetailed 구현됨
 
-### Phase 4: 추가 기능 (3주)
-- [ ] 스킵/리트라이 기능
-- [ ] 자동 저장 시스템
-- [ ] GameConstants 상수화
+### Phase 4: 추가 기능 — ✅ 완료
+- [x] 스킵/리트라이 기능 → GameplayController.SkipToResult/QuickRestart
+- [x] 자동 저장 시스템 → AutoSave.cs 생성
+- [x] GameConstants 상수화 → GameConstants.cs 생성됨
 
 ---
 
@@ -454,10 +454,10 @@ namespace AIBeat.Core
 - [x] 이벤트 구독/해제 정상 동작 → 4개 컴포넌트 모두 OnDestroy에서 해제
 
 ### 기능 개선 후 검증
-- [ ] 오브젝트 풀 동적 확장 동작
-- [ ] GC Allocation 감소 확인
-- [ ] 콤보 효과 정상 표시
-- [ ] 판정 표시 개선 확인
+- [x] 오브젝트 풀 동적 확장 동작 → ExpandPool 구현 (maxPoolSize=200)
+- [x] GC Allocation 감소 → ListPool<T> 유틸 생성
+- [x] 콤보 효과 정상 표시 → GameplayUI.UpdateCombo
+- [x] 판정 표시 개선 확인 → GameplayUI.ShowJudgementDetailed
 
 ---
 

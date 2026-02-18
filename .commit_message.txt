@@ -1,1 +1,1 @@
-📝 PROGRESS + BUG_FIX_PLAN 전체 일관성 검증 및 상태 동기화 (모순 해소)
+✨ 미구현 기능 5개 구현 (ListPool, 풀 동적 확장, AutoSave, 스킵/리트라이, AudioBuffer)

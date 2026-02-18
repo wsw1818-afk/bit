@@ -1026,6 +1026,9 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
                 Debug.Log($"[GameplayController] Game ended - Score:{gameResult.Score}, Rank:{gameResult.Rank}, P:{gameResult.PerfectCount} G:{gameResult.GreatCount} Good:{gameResult.GoodCount} B:{gameResult.BadCount} M:{gameResult.MissCount}");
 #endif
+                // 자동 저장: 플레이 기록
+                AutoSave.RecordSongPlay(currentSong?.Title);
+
                 ShowResult(gameResult);
             }
             else
@@ -1048,6 +1051,41 @@ namespace AIBeat.Gameplay
                 SongLibraryManager.Instance.UpdateBestRecord(
                     currentSong.Title, result.Score, result.MaxCombo, result.Rank);
             }
+        }
+
+        /// <summary>
+        /// 곡을 즉시 건너뛰고 결과 화면으로 이동
+        /// </summary>
+        public void SkipToResult()
+        {
+            if (!isPlaying) return;
+
+            isPlaying = false;
+            isPaused = false;
+
+            noteSpawner?.StopSpawning();
+            AudioManager.Instance?.StopBGM();
+            audioAnalyzer?.StopAnalysis();
+
+            if (judgementSystem != null)
+            {
+                var gameResult = judgementSystem.GetResult();
+                ShowResult(gameResult);
+            }
+        }
+
+        /// <summary>
+        /// 현재 곡을 처음부터 다시 시작
+        /// </summary>
+        public void QuickRestart()
+        {
+            Time.timeScale = 1f;
+            isPaused = false;
+            isPlaying = false;
+
+            // 현재 씬 리로드
+            UnityEngine.SceneManagement.SceneManager.LoadScene(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         }
 
         public void PauseGame()
