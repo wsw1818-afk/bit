@@ -593,6 +593,7 @@ private void CreateFloatingSettingsButton()
 - [x] 연주자 애니메이션
 - [x] SETTINGS FAB 버튼 (곡 선택 화면)
 - [x] 콤보 UI (이미 구현됨 확인)
+- [x] **노트 스킨 에셋 지원** - ✅ `TextureGenerator` 에셋 로드 추가
 - [ ] 상세 결과 화면
 
 ---
