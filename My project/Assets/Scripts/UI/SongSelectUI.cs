@@ -529,7 +529,7 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 인라인 설정 패널 (노트 속도, 판정 오프셋, 배경 밝기)
+        /// 설정 패널 (전체 화면, 스크롤 가능, 5개 설정 모두 포함)
         /// </summary>
         private void CreateSettingsPanel()
         {
@@ -542,74 +542,176 @@ namespace AIBeat.UI
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
-            // 반투명 배경 (터치 차단)
+            // 불투명 배경 (터치 차단)
             var overlay = settingsPanel.AddComponent<Image>();
-            overlay.color = new Color(0f, 0f, 0.02f, 0.85f);
+            overlay.color = new Color(0.01f, 0.01f, 0.04f, 0.97f);
             overlay.raycastTarget = true;
 
-            // 설정 카드 (가운데)
-            var card = new GameObject("SettingsCard");
-            card.transform.SetParent(settingsPanel.transform, false);
-            var cardRect = card.AddComponent<RectTransform>();
-            cardRect.anchorMin = new Vector2(0.08f, 0.2f);
-            cardRect.anchorMax = new Vector2(0.92f, 0.8f);
-            cardRect.offsetMin = Vector2.zero;
-            cardRect.offsetMax = Vector2.zero;
+            // === ScrollRect ===
+            var scrollGo = new GameObject("ScrollView");
+            scrollGo.transform.SetParent(settingsPanel.transform, false);
+            var scrollRect = scrollGo.AddComponent<RectTransform>();
+            scrollRect.anchorMin = Vector2.zero;
+            scrollRect.anchorMax = Vector2.one;
+            scrollRect.offsetMin = new Vector2(0, 90);    // 하단 버튼 영역
+            scrollRect.offsetMax = new Vector2(0, -100);   // 상단 노치/카메라홀 여백
 
-            var cardBg = card.AddComponent<Image>();
-            cardBg.color = new Color(0.02f, 0.02f, 0.08f, 0.95f);
+            var scrollView = scrollGo.AddComponent<ScrollRect>();
+            scrollView.horizontal = false;
+            scrollView.vertical = true;
+            scrollView.movementType = ScrollRect.MovementType.Elastic;
+            scrollView.elasticity = 0.1f;
+            scrollView.scrollSensitivity = 30f;
 
-            var cardOutline = card.AddComponent<Outline>();
-            cardOutline.effectColor = UIColorPalette.NEON_CYAN;
-            cardOutline.effectDistance = new Vector2(2, -2);
+            // Viewport
+            var viewportGo = new GameObject("Viewport");
+            viewportGo.transform.SetParent(scrollGo.transform, false);
+            var viewportRect = viewportGo.AddComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = Vector2.zero;
+            viewportRect.offsetMax = Vector2.zero;
+            viewportGo.AddComponent<RectMask2D>();
 
-            // 세로 레이아웃
-            var vLayout = card.AddComponent<VerticalLayoutGroup>();
-            vLayout.padding = new RectOffset(30, 30, 25, 25);
-            vLayout.spacing = 20;
-            vLayout.childAlignment = TextAnchor.UpperCenter;
-            vLayout.childControlWidth = true;
-            vLayout.childControlHeight = false;
-            vLayout.childForceExpandWidth = true;
-            vLayout.childForceExpandHeight = false;
+            // Content
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(viewportGo.transform, false);
+            var contentRect = contentGo.AddComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 1);
+            contentRect.anchorMax = new Vector2(1, 1);
+            contentRect.pivot = new Vector2(0.5f, 1);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0, 0);
+
+            scrollView.viewport = viewportRect;
+            scrollView.content = contentRect;
+
+            var layout = contentGo.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(30, 30, 15, 15);
+            layout.spacing = 14;
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+
+            var fitter = contentGo.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // 타이틀
-            CreateSettingsLabel(card.transform, "설정", 42, UIColorPalette.NEON_CYAN_BRIGHT, 60);
+            CreateSettingsLabel(contentGo.transform, "설정", 48, UIColorPalette.NEON_CYAN_BRIGHT, 70);
 
-            // 노트 속도 슬라이더
-            float noteSpeed = SettingsManager.Instance != null ? SettingsManager.Instance.NoteSpeed : 5f;
-            CreateSettingsSlider(card.transform, "노트 속도", noteSpeed, 1f, 10f, (val) =>
-            {
-                if (SettingsManager.Instance != null)
-                    SettingsManager.Instance.NoteSpeed = val;
-            });
+            // 구분선
+            CreateSettingsSeparator(contentGo.transform);
 
-            // 판정 오프셋 슬라이더
-            float offset = SettingsManager.Instance != null ? SettingsManager.Instance.JudgementOffset * 1000f : 0f;
-            CreateSettingsSlider(card.transform, "판정 오프셋 (ms)", offset, -100f, 100f, (val) =>
+            // === 게임플레이 섹션 ===
+            CreateSettingsLabel(contentGo.transform, "▶ 게임플레이", 28, UIColorPalette.NEON_MAGENTA, 40);
+
+            var sm = SettingsManager.Instance;
+
+            // 노트 속도 (0.5 단위 스냅)
+            float noteSpeed = sm != null ? sm.NoteSpeed : 5f;
+            CreateSettingsSlider(contentGo.transform, "노트 속도", noteSpeed, 1f, 10f, (val) =>
             {
-                if (SettingsManager.Instance != null)
-                    SettingsManager.Instance.JudgementOffset = val / 1000f;
-            });
+                float snapped = Mathf.Round(val * 2f) / 2f;
+                if (sm != null) sm.NoteSpeed = snapped;
+            }, "F1", true);
+
+            // 판정 오프셋
+            float offset = sm != null ? sm.JudgementOffset * 1000f : 0f;
+            CreateSettingsSlider(contentGo.transform, "판정 오프셋", offset, -100f, 100f, (val) =>
+            {
+                if (sm != null) sm.JudgementOffset = Mathf.Round(val) / 1000f;
+            }, "ms");
+
+            CreateSettingsSeparator(contentGo.transform);
+
+            // === 오디오 섹션 ===
+            CreateSettingsLabel(contentGo.transform, "♪ 오디오", 28, UIColorPalette.NEON_MAGENTA, 40);
 
             // BGM 볼륨
-            float bgmVol = SettingsManager.Instance != null ? SettingsManager.Instance.BGMVolume * 100f : 80f;
-            CreateSettingsSlider(card.transform, "음악 볼륨", bgmVol, 0f, 100f, (val) =>
+            float bgmVol = sm != null ? sm.BGMVolume * 100f : 80f;
+            CreateSettingsSlider(contentGo.transform, "음악 볼륨", bgmVol, 0f, 100f, (val) =>
             {
-                if (SettingsManager.Instance != null)
-                    SettingsManager.Instance.BGMVolume = val / 100f;
+                if (sm != null) sm.BGMVolume = val / 100f;
+            }, "%");
+
+            // SFX 볼륨
+            float sfxVol = sm != null ? sm.SFXVolume * 100f : 80f;
+            CreateSettingsSlider(contentGo.transform, "효과음 볼륨", sfxVol, 0f, 100f, (val) =>
+            {
+                if (sm != null) sm.SFXVolume = val / 100f;
+            }, "%");
+
+            CreateSettingsSeparator(contentGo.transform);
+
+            // === 비주얼 섹션 ===
+            CreateSettingsLabel(contentGo.transform, "◆ 비주얼", 28, UIColorPalette.NEON_MAGENTA, 40);
+
+            // 배경 어둡게
+            float dim = sm != null ? sm.BackgroundDim * 100f : 50f;
+            CreateSettingsSlider(contentGo.transform, "배경 어둡게", dim, 0f, 100f, (val) =>
+            {
+                if (sm != null) sm.BackgroundDim = val / 100f;
+            }, "%");
+
+            // === 하단 버튼 영역 (ScrollView 밖) ===
+            var btnArea = new GameObject("ButtonArea");
+            btnArea.transform.SetParent(settingsPanel.transform, false);
+            var btnAreaRect = btnArea.AddComponent<RectTransform>();
+            btnAreaRect.anchorMin = new Vector2(0, 0);
+            btnAreaRect.anchorMax = new Vector2(1, 0);
+            btnAreaRect.pivot = new Vector2(0.5f, 0);
+            btnAreaRect.anchoredPosition = new Vector2(0, 15);
+            btnAreaRect.sizeDelta = new Vector2(-60, 70);
+
+            var hLayout = btnArea.AddComponent<HorizontalLayoutGroup>();
+            hLayout.spacing = 20;
+            hLayout.childAlignment = TextAnchor.MiddleCenter;
+            hLayout.childControlWidth = true;
+            hLayout.childControlHeight = true;
+            hLayout.childForceExpandWidth = true;
+            hLayout.childForceExpandHeight = true;
+
+            // 초기화 버튼
+            var resetBtn = UIButtonStyleHelper.CreateStyledButton(btnArea.transform, "ResetBtn", "초기화",
+                preferredHeight: 60f, fontSize: 28f);
+            resetBtn.onClick.AddListener(() =>
+            {
+                sm?.ResetToDefaults();
+                // 패널 재생성으로 슬라이더 값 갱신
+                Destroy(settingsPanel);
+                settingsPanel = null;
+                CreateSettingsPanel();
+                settingsPanel.SetActive(true);
+                settingsPanel.transform.SetAsLastSibling();
+                KoreanFontManager.ApplyFontToAll(settingsPanel);
             });
 
             // 닫기 버튼
-            var closeBtn = UIButtonStyleHelper.CreateStyledButton(card.transform, "CloseSettingsBtn", "닫기",
-                preferredHeight: 70f, fontSize: 32f);
-            closeBtn.onClick.AddListener(() => settingsPanel.SetActive(false));
+            var closeBtn = UIButtonStyleHelper.CreateStyledButton(btnArea.transform, "CloseBtn", "닫기",
+                preferredHeight: 60f, fontSize: 28f);
+            closeBtn.onClick.AddListener(() =>
+            {
+                sm?.SaveSettings();
+                settingsPanel.SetActive(false);
+            });
 
             // 최상위 렌더링
             settingsPanel.transform.SetAsLastSibling();
 
             // 한국어 폰트 적용
             KoreanFontManager.ApplyFontToAll(settingsPanel);
+        }
+
+        private void CreateSettingsSeparator(Transform parent)
+        {
+            var go = new GameObject("Separator");
+            go.transform.SetParent(parent, false);
+            go.AddComponent<LayoutElement>().preferredHeight = 3;
+            var img = go.AddComponent<Image>();
+            img.color = UIColorPalette.BORDER_CYAN.WithAlpha(0.4f);
+            img.raycastTarget = false;
         }
 
         private void CreateSettingsLabel(Transform parent, string text, float fontSize, Color color, float height)
@@ -626,55 +728,83 @@ namespace AIBeat.UI
             tmp.fontStyle = FontStyles.Bold;
         }
 
-        private void CreateSettingsSlider(Transform parent, string label, float value, float min, float max, System.Action<float> onChanged)
+        private void CreateSettingsSlider(Transform parent, string label, float value, float min, float max,
+            System.Action<float> onChanged, string suffix = "", bool snapHalf = false)
         {
-            var container = new GameObject("Slider_" + label);
-            container.transform.SetParent(parent, false);
-            var containerLE = container.AddComponent<LayoutElement>();
-            containerLE.preferredHeight = 90;
+            // 카드 컨테이너
+            var card = new GameObject("Card_" + label);
+            card.transform.SetParent(parent, false);
+            card.AddComponent<LayoutElement>().preferredHeight = 110;
 
-            var vLayout = container.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 5;
+            var cardBg = card.AddComponent<Image>();
+            cardBg.color = new Color(0.02f, 0.02f, 0.08f, 0.92f);
+            var cardOutline = card.AddComponent<Outline>();
+            cardOutline.effectColor = UIColorPalette.BORDER_CYAN;
+            cardOutline.effectDistance = new Vector2(1, -1);
+
+            var vLayout = card.AddComponent<VerticalLayoutGroup>();
+            vLayout.padding = new RectOffset(15, 15, 8, 8);
+            vLayout.spacing = 4;
             vLayout.childControlWidth = true;
-            vLayout.childControlHeight = false;
+            vLayout.childControlHeight = true;
             vLayout.childForceExpandWidth = true;
+            vLayout.childForceExpandHeight = false;
 
-            // 라벨 + 값
+            // 라벨 행 (이름 + 값)
+            var headerGo = new GameObject("Header");
+            headerGo.transform.SetParent(card.transform, false);
+            headerGo.AddComponent<LayoutElement>().preferredHeight = 36;
+            var hLayout = headerGo.AddComponent<HorizontalLayoutGroup>();
+            hLayout.childControlWidth = true;
+            hLayout.childControlHeight = true;
+            hLayout.childForceExpandWidth = true;
+            hLayout.childForceExpandHeight = true;
+
             var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(container.transform, false);
-            var labelLE = labelGo.AddComponent<LayoutElement>();
-            labelLE.preferredHeight = 30;
+            labelGo.transform.SetParent(headerGo.transform, false);
+            labelGo.AddComponent<LayoutElement>().flexibleWidth = 1;
             var labelTmp = labelGo.AddComponent<TextMeshProUGUI>();
-            labelTmp.text = $"{label}: {value:F0}";
-            labelTmp.fontSize = 24;
+            labelTmp.text = label;
+            labelTmp.fontSize = 26;
+            labelTmp.fontStyle = FontStyles.Bold;
             labelTmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
             labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
 
+            var valueGo = new GameObject("Value");
+            valueGo.transform.SetParent(headerGo.transform, false);
+            valueGo.AddComponent<LayoutElement>().preferredWidth = 100;
+            var valueTmp = valueGo.AddComponent<TextMeshProUGUI>();
+            valueTmp.fontSize = 28;
+            valueTmp.fontStyle = FontStyles.Bold;
+            valueTmp.color = Color.white;
+            valueTmp.alignment = TextAlignmentOptions.MidlineRight;
+
+            // 초기 값 표시
+            FormatValueText(valueTmp, value, suffix, snapHalf);
+
             // 슬라이더
             var sliderGo = new GameObject("Slider");
-            sliderGo.transform.SetParent(container.transform, false);
-            var sliderLE = sliderGo.AddComponent<LayoutElement>();
-            sliderLE.preferredHeight = 40;
+            sliderGo.transform.SetParent(card.transform, false);
+            sliderGo.AddComponent<LayoutElement>().preferredHeight = 50;
 
-            // 슬라이더 배경
-            var sliderBgGo = new GameObject("Background");
-            sliderBgGo.transform.SetParent(sliderGo.transform, false);
-            var sliderBgRect = sliderBgGo.AddComponent<RectTransform>();
-            sliderBgRect.anchorMin = Vector2.zero;
-            sliderBgRect.anchorMax = Vector2.one;
-            sliderBgRect.offsetMin = Vector2.zero;
-            sliderBgRect.offsetMax = Vector2.zero;
-            var sliderBgImg = sliderBgGo.AddComponent<Image>();
-            sliderBgImg.color = new Color(0.05f, 0.05f, 0.12f, 0.9f);
+            // 배경
+            var bgGo = new GameObject("Background");
+            bgGo.transform.SetParent(sliderGo.transform, false);
+            var bgRect = bgGo.AddComponent<RectTransform>();
+            bgRect.anchorMin = new Vector2(0, 0.25f);
+            bgRect.anchorMax = new Vector2(1, 0.75f);
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            bgGo.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.12f, 0.9f);
 
-            // 필 영역
+            // 필
             var fillArea = new GameObject("Fill Area");
             fillArea.transform.SetParent(sliderGo.transform, false);
             var fillAreaRect = fillArea.AddComponent<RectTransform>();
-            fillAreaRect.anchorMin = Vector2.zero;
-            fillAreaRect.anchorMax = Vector2.one;
-            fillAreaRect.offsetMin = new Vector2(5, 5);
-            fillAreaRect.offsetMax = new Vector2(-5, -5);
+            fillAreaRect.anchorMin = new Vector2(0, 0.25f);
+            fillAreaRect.anchorMax = new Vector2(1, 0.75f);
+            fillAreaRect.offsetMin = new Vector2(3, 0);
+            fillAreaRect.offsetMax = new Vector2(-3, 0);
 
             var fill = new GameObject("Fill");
             fill.transform.SetParent(fillArea.transform, false);
@@ -683,10 +813,9 @@ namespace AIBeat.UI
             fillRect.anchorMax = Vector2.one;
             fillRect.offsetMin = Vector2.zero;
             fillRect.offsetMax = Vector2.zero;
-            var fillImg = fill.AddComponent<Image>();
-            fillImg.color = UIColorPalette.NEON_MAGENTA;
+            fill.AddComponent<Image>().color = UIColorPalette.NEON_MAGENTA;
 
-            // 핸들 영역
+            // 핸들
             var handleArea = new GameObject("Handle Slide Area");
             handleArea.transform.SetParent(sliderGo.transform, false);
             var handleAreaRect = handleArea.AddComponent<RectTransform>();
@@ -698,26 +827,43 @@ namespace AIBeat.UI
             var handle = new GameObject("Handle");
             handle.transform.SetParent(handleArea.transform, false);
             var handleRect = handle.AddComponent<RectTransform>();
-            handleRect.sizeDelta = new Vector2(30, 0);
+            handleRect.sizeDelta = new Vector2(44, 44);
             var handleImg = handle.AddComponent<Image>();
             handleImg.color = Color.white;
+            var handleOutline = handle.AddComponent<Outline>();
+            handleOutline.effectColor = UIColorPalette.NEON_MAGENTA;
+            handleOutline.effectDistance = new Vector2(2, -2);
 
-            // Slider 컴포넌트
             var slider = sliderGo.AddComponent<Slider>();
             slider.fillRect = fillRect;
             slider.handleRect = handleRect;
+            slider.targetGraphic = handleImg;
             slider.minValue = min;
             slider.maxValue = max;
             slider.value = value;
-            slider.wholeNumbers = (max - min > 10); // 범위가 크면 정수
+            slider.wholeNumbers = !snapHalf && (max - min >= 10);
 
             slider.onValueChanged.AddListener((val) =>
             {
-                labelTmp.text = $"{label}: {val:F0}";
-                onChanged?.Invoke(val);
+                float displayVal = snapHalf ? Mathf.Round(val * 2f) / 2f : val;
+                if (snapHalf) slider.SetValueWithoutNotify(displayVal);
+                FormatValueText(valueTmp, displayVal, suffix, snapHalf);
+                onChanged?.Invoke(displayVal);
             });
 
             createdSliders.Add(slider);
+        }
+
+        private void FormatValueText(TMP_Text tmp, float val, string suffix, bool snapHalf)
+        {
+            if (suffix == "ms")
+                tmp.text = $"{Mathf.Round(val):F0}ms";
+            else if (suffix == "%")
+                tmp.text = $"{Mathf.RoundToInt(val)}%";
+            else if (snapHalf)
+                tmp.text = (Mathf.Round(val * 2f) / 2f).ToString("F1");
+            else
+                tmp.text = $"{val:F0}";
         }
 
         private void EnsureCanvasScaler()

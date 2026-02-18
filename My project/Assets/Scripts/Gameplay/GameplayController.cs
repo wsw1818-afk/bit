@@ -56,6 +56,10 @@ namespace AIBeat.Gameplay
         private bool isAnalyzing = false;
         private Coroutine analyzeCoroutine = null;
 
+        // 배경 어둡기 오버레이
+        private GameObject bgDimOverlay;
+        private MeshRenderer bgDimRenderer;
+
         // 코루틴 중복 시작 방지
         private Coroutine inputLoopCoroutine;
         private Coroutine holdBonusCoroutine;
@@ -76,6 +80,8 @@ namespace AIBeat.Gameplay
                 gameplayUI = FindFirstObjectByType<GameplayUI>();
             // Music Theme 적용 (Cyberpunk 제거됨)
             Initialize();
+            // 배경 어둡기 오버레이 생성
+            CreateBackgroundDimOverlay();
             if (inputLoopCoroutine == null)
                 inputLoopCoroutine = StartCoroutine(InputLoop());
             if (holdBonusCoroutine == null)
@@ -1303,6 +1309,57 @@ namespace AIBeat.Gameplay
                 AudioManager.Instance.OnBGMLoaded -= OnAudioLoaded;
                 AudioManager.Instance.OnBGMEnded -= OnSongEnd;
                 AudioManager.Instance.OnBGMLoadFailed -= OnAudioLoadFailed;
+            }
+
+            // BackgroundDim 이벤트 해제
+            SettingsManager.OnSettingChanged -= OnBackgroundDimChanged;
+        }
+
+        /// <summary>
+        /// 배경 어둡기 오버레이 생성 (배경과 노트 사이에 배치)
+        /// SettingsManager.BackgroundDim 값에 따라 투명도 조절
+        /// </summary>
+        private void CreateBackgroundDimOverlay()
+        {
+            bgDimOverlay = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            bgDimOverlay.name = "BackgroundDimOverlay";
+
+            // 콜라이더 제거 (터치 방해 방지)
+            var collider = bgDimOverlay.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+
+            // 배경(Z=1)과 노트(Z=-1) 사이, 레인 배경(Z=1.0) 바로 앞
+            bgDimOverlay.transform.position = new Vector3(0f, 6f, 0.9f);
+            bgDimOverlay.transform.localScale = new Vector3(15f, 20f, 1f);
+
+            // Unlit 투명 머티리얼
+            bgDimRenderer = bgDimOverlay.GetComponent<MeshRenderer>();
+            var mat = new Material(Shader.Find("Unlit/Color"));
+            // 투명 렌더링 설정
+            mat.SetFloat("_Mode", 3); // Transparent
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_ALPHABLEND_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = 3000;
+
+            // 초기 어둡기 적용
+            float dim = SettingsManager.Instance != null ? SettingsManager.Instance.BackgroundDim : 0.5f;
+            mat.color = new Color(0f, 0f, 0f, dim);
+            bgDimRenderer.material = mat;
+
+            // 설정 변경 이벤트 구독
+            SettingsManager.OnSettingChanged += OnBackgroundDimChanged;
+        }
+
+        private void OnBackgroundDimChanged(string key, float value)
+        {
+            if (key == SettingsManager.KEY_BACKGROUND_DIM && bgDimRenderer != null)
+            {
+                var mat = bgDimRenderer.material;
+                mat.color = new Color(0f, 0f, 0f, value);
             }
         }
 
