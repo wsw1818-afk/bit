@@ -1,1 +1,1 @@
-🐛 AssetGenTrigger가 Play 모드마다 Gemini 이미지를 절차적 그라데이션으로 덮어쓰는 버그 수정 (파일 존재 시 생성 스킵)
+🎨 Gemini AI 생성 배경 이미지 5종 적용 (Splash/Menu/SongSelect/Gameplay/Result) + AssetGenTrigger 덮어쓰기 버그 수정

@@ -242,10 +242,23 @@ namespace AIBeat.UI
             var img = bgGo.AddComponent<Image>();
             img.raycastTarget = false;
 
-            // 절차적 배경 사용 (Gameplay_BG.jpg는 HUD 프레임이므로 별도 오버레이로 처리)
-            img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
-            img.type = Image.Type.Sliced;
-            img.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+            // AI 디자인 배경 이미지 로드 (Gameplay_BG.jpg - 네온 터널)
+            Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Gameplay_BG");
+            if (bgSprite != null)
+            {
+                img.sprite = bgSprite;
+                img.type = Image.Type.Simple;
+                img.preserveAspect = false;
+                Debug.Log("[GameplayUI] Loaded Gameplay_BG as background");
+            }
+            else
+            {
+                // 폴백: 절차적 배경
+                img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+                img.type = Image.Type.Sliced;
+                img.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+                Debug.Log("[GameplayUI] Using procedural background (fallback)");
+            }
         }
 
         /// <summary>
@@ -1196,9 +1209,21 @@ namespace AIBeat.UI
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
-            // 배경 - 어두운 불투명 (사이버펑크 테마)
+            // 배경 - AI 디자인 이미지 (콘서트 무대) 또는 어두운 불투명 폴백
             var bg = panelGo.AddComponent<Image>();
-            bg.color = new Color(0.04f, 0.06f, 0.12f, 1f);
+            Sprite resultBgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Result_BG");
+            if (resultBgSprite != null)
+            {
+                bg.sprite = resultBgSprite;
+                bg.type = Image.Type.Simple;
+                bg.preserveAspect = false;
+                bg.color = new Color(0.7f, 0.7f, 0.7f, 1f); // 살짝 어둡게 (텍스트 가독성)
+                Debug.Log("[GameplayUI] Loaded Result_BG as result background");
+            }
+            else
+            {
+                bg.color = new Color(0.04f, 0.06f, 0.12f, 1f);
+            }
             bg.raycastTarget = true;
 
             var korFont = KoreanFontManager.KoreanFont;
