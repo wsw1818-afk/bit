@@ -494,7 +494,18 @@ private void CreateFloatingSettingsButton()
 - [x] SceneBuilder.cs: GameplayScene.unity → Gameplay.unity 참조 통일
 - [x] ResultPanel SafeAreaPanel 내부 비활성화 버그 수정 → Canvas 루트로 이동
 - [x] ResultPanel 활성 상태 유지 코루틴 안전장치 추가
+- [x] **ResultPanel 렌더링 안 되는 근본 원인 수정** (아래 상세)
+- [x] Force Capture / Force Show Result 에디터 도구 추가
 - [x] 전체 게임 플로우 MCP 캡처 검증 완료 (Splash→MainMenu→SongSelect→Gameplay→Result)
+
+#### 🔥 ResultPanel 렌더링 버그 근본 원인 (중요 교훈)
+**증상**: ResultPanel이 `activeSelf: true`인데 화면에 전혀 렌더링 되지 않음 (초록색 디버그 배경도 안 보임)
+**근본 원인**: Gameplay.unity 씬 파일에서 `[SerializeField] resultPanel`이 빈 "New Game Object" (Transform만 있는 루트 오브젝트)를 참조
+- `resultPanel != null` 체크가 통과 → `CreateResultPanel()` 미호출
+- 빈 오브젝트에는 RectTransform, Image, Canvas 하위 구조가 없어 렌더링 불가
+- `pausePanel`, `countdownPanel`도 동일한 문제 (모두 stale "New Game Object" 참조)
+**수정**: 씬 파일에서 3개의 잘못된 SerializedField 참조를 `{fileID: 0}`으로 초기화 + stale 오브젝트 3개 제거
+**교훈**: `[SerializeField]` 필드가 존재하면 Unity는 씬의 오브젝트를 연결할 수 있음 → 코드에서 동적 생성하는 패널이 씬에 빈 오브젝트로 남아있으면 생성 로직이 건너뛰어짐
 
 **마지막 업데이트**: 2026-02-18
 **다음 검토일**: 2026-02-19

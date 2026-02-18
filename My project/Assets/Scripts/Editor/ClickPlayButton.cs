@@ -27,6 +27,43 @@ public class ClickPlayButton
         }
     }
 
+    [MenuItem("Tools/A.I. BEAT/Force Show Result")]
+    public static void ForceShowResult()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("[ForceShowResult] Play 모드에서만 실행 가능합니다");
+            return;
+        }
+
+        Application.runInBackground = true;
+
+        var gameplayUI = Object.FindFirstObjectByType<AIBeat.UI.GameplayUI>();
+        if (gameplayUI == null)
+        {
+            Debug.LogError("[ForceShowResult] GameplayUI를 찾을 수 없습니다");
+            return;
+        }
+
+        var js = Object.FindFirstObjectByType<AIBeat.Gameplay.JudgementSystem>();
+        var result = new AIBeat.Gameplay.GameResult
+        {
+            Score = js != null ? js.TotalScore : 63759,
+            MaxCombo = js != null ? js.MaxCombo : 37,
+            Accuracy = js != null ? js.Accuracy : 84.5f,
+            Rank = "S",
+            PerfectCount = js != null ? js.PerfectCount : 39,
+            GreatCount = js != null ? js.GreatCount : 13,
+            GoodCount = js != null ? js.GoodCount : 12,
+            BadCount = js != null ? js.BadCount : 2,
+            MissCount = js != null ? js.MissCount : 0,
+            BonusScore = js != null ? js.BonusScore : 3350,
+        };
+
+        gameplayUI.ShowResult(result);
+        Debug.Log("[ForceShowResult] Result 화면 강제 표시 완료");
+    }
+
     [MenuItem("Tools/A.I. BEAT/Start Test Game")]
     public static void StartTestGame()
     {

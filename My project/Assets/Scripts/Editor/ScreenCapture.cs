@@ -38,6 +38,49 @@ namespace AIBeat.Editor
             window.minSize = new Vector2(300, 350);
         }
 
+        [MenuItem("Tools/A.I. BEAT/Force Capture Screenshot")]
+        public static void ForceCaptureWithStep()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[ScreenCapture] Play 모드에서만 사용 가능합니다");
+                return;
+            }
+
+            // runInBackground 강제 설정
+            Application.runInBackground = true;
+
+            // 먼저 몇 프레임 진행시켜 렌더링 파이프라인 안정화
+            for (int i = 0; i < 5; i++)
+                EditorApplication.Step();
+
+            string dir = Path.Combine(Application.dataPath, "..", "Screenshots");
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            string fileName = $"Screenshot_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
+            string fullPath = Path.Combine(dir, fileName);
+
+            // ScreenshotHelper를 통한 캡처 시도 (WaitForEndOfFrame - Overlay UI 포함)
+            var helper = Utils.ScreenshotHelper.Instance;
+            if (helper != null)
+            {
+                helper.CaptureAfterFrame(fullPath);
+                // 코루틴 실행을 위해 추가 프레임 진행
+                for (int i = 0; i < 3; i++)
+                    EditorApplication.Step();
+            }
+            else
+            {
+                // Fallback: ScreenCapture API
+                UnityEngine.ScreenCapture.CaptureScreenshot(fullPath, 1);
+                for (int i = 0; i < 3; i++)
+                    EditorApplication.Step();
+            }
+
+            Debug.Log($"[ScreenCapture] Force capture: {fullPath}");
+        }
+
         [MenuItem("Tools/A.I. BEAT/Capture Screenshot _F12")]
         public static void QuickCapture()
         {

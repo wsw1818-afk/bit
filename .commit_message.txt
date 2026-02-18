@@ -1,1 +1,1 @@
-🔧 GameplayScene 중복 씬 삭제 + SceneBuilder 통일 + ResultPanel SafeAreaPanel 비활성화 버그 수정 (Canvas 루트 이동)
+🐛 ResultPanel 렌더링 안 되는 근본 원인 수정 (씬 SerializedField가 빈 'New Game Object' 참조 → CreateResultPanel 미호출) + stale 오브젝트 3개 제거 + Force Capture 에디터 도구 추가
