@@ -272,7 +272,7 @@ namespace AIBeat.UI
 
                 float spriteW = sr.sprite.bounds.size.x;
                 float spriteH = sr.sprite.bounds.size.y;
-                float scale = Mathf.Max(worldWidth / spriteW, worldHeight / spriteH);
+                float scale = Mathf.Max(worldWidth / spriteW, worldHeight / spriteH) * 1.2f; // 20% 여유
                 bgGo.transform.localScale = new Vector3(scale, scale, 1f);
             }
         }
@@ -306,7 +306,7 @@ namespace AIBeat.UI
                 var lineGo = new GameObject($"LaneLine_{i}");
                 lineGo.transform.SetParent(parent.transform);
                 lineGo.transform.position = new Vector3(x, camY, lineZ);
-                lineGo.transform.localScale = new Vector3(isEdge ? 0.04f : 0.02f, lineHeight, 1f);
+                lineGo.transform.localScale = new Vector3(isEdge ? 0.06f : 0.04f, lineHeight, 1f);
 
                 var sr = lineGo.AddComponent<SpriteRenderer>();
                 sr.sprite = Sprite.Create(
@@ -315,10 +315,10 @@ namespace AIBeat.UI
                     new Vector2(0.5f, 0.5f), 100f
                 );
                 sr.sortingOrder = -50; // 배경(-100)보다 앞, 노트보다 뒤
-                // 테두리: 밝은 시안, 내부: 연한 시안 반투명
+                // 테두리: 밝은 시안, 내부: 반투명 화이트
                 sr.color = isEdge
-                    ? new Color(0f, 1f, 1f, 0.35f)
-                    : new Color(0f, 0.8f, 1f, 0.15f);
+                    ? new Color(0f, 1f, 1f, 0.4f)
+                    : new Color(1f, 1f, 1f, 0.2f);
             }
         }
 
@@ -386,24 +386,14 @@ namespace AIBeat.UI
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
-            // 4개 네온 테두리 라인 (상/하/좌/우)
-            Color neonCyan = new Color(0f, 0.85f, 0.9f, 0.5f);
-            float borderWidth = 3f;
+            // 상/하 네온 테두리만 (좌/우는 레인 구분선이 대체)
+            Color neonCyan = new Color(0f, 0.85f, 0.9f, 0.4f);
+            float borderWidth = 2f;
 
             CreateBorderLine(frameGo.transform, "TopBorder", neonCyan, borderWidth,
                 new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), Vector2.zero, new Vector2(0, borderWidth));
             CreateBorderLine(frameGo.transform, "BottomBorder", neonCyan, borderWidth,
                 new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), Vector2.zero, new Vector2(0, borderWidth));
-            CreateBorderLine(frameGo.transform, "LeftBorder", neonCyan, borderWidth,
-                new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(borderWidth, 0));
-            CreateBorderLine(frameGo.transform, "RightBorder", neonCyan, borderWidth,
-                new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), Vector2.zero, new Vector2(borderWidth, 0));
-
-            // 코너 글로우 (4개 모서리에 약간의 발광 효과)
-            CreateCornerGlow(frameGo.transform, "TopLeftGlow", neonCyan, new Vector2(0, 1), new Vector2(0, 1));
-            CreateCornerGlow(frameGo.transform, "TopRightGlow", neonCyan, new Vector2(1, 1), new Vector2(1, 1));
-            CreateCornerGlow(frameGo.transform, "BottomLeftGlow", neonCyan, new Vector2(0, 0), new Vector2(0, 0));
-            CreateCornerGlow(frameGo.transform, "BottomRightGlow", neonCyan, new Vector2(1, 0), new Vector2(1, 0));
         }
 
         private void CreateBorderLine(Transform parent, string name, Color color, float width,
