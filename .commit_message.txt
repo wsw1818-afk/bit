@@ -1,1 +1,1 @@
-🔍 PROGRESS 버그 전수 검증 (4개 모두 오진/수정완료 확인) + Debug.Log 빌드 래핑 보완
+📝 PROGRESS + BUG_FIX_PLAN 전체 일관성 검증 및 상태 동기화 (모순 해소)
