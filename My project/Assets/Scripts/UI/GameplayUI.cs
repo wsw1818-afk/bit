@@ -1409,11 +1409,40 @@ namespace AIBeat.UI
             // NEW RECORD 체크 및 표시
             CheckAndShowNewRecord(result);
 
-            // 최상위 렌더링 보장
+            // 최상위 렌더링 보장: Canvas 직계 자식으로 이동 (SafeAreaPanel 밖으로)
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && resultPanel.transform.parent != canvas.transform)
+            {
+                resultPanel.transform.SetParent(canvas.transform, false);
+                // RectTransform 풀스크린 재설정
+                var rrt = resultPanel.GetComponent<RectTransform>();
+                rrt.anchorMin = Vector2.zero;
+                rrt.anchorMax = Vector2.one;
+                rrt.offsetMin = Vector2.zero;
+                rrt.offsetMax = Vector2.zero;
+            }
             resultPanel.transform.SetAsLastSibling();
             resultPanel.transform.localScale = Vector3.one;
 
-            Debug.Log($"[GameplayUI] ResultPanel shown - active:{resultPanel.activeSelf}, scale:{resultPanel.transform.localScale}, siblingIndex:{resultPanel.transform.GetSiblingIndex()}");
+            // 안전장치: 1프레임 후 활성 상태 재확인
+            StartCoroutine(EnsureResultPanelActive());
+
+            Debug.Log($"[GameplayUI] ResultPanel shown - active:{resultPanel.activeSelf}, scale:{resultPanel.transform.localScale}, siblingIndex:{resultPanel.transform.GetSiblingIndex()}, parent:{resultPanel.transform.parent?.name}");
+        }
+
+        private System.Collections.IEnumerator EnsureResultPanelActive()
+        {
+            // 3프레임 동안 ResultPanel 활성 상태 강제 유지
+            for (int i = 0; i < 3; i++)
+            {
+                yield return null;
+                if (resultPanel != null && !resultPanel.activeSelf)
+                {
+                    Debug.LogWarning($"[GameplayUI] ResultPanel was deactivated on frame {i+1}! Re-activating...");
+                    resultPanel.SetActive(true);
+                    resultPanel.transform.SetAsLastSibling();
+                }
+            }
         }
 
         /// <summary>

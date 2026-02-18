@@ -26,7 +26,7 @@ namespace AIBeat.Editor
                 "Assets/Scenes/SplashScene.unity",
                 "Assets/Scenes/MainMenuScene.unity",
                 "Assets/Scenes/SongSelectScene.unity",
-                "Assets/Scenes/GameplayScene.unity",
+                "Assets/Scenes/Gameplay.unity",
             };
 
             var sceneList = new System.Collections.Generic.List<EditorBuildSettingsScene>();
@@ -236,7 +236,7 @@ namespace AIBeat.Editor
 
         private static void BuildGameplayScene()
         {
-            NewScene("Assets/Scenes/GameplayScene.unity");
+            NewScene("Assets/Scenes/Gameplay.unity");
             
             var canvas = CreateCanvas();
             
@@ -274,7 +274,7 @@ namespace AIBeat.Editor
             var judgeObj = CreateText(canvas.gameObject, "JudgementText", "", 60, new Vector2(0, -200), new Vector2(600, 100));
             judgeObj.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Center;
 
-            SaveScene("Assets/Scenes/GameplayScene.unity");
+            SaveScene("Assets/Scenes/Gameplay.unity");
         }
         
         // Helpers

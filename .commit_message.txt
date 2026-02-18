@@ -1,1 +1,1 @@
-🎨 Gameplay 체크보드 HUD 제거 + 네온 테두리 교체 + NoteVisuals 4키 수정 + 카메라쉐이크/콤보 마일스톤 Juice 추가 + 텍스트 가독성 개선
+🔧 GameplayScene 중복 씬 삭제 + SceneBuilder 통일 + ResultPanel SafeAreaPanel 비활성화 버그 수정 (Canvas 루트 이동)

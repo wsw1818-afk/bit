@@ -489,5 +489,12 @@ private void CreateFloatingSettingsButton()
 - [x] 곡 선택 텍스트 가독성 개선 (랭크/점수/빈목록 텍스트 밝기 상향)
 - [x] MCP 스크린샷 검증 (Splash→MainMenu→SongSelect→Gameplay→Result 전체 확인)
 
-**마지막 업데이트**: 2026-02-17
-**다음 검토일**: 2026-02-18
+### 2026-02-18 (씬 통합 + Result 패널 수정)
+- [x] GameplayScene.unity 중복 씬 삭제 (미사용 → Gameplay.unity만 사용)
+- [x] SceneBuilder.cs: GameplayScene.unity → Gameplay.unity 참조 통일
+- [x] ResultPanel SafeAreaPanel 내부 비활성화 버그 수정 → Canvas 루트로 이동
+- [x] ResultPanel 활성 상태 유지 코루틴 안전장치 추가
+- [x] 전체 게임 플로우 MCP 캡처 검증 완료 (Splash→MainMenu→SongSelect→Gameplay→Result)
+
+**마지막 업데이트**: 2026-02-18
+**다음 검토일**: 2026-02-19
