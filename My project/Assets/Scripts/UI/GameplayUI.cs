@@ -647,13 +647,17 @@ namespace AIBeat.UI
             pauseButton.targetGraphic = btnImage;
             pauseButton.onClick.AddListener(() =>
             {
-                Debug.Log($"[GameplayUI] ✕ button clicked! gameplayCtrl={gameplayController != null}");
+                Debug.Log("[GameplayUI] ✕ button clicked!");
+                // GameplayController를 통한 정상 일시정지
                 if (gameplayController == null)
                     gameplayController = FindFirstObjectByType<GameplayController>();
                 if (gameplayController != null)
                     gameplayController.PauseGame();
-                else
-                    Debug.LogError("[GameplayUI] GameplayController NOT found!");
+
+                // Failsafe: PauseGame 가드(isPlaying/isPaused)에 걸려도 강제 정지
+                Time.timeScale = 0f;
+                AudioManager.Instance?.PauseBGM();
+                ShowPauseMenu(true);
             });
         }
 
