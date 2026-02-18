@@ -115,7 +115,7 @@ namespace AIBeat.UI
             scrollRect.anchorMin = Vector2.zero;
             scrollRect.anchorMax = Vector2.one;
             scrollRect.offsetMin = new Vector2(0, 90);   // 하단 버튼 영역 확보
-            scrollRect.offsetMax = new Vector2(0, 0);
+            scrollRect.offsetMax = new Vector2(0, -120); // 상단 카메라 홀/노치 영역 확보
 
             var scrollView = scrollGo.AddComponent<ScrollRect>();
             scrollView.horizontal = false;

@@ -1,1 +1,1 @@
-📦 배포용 APK 빌드 (Debug.Log 래핑 + SplashScene 추가 + Release 빌드 옵션 + ✕ 일시정지 버튼)
+🐛 터치 레인 인식 + 설정창 카메라홀 가림 수정

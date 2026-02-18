@@ -52,18 +52,13 @@ namespace AIBeat.Gameplay
             isEnabled = enabled;
         }
 
+        private int cachedScreenWidth;
+        private int cachedScreenHeight;
+
         private void Start()
         {
             CacheScratchThreshold();
-            try
-            {
-                CacheLaneBoundaries();
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[InputHandler] CacheLaneBoundaries failed: {e.Message}. Using fallback.");
-                laneBoundaries = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
-            }
+            // CacheLaneBoundaries는 InputLoop에서 카메라 설정 완료 후 실행
             StartCoroutine(InputLoop());
         }
 
@@ -149,10 +144,37 @@ namespace AIBeat.Gameplay
         /// </summary>
         private IEnumerator InputLoop()
         {
+            // 2프레임 대기: GameplayController.Start()의 AdjustCameraForPortrait() 완료 보장
+            yield return null;
+            yield return null;
+
+            try
+            {
+                CacheLaneBoundaries();
+                cachedScreenWidth = Screen.width;
+                cachedScreenHeight = Screen.height;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[InputHandler] CacheLaneBoundaries failed: {e.Message}. Using fallback.");
+                laneBoundaries = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
+            }
+
             while (true)
             {
                 yield return null;
                 if (!isEnabled) continue;
+
+                // 화면 크기 변경 시 레인 경계 재계산 (회전/해상도 변경 대응)
+                if (Screen.width != cachedScreenWidth || Screen.height != cachedScreenHeight)
+                {
+                    cachedScreenWidth = Screen.width;
+                    cachedScreenHeight = Screen.height;
+                    CacheScratchThreshold();
+                    try { CacheLaneBoundaries(); }
+                    catch { laneBoundaries = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f }; }
+                }
+
                 ProcessTouchInput();
                 ProcessKeyboardInput();
             }
