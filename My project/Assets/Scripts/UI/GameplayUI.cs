@@ -133,7 +133,8 @@ namespace AIBeat.UI
             if (resultPanel != null) resultPanel.SetActive(false);
             if (judgementText != null) judgementText.gameObject.SetActive(false);
 
-            // Z-order 보장: 일시정지 패널이 항상 최상위 (버튼은 TopBar 내부)
+            // Z-order 보장: ✕ 버튼 → 일시정지 패널 순으로 최상위
+            if (pauseButton != null) pauseButton.transform.SetAsLastSibling();
             if (pausePanel != null) pausePanel.transform.SetAsLastSibling();
 
             // Combo 초기 텍스트 비우기 (콤보 0일때 표시 안함)
@@ -580,15 +581,8 @@ namespace AIBeat.UI
                 comboText.text = "";
             }
 
-            // --- 일시정지 버튼 (TopBar 내부 우측 끝, 레드-핑크 ✕) ---
-            if (pauseButton != null)
-            {
-                pauseButton.transform.SetParent(topBar.transform, false);
-                var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
-                pauseLE.preferredWidth = 90;
-                pauseLE.preferredHeight = 90;
-                pauseLE.minWidth = 90;
-            }
+            // --- 일시정지 버튼: TopBar와 독립, 화면 우측 상단 고정 ---
+            // (CreatePauseButton에서 앵커로 절대 배치됨 → reparent 불필요)
 
             // ============================================================
             // === JudgementText → 판정선 약간 위 (하단 30% 지점) ===
@@ -620,8 +614,13 @@ namespace AIBeat.UI
             var pauseBtnGo = new GameObject("PauseButton");
             pauseBtnGo.transform.SetParent(transform, false);
 
+            // 화면 우측 상단 절대 위치 (TopBar와 독립)
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(90, 90);
+            btnRect.anchorMin = new Vector2(1, 1);
+            btnRect.anchorMax = new Vector2(1, 1);
+            btnRect.pivot = new Vector2(1, 1);
+            btnRect.anchoredPosition = new Vector2(-10, -10); // 우측 상단에서 10px 여백
+            btnRect.sizeDelta = new Vector2(100, 100);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
             btnImage.color = new Color(0.9f, 0.15f, 0.3f, 0.95f); // 밝은 레드-핑크 (고가시성)
@@ -637,7 +636,7 @@ namespace AIBeat.UI
             textRect.offsetMax = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
             iconText.text = "✕";
-            iconText.fontSize = 52;
+            iconText.fontSize = 56;
             iconText.color = Color.white;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
