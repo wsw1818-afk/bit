@@ -349,24 +349,6 @@ namespace AIBeat.UI
                 sr.color = new Color(0f, 0.8f, 1f, 0.35f);
             }
 
-            // --- 3) 하단 판정선 글로우 (레인별 색상) ---
-            float judgeY = camY - cam.orthographicSize + 1.5f;
-            float glowHeight = 4f; // 4 world units 높이
-            for (int i = 0; i < laneCount; i++)
-            {
-                float x = (i - 1.5f) * laneWidth;
-
-                var glowGo = new GameObject($"LaneGlow_{i}");
-                glowGo.transform.SetParent(parent.transform);
-                glowGo.transform.position = new Vector3(x, judgeY, lineZ);
-                glowGo.transform.localScale = new Vector3(laneWidth * S, glowHeight * S, 1f);
-
-                var sr = glowGo.AddComponent<SpriteRenderer>();
-                sr.sprite = whiteSprite;
-                sr.sortingOrder = -40;
-                Color c = laneColors[i];
-                sr.color = new Color(c.r, c.g, c.b, 0.12f);
-            }
         }
 
         /// <summary>
