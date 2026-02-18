@@ -2111,6 +2111,9 @@ namespace AIBeat.UI
         {
             ShowPauseMenu(false);
             gameplayController?.ResumeGame();
+            // Failsafe: ResumeGame 가드에 걸려도 강제 재개
+            Time.timeScale = 1f;
+            AudioManager.Instance?.ResumeBGM();
         }
 
         private void OnRestartClicked()
