@@ -19,11 +19,20 @@ namespace AIBeat.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         public static void AutoGenerateOnPlay()
         {
-            // Optional: Check if assets exist before generating to save time
-            // For now, generate to ensure they are fresh/exist
             if (Application.isEditor)
             {
-                GenerateAndSaveAssets();
+                // 핵심 에셋(노트, 판정)만 없을 때 생성. 배경/UI는 덮어쓰지 않음
+                string basePath = Path.Combine(Application.dataPath, "Resources", "AIBeat_Design");
+                string notePath = Path.Combine(basePath, "Notes", "NormalNote.png");
+                if (!File.Exists(notePath))
+                {
+                    Debug.Log("[AssetGen] 핵심 에셋 미존재 → 전체 생성");
+                    GenerateAndSaveAssets();
+                }
+                else
+                {
+                    Debug.Log("[AssetGen] 에셋 이미 존재 → 생성 스킵");
+                }
             }
         }
 
