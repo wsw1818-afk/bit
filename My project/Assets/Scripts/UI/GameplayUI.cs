@@ -334,26 +334,34 @@ namespace AIBeat.UI
 
         private IEnumerator BackgroundAnimationLoop(Transform bgTransform, SpriteRenderer bgSr)
         {
+            // 카메라 배경색 검정 (빈 영역 방지)
+            var cam = Camera.main;
+            if (cam != null) cam.backgroundColor = Color.black;
+
             float baseScale = bgTransform.localScale.x;
+            Vector3 basePos = bgTransform.position;
             float time = 0f;
 
             while (bgTransform != null)
             {
                 time += Time.deltaTime;
 
-                // 1) 느린 회전 (60초에 1바퀴)
-                bgTransform.Rotate(0f, 0f, 6f * Time.deltaTime);
+                // 1) 느린 수직 스크롤 (위로 천천히 흘러가는 느낌)
+                float scrollY = Mathf.Sin(time * 0.3f) * 0.5f;
+                bgTransform.position = basePos + new Vector3(0f, scrollY, 0f);
 
                 // 2) 미세한 펄스 (±3%)
                 float pulse = 1f + 0.03f * Mathf.Sin(time * 1.5f);
                 float s = baseScale * pulse;
                 bgTransform.localScale = new Vector3(s, s, 1f);
 
-                // 3) 색상 사이클 (밝기 변조)
+                // 3) 색상 사이클 (밝기 + 약간의 색조 변화)
                 if (bgSr != null)
                 {
-                    float brightness = 0.85f + 0.15f * Mathf.Sin(time * 0.8f);
-                    bgSr.color = new Color(brightness, brightness, brightness, 1f);
+                    float r = 0.85f + 0.10f * Mathf.Sin(time * 0.7f);
+                    float g = 0.85f + 0.10f * Mathf.Sin(time * 0.7f + 0.5f);
+                    float b = 0.90f + 0.10f * Mathf.Sin(time * 0.7f + 1.0f);
+                    bgSr.color = new Color(r, g, b, 1f);
                 }
 
                 yield return null;
