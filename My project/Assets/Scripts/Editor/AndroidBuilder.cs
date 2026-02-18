@@ -54,9 +54,10 @@ namespace AIBeat.Editor
                 EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
             }
 
-            // 빌드 씬 목록
+            // 빌드 씬 목록 (Build Settings 순서와 동일)
             string[] scenes = new string[]
             {
+                "Assets/Scenes/SplashScene.unity",
                 "Assets/Scenes/MainMenuScene.unity",
                 "Assets/Scenes/SongSelectScene.unity",
                 "Assets/Scenes/Gameplay.unity"
@@ -75,7 +76,7 @@ namespace AIBeat.Editor
                 scenes = scenes,
                 locationPathName = apkPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.Development | BuildOptions.AllowDebugging
+                options = BuildOptions.None // Release 빌드 (Development/Debugging 제거)
             };
 
             Debug.Log($"[AndroidBuilder] Starting Android APK build...");

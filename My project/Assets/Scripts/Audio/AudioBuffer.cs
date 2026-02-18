@@ -53,7 +53,9 @@ namespace AIBeat.Audio
 
             if (clip.loadState != AudioDataLoadState.Loaded)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning($"[AudioBuffer] Clip '{clip.name}' failed to load within {timeout}s");
+#endif
             }
         }
 

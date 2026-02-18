@@ -180,7 +180,9 @@ namespace AIBeat.Core
                 }
                 else
                 {
+#if UNITY_EDITOR
                     Debug.LogError($"[AudioManager] Failed to load audio: {www.error}");
+#endif
                     OnBGMLoadFailed?.Invoke(www.error);
                 }
             }
@@ -200,7 +202,9 @@ namespace AIBeat.Core
         {
             if (bgmSource.clip == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[AudioManager] No BGM clip loaded");
+#endif
                 return;
             }
 
@@ -287,7 +291,9 @@ namespace AIBeat.Core
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogError($"[AudioManager] Failed to load from Resources: {path}");
+#endif
             }
             return clip;
         }
@@ -323,7 +329,9 @@ namespace AIBeat.Core
                 }
                 else
                 {
+#if UNITY_EDITOR
                     Debug.LogError($"[AudioManager] Failed to load: {www.error}");
+#endif
                 }
             }
         }
@@ -350,7 +358,9 @@ namespace AIBeat.Core
         {
             if (!isDebugMode)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[AudioManager] StartDebugPlayback called but isDebugMode=false!");
+#endif
                 return;
             }
             isDebugPlaying = true;

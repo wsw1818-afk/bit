@@ -161,7 +161,9 @@ namespace AIBeat.Core
             currentState = newState;
             OnStateChanged?.Invoke(newState);
 
+#if UNITY_EDITOR
             Debug.Log($"[GameManager] State changed to: {newState}");
+#endif
         }
 
         public void LoadScene(string sceneName)
@@ -174,12 +176,16 @@ namespace AIBeat.Core
             // Gameplay 씬 전환 시 로딩 화면 사용
             if (sceneName == "Gameplay" && LoadingScreen.Instance != null)
             {
+#if UNITY_EDITOR
                 Debug.Log("[GameManager] 로딩 화면 경로로 씬 전환 시작");
+#endif
                 StartCoroutine(LoadSceneWithLoadingScreen(sceneName));
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.Log($"[GameManager] 일반 페이드 경로로 씬 전환: {sceneName}");
+#endif
                 StartCoroutine(LoadSceneWithFade(sceneName));
             }
         }
@@ -384,7 +390,9 @@ namespace AIBeat.Core
                 if (Time.timeScale < 0.01f)
                 {
                     Time.timeScale = 1f;
+#if UNITY_EDITOR
                     Debug.LogWarning($"[GameManager] timeScale was 0 in state {currentState}, restored to 1");
+#endif
                 }
             }
         }

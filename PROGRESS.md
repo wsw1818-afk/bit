@@ -248,6 +248,7 @@ namespace AIBeat.Core
 | 5 | ~~GameplayController debugMode 런타임 토글~~ | `GameplayController.cs:31-35` | ✅ 수정완료 | `#if UNITY_EDITOR` 컴파일 조건 사용 중 |
 | 6 | ~~InputHandler 레인 경계 예외 처리~~ | `InputHandler.cs:58-66` | ✅ 수정완료 | try-catch + 균등분할 폴백 구현됨 |
 | 7 | ~~Coroutine 중복 시작 방지~~ | `GameplayController.cs:59-62, 79-82` | ✅ 수정완료 | null 체크 후 시작 구현됨 |
+| 8 | ~~Debug.Log 빌드 성능 (전체)~~ | 11개 파일 | ✅ 수정완료 | 모든 런타임 스크립트의 Debug 호출 `#if UNITY_EDITOR` 래핑 |
 
 #### 🟢 Medium (개선 권장)
 | # | 문제 | 위치 | 상태 | 비고 |
@@ -651,7 +652,7 @@ private void CreateFloatingSettingsButton()
 3. ~~JudgementSystem 이벤트 해제~~ → 오진 (발행 측)
 4. ✅ NoteSpawner Material 캐싱 + OnDestroy 정리
 5. ✅ InputHandler 레인 경계 인식 → 레인 중심 기준 계산
-6. ✅ Debug.Log 빌드 성능 → 에디터 전용 래핑
+6. ✅ Debug.Log 빌드 성능 → 에디터 전용 래핑 (전체 11개 파일 완료)
 
 ### 우선순위 2 (이번 주) — 2026-02-17 완료
 1. ✅ ErrorHandler 시스템 구현 (`Core/ErrorHandler.cs`)
@@ -957,7 +958,7 @@ public static class ErrorHandler
 - [x] **AudioManager** DontDestroyOnLoad → 오진 (의도적 미사용)
 - [x] **JudgementSystem** 이벤트 구독 해제 → OnDestroy() 구현됨
 - [x] **NoteSpawner** OnDestroy 정리 → Material/프리팹 정리 구현됨
-- [x] **Debug.Log** 빌드 성능 → `#if UNITY_EDITOR` 래핑 완료 (GameplayController, NoteSpawner, InputHandler)
+- [x] **Debug.Log** 빌드 성능 → `#if UNITY_EDITOR` 래핑 완료 (전체 11개 런타임 스크립트 완료)
 
 #### ~~고우선순위 (1-2주)~~ — 모두 완료됨
 - [x] **UIColorPalette** 색상 개선
@@ -1008,5 +1009,18 @@ public static class ErrorHandler
 
 ---
 
-**마지막 업데이트**: 2026-02-18 (UI 버그 4개 수정: UI-1/UI-3/UI-4/UI-5 이벤트+리소스 정리)
+### 2026-02-18 (Debug.Log 빌드 최적화 - 전체 완료)
+- [x] **나머지 Debug.Log/LogWarning/LogError 전체 #if UNITY_EDITOR 래핑** (11개 파일)
+  - AudioAnalyzer.cs (1개), AudioBuffer.cs (1개), BeatMapper.cs (1개)
+  - OfflineAudioAnalyzer.cs (6개), SmartBeatMapper.cs (1개 - 나머지 3개는 이미 래핑됨)
+  - AndroidMusicScanner.cs (5개), AudioManager.cs (5개)
+  - ErrorHandler.cs (1개), GameManager.cs (4개)
+  - GameplayController.cs (~14개 - 지정 2개 + 추가 발견 12개)
+  - GameplayUI.cs (~17개 - 지정 1개 + 추가 발견 16개)
+- [x] Unity 컴파일 성공 (0 에러, 4 경고 - 기존 무관 경고)
+- **효과**: Android APK 빌드에서 모든 Debug 로깅 오버헤드 제거
+
+---
+
+**마지막 업데이트**: 2026-02-18 (Debug.Log 전체 #if UNITY_EDITOR 래핑 완료 - 11개 파일, 빌드 성능 최적화)
 **다음 검토일**: 2026-02-19

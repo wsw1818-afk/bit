@@ -151,7 +151,9 @@ namespace AIBeat.UI
             if (pauseButton != null) pauseButton.transform.SetAsLastSibling();
             if (pausePanel != null) pausePanel.transform.SetAsLastSibling();
 
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] Awake complete - pauseBtn:{pauseButton != null}, pausePanel:{pausePanel != null}, gameplayCtrl:{gameplayController != null}");
+#endif
         }
 
         /// <summary>
@@ -226,7 +228,9 @@ namespace AIBeat.UI
             judgementSystem = FindFirstObjectByType<JudgementSystem>();
             gameplayController = FindFirstObjectByType<GameplayController>();
 
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] AutoSetup - Score:{scoreText != null}, Combo:{comboText != null}, Judgement:{judgementText != null}, ResultPanel:{resultPanel != null}");
+#endif
             
             // Setup Effect Controller Prefab (UI Image 기반 — Canvas 내부)
             if (effectControllerPrefab == null)
@@ -270,13 +274,17 @@ namespace AIBeat.UI
             if (bgSprite != null)
             {
                 sr.sprite = bgSprite;
+#if UNITY_EDITOR
                 Debug.Log("[GameplayUI] Loaded Gameplay_BG as 3D background");
+#endif
             }
             else
             {
                 sr.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
                 sr.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+#if UNITY_EDITOR
                 Debug.Log("[GameplayUI] Using procedural 3D background (fallback)");
+#endif
             }
 
             // 카메라 뷰를 꽉 채우도록 스케일 (Cover 방식)
@@ -647,7 +655,9 @@ namespace AIBeat.UI
             pauseButton.targetGraphic = btnImage;
             pauseButton.onClick.AddListener(() =>
             {
+#if UNITY_EDITOR
                 Debug.Log("[GameplayUI] ✕ button clicked!");
+#endif
                 // GameplayController를 통한 정상 일시정지
                 if (gameplayController == null)
                     gameplayController = FindFirstObjectByType<GameplayController>();
@@ -1142,7 +1152,9 @@ namespace AIBeat.UI
             // 카운트다운 패널보다 뒤에 위치 (카운트다운이 위에 표시)
             loadingVideoPanel.transform.SetSiblingIndex(0);
 
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] Loading video panel created, URL: {videoPlayer.url}");
+#endif
         }
 
         /// <summary>
@@ -1152,7 +1164,9 @@ namespace AIBeat.UI
         public void ShowLoadingVideo(bool show)
         {
             // 로딩 비디오 기능 비활성화 - 분석 함수 중복 호출 문제 해결 전까지
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] ShowLoadingVideo({show}) - DISABLED");
+#endif
             return;
         }
 
@@ -1636,7 +1650,9 @@ namespace AIBeat.UI
 
         public void ShowPauseMenu(bool show)
         {
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] ShowPauseMenu({show}), pausePanel:{pausePanel != null}");
+#endif
             if (pausePanel != null)
             {
                 pausePanel.SetActive(show);
@@ -1674,7 +1690,9 @@ namespace AIBeat.UI
                 bg.type = Image.Type.Simple;
                 bg.preserveAspect = false;
                 bg.color = new Color(0.7f, 0.7f, 0.7f, 1f); // 살짝 어둡게 (텍스트 가독성)
+#if UNITY_EDITOR
                 Debug.Log("[GameplayUI] Loaded Result_BG as result background");
+#endif
             }
             else
             {
@@ -1786,7 +1804,9 @@ namespace AIBeat.UI
 
             panelGo.SetActive(false);
 
+#if UNITY_EDITOR
             Debug.Log("[GameplayUI] ResultPanel 동적 생성 완료");
+#endif
             return panelGo;
         }
 
@@ -1865,7 +1885,9 @@ namespace AIBeat.UI
 
         public void ShowResult(GameResult result)
         {
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] ShowResult called - resultPanel:{resultPanel != null}, Score:{result.Score}, Rank:{result.Rank}, Miss:{result.MissCount}");
+#endif
 
             // 통계 HUD + 일시정지 버튼 숨기기
             if (statsPanel != null) statsPanel.SetActive(false);
@@ -1873,12 +1895,16 @@ namespace AIBeat.UI
 
             if (resultPanel == null)
             {
+#if UNITY_EDITOR
                 Debug.LogError("[GameplayUI] ResultPanel is NULL! Attempting dynamic creation...");
+#endif
                 resultPanel = CreateResultPanel();
             }
             if (resultPanel == null)
             {
+#if UNITY_EDITOR
                 Debug.LogError("[GameplayUI] ResultPanel creation FAILED! Cannot show result.");
+#endif
                 return;
             }
 
@@ -1938,7 +1964,9 @@ namespace AIBeat.UI
             var rrt = resultPanel.GetComponent<RectTransform>();
             if (rrt == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning($"[GameplayUI] ResultPanel '{resultPanel.name}' has no RectTransform! Adding one...");
+#endif
                 rrt = resultPanel.AddComponent<RectTransform>();
             }
             rrt.anchorMin = Vector2.zero;
@@ -1951,7 +1979,9 @@ namespace AIBeat.UI
             // 안전장치: 1프레임 후 활성 상태 재확인
             StartCoroutine(EnsureResultPanelActive());
 
+#if UNITY_EDITOR
             Debug.Log($"[GameplayUI] ResultPanel shown - active:{resultPanel.activeSelf}, scale:{resultPanel.transform.localScale}, siblingIndex:{resultPanel.transform.GetSiblingIndex()}, parent:{resultPanel.transform.parent?.name}");
+#endif
         }
 
         private System.Collections.IEnumerator EnsureResultPanelActive()
@@ -1962,7 +1992,9 @@ namespace AIBeat.UI
                 yield return null;
                 if (resultPanel != null && !resultPanel.activeSelf)
                 {
+#if UNITY_EDITOR
                     Debug.LogWarning($"[GameplayUI] ResultPanel was deactivated on frame {i+1}! Re-activating...");
+#endif
                     resultPanel.SetActive(true);
                     resultPanel.transform.SetAsLastSibling();
                 }

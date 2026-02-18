@@ -78,7 +78,9 @@ namespace AIBeat.Audio
             int sampleRate = AudioSettings.outputSampleRate;
             if (sampleRate <= 0)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[AudioAnalyzer] Invalid sample rate, using default 44100");
+#endif
                 sampleRate = 44100;
             }
 

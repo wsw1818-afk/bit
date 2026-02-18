@@ -225,7 +225,9 @@ namespace AIBeat.Gameplay
                 currentSong = Resources.Load<SongData>("Songs/SimpleTest");
                 if (currentSong == null)
                 {
+#if UNITY_EDITOR
                     Debug.LogError("[GameplayController] No song data found!");
+#endif
                     return;
                 }
 #if UNITY_EDITOR
@@ -294,7 +296,9 @@ namespace AIBeat.Gameplay
                 if (noteSpawner == null) missing += "NoteSpawner ";
                 if (judgementSystem == null) missing += "JudgementSystem ";
                 if (inputHandler == null) missing += "InputHandler ";
+#if UNITY_EDITOR
                 Debug.LogError($"[GameplayController] Missing critical components: {missing}. Returning to menu.");
+#endif
                 StartCoroutine(SafeReturnToMenu(2f));
                 return;
             }
@@ -385,7 +389,9 @@ namespace AIBeat.Gameplay
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] No audio source, starting without music");
+#endif
                 OnAudioLoaded();
             }
 
@@ -461,7 +467,9 @@ namespace AIBeat.Gameplay
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] AudioManager.Instance is null!");
+#endif
             }
 
             // 노트 스폰 시작
@@ -475,7 +483,9 @@ namespace AIBeat.Gameplay
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogError("[GameplayController] noteSpawner is NULL!");
+#endif
             }
 
             isPlaying = true;
@@ -612,7 +622,9 @@ namespace AIBeat.Gameplay
             // 이미 분석 중이거나 게임이 시작되었으면 무시
             if (isAnalyzing || isPlaying)
             {
+#if UNITY_EDITOR
                 Debug.Log($"[GameplayController] OnAudioLoaded ignored - isAnalyzing={isAnalyzing}, isPlaying={isPlaying}");
+#endif
                 return;
             }
 
@@ -649,7 +661,9 @@ namespace AIBeat.Gameplay
             // 중복 실행 방지: 이미 게임이 시작되었으면 중단
             if (isPlaying)
             {
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] AnalyzeAndGenerateNotes aborted - game already playing");
+#endif
                 isAnalyzing = false;
                 yield break;
             }
@@ -678,14 +692,18 @@ namespace AIBeat.Gameplay
             // 분석 중에 게임이 시작되었으면 중단
             if (isPlaying)
             {
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] AnalyzeAndGenerateNotes aborted after analysis - game already playing");
+#endif
                 isAnalyzing = false;
                 yield break;
             }
 
             if (result == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] Audio analysis failed, using BPM fallback");
+#endif
                 var fallbackSections = currentSong.Sections ?? BeatMapper.CreateDefaultSections(currentSong.Duration);
                 var fallbackNotes = beatMapper.GenerateNotesFromBPM(currentSong.BPM, currentSong.Duration, fallbackSections);
                 isAnalyzing = false;
@@ -1033,7 +1051,9 @@ namespace AIBeat.Gameplay
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogError("[GameplayController] JudgementSystem is null at game end");
+#endif
                 StartCoroutine(SafeReturnToMenu(2f));
             }
         }
@@ -1237,7 +1257,9 @@ namespace AIBeat.Gameplay
 
         private void OnAudioLoadFailed(string error)
         {
+#if UNITY_EDITOR
             Debug.LogError($"[GameplayController] Audio load failed: {error}");
+#endif
             gameplayUI?.ShowCountdown(true);
             gameplayUI?.UpdateCountdown("Load Failed\nReturning...");
             StartCoroutine(SafeReturnToMenu(3f));
@@ -1293,14 +1315,18 @@ namespace AIBeat.Gameplay
             var laneBackground = GameObject.Find("LaneBackground");
             if (laneBackground == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] LaneBackground not found");
+#endif
                 return;
             }
 
             var meshRenderer = laneBackground.GetComponent<MeshRenderer>();
             if (meshRenderer == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] LaneBackground has no MeshRenderer");
+#endif
                 return;
             }
 
@@ -1318,11 +1344,15 @@ namespace AIBeat.Gameplay
             if (laneVisualFeedback != null)
             {
                 laneVisualFeedback.gameObject.SetActive(false);
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] LaneVisualFeedback component disabled");
+#endif
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] LaneVisualFeedback component not found");
+#endif
             }
 
             // NanoBanana 에셋 로드 (Background.png) - 사용자가 원하는 나노바나나 이미지
@@ -1331,7 +1361,9 @@ namespace AIBeat.Gameplay
             // 로드 실패 시 절차적 생성 (Sensational Style)
             if (texture == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] 'Background_Sensation' asset not found. Generating procedural sensation...");
+#endif
                 texture = GenerateSensationalTexture();
             }
 
@@ -1345,7 +1377,9 @@ namespace AIBeat.Gameplay
                 else if (instanceMaterial.HasProperty("_Color"))
                     instanceMaterial.SetColor("_Color", Color.white);
                     
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] Background applied (Source: " + (texture.name == "" ? "Generated" : "Asset") + ")");
+#endif
             }
         }
 

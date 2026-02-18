@@ -86,7 +86,9 @@ namespace AIBeat.Audio
         {
             if (clip == null)
             {
+#if UNITY_EDITOR
                 Debug.LogError("[OfflineAudioAnalyzer] AudioClip is null!");
+#endif
                 return null;
             }
 
@@ -101,7 +103,9 @@ namespace AIBeat.Audio
             int totalFrames = (mono.Length - FFT_SIZE) / HOP_SIZE + 1;
             if (totalFrames <= 0)
             {
+#if UNITY_EDITOR
                 Debug.LogError("[OfflineAudioAnalyzer] Audio too short for analysis");
+#endif
                 return null;
             }
 
@@ -205,7 +209,9 @@ namespace AIBeat.Audio
         {
             if (clip == null)
             {
+#if UNITY_EDITOR
                 Debug.LogError("[OfflineAudioAnalyzer] AudioClip is null!");
+#endif
                 onComplete?.Invoke(null);
                 yield break;
             }
@@ -221,7 +227,9 @@ namespace AIBeat.Audio
             int totalFrames = (mono.Length - FFT_SIZE) / HOP_SIZE + 1;
             if (totalFrames <= 0)
             {
+#if UNITY_EDITOR
                 Debug.LogError("[OfflineAudioAnalyzer] Audio too short for analysis");
+#endif
                 onComplete?.Invoke(null);
                 yield break;
             }
@@ -346,7 +354,9 @@ namespace AIBeat.Audio
             // sampleRate 유효성 검증
             if (sampleRate <= 0f)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[OfflineAudioAnalyzer] Invalid sample rate");
+#endif
                 return energies; // 모든 밴드 에너지 0 반환
             }
 
@@ -357,7 +367,9 @@ namespace AIBeat.Audio
                 // BAND_EDGES 배열 범위 검증 (0-8 인덱스, 9개 요소)
                 if (band + 1 >= BAND_EDGES.Length)
                 {
+#if UNITY_EDITOR
                     Debug.LogError($"[OfflineAudioAnalyzer] Band index out of range: {band}");
+#endif
                     continue;
                 }
 

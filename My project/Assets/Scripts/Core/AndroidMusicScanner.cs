@@ -95,14 +95,18 @@ namespace AIBeat.Core
             }
             catch (Exception e)
             {
+#if UNITY_EDITOR
                 Debug.LogError($"[AndroidMusicScanner] MediaStore 쿼리 실패: {e.Message}");
+#endif
             }
 #else
             results = ScanFileSystemFallback();
 #endif
 
             results = FilterOutRecordings(results);
+#if UNITY_EDITOR
             Debug.Log($"[AndroidMusicScanner] 스캔 완료: {results.Count}곡 (녹음 제외)");
+#endif
             return results;
         }
 
@@ -136,7 +140,9 @@ namespace AIBeat.Core
                 {
                     if (cursor == null)
                     {
+#if UNITY_EDITOR
                         Debug.LogWarning("[AndroidMusicScanner] Cursor is null");
+#endif
                         return list;
                     }
 
@@ -181,7 +187,9 @@ namespace AIBeat.Core
                         }
                         catch (Exception e)
                         {
+#if UNITY_EDITOR
                             Debug.LogWarning($"[AndroidMusicScanner] Row 읽기 실패: {e.Message}");
+#endif
                         }
                     }
 
@@ -189,7 +197,9 @@ namespace AIBeat.Core
                 }
             }
 
+#if UNITY_EDITOR
             Debug.Log($"[AndroidMusicScanner] MediaStore 결과: {list.Count}개");
+#endif
             return list;
         }
 

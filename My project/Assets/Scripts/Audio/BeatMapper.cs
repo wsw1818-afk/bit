@@ -67,7 +67,9 @@ namespace AIBeat.Audio
             // BPM 유효성 검증
             if (bpm <= 0f || bpm > 300f)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning($"[BeatMapper] Invalid BPM: {bpm}, using default 120");
+#endif
                 bpm = 120f;
             }
 

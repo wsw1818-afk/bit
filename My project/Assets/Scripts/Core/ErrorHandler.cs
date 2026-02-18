@@ -53,7 +53,9 @@ namespace AIBeat.Core
             }
             catch (Exception e)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning($"[{context}] SafeInvoke failed: {e.Message}");
+#endif
             }
         }
     }

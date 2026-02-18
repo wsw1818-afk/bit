@@ -37,7 +37,9 @@ namespace AIBeat.Audio
         {
             if (analysis == null || analysis.Onsets == null || analysis.Onsets.Count == 0)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[SmartBeatMapper] No analysis data, generating fallback notes");
+#endif
                 return GenerateFallbackNotes(analysis?.Duration ?? 30f, analysis?.BPM ?? 120f);
             }
 
