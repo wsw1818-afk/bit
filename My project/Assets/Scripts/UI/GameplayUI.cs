@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 using AIBeat.Data;
 using AIBeat.Core;
@@ -107,6 +108,8 @@ namespace AIBeat.UI
             CreateCountdownPanel();
             // CreateLoadingVideoPanel(); // 필요할 때만 생성 (ShowLoadingVideo(true) 호출 시)
             CreateGameplayBackground(); // Cyberpunk 배경 활성화
+            CreateLaneDividers();       // 레인 구분선 (3D)
+            StartBackgroundAnimation(); // 배경 회전/펄스 애니메이션
             CreateHUDFrameOverlay();    // HUD 프레임 오버레이 (배경 위, HUD 아래)
             RepositionHUD();
 
@@ -271,6 +274,89 @@ namespace AIBeat.UI
                 float spriteH = sr.sprite.bounds.size.y;
                 float scale = Mathf.Max(worldWidth / spriteW, worldHeight / spriteH);
                 bgGo.transform.localScale = new Vector3(scale, scale, 1f);
+            }
+        }
+
+        /// <summary>
+        /// 레인 구분선 — 3D 월드에 반투명 네온 라인으로 표시
+        /// 4레인 (간격 1.4f) 사이 3개 + 좌우 테두리 2개 = 5개 라인
+        /// </summary>
+        private void CreateLaneDividers()
+        {
+            if (GameObject.Find("LaneDividers") != null) return;
+
+            var cam = Camera.main;
+            if (cam == null) return;
+
+            var parent = new GameObject("LaneDividers");
+            parent.transform.position = Vector3.zero;
+
+            const float laneWidth = 1.4f;
+            const int laneCount = 4;
+            float camY = cam.transform.position.y;
+            float lineHeight = cam.orthographicSize * 2.5f; // 화면보다 약간 넓게
+            float lineZ = -0.5f; // 노트(Z=-1)보다 뒤, 배경(Z=5)보다 앞
+
+            // 5개 라인: 좌측 테두리, 3개 내부 구분선, 우측 테두리
+            for (int i = 0; i <= laneCount; i++)
+            {
+                float x = (i - laneCount / 2f) * laneWidth;
+                bool isEdge = (i == 0 || i == laneCount);
+
+                var lineGo = new GameObject($"LaneLine_{i}");
+                lineGo.transform.SetParent(parent.transform);
+                lineGo.transform.position = new Vector3(x, camY, lineZ);
+                lineGo.transform.localScale = new Vector3(isEdge ? 0.04f : 0.02f, lineHeight, 1f);
+
+                var sr = lineGo.AddComponent<SpriteRenderer>();
+                sr.sprite = Sprite.Create(
+                    Texture2D.whiteTexture,
+                    new Rect(0, 0, 4, 4),
+                    new Vector2(0.5f, 0.5f), 100f
+                );
+                sr.sortingOrder = -50; // 배경(-100)보다 앞, 노트보다 뒤
+                // 테두리: 밝은 시안, 내부: 연한 시안 반투명
+                sr.color = isEdge
+                    ? new Color(0f, 1f, 1f, 0.35f)
+                    : new Color(0f, 0.8f, 1f, 0.15f);
+            }
+        }
+
+        /// <summary>
+        /// 배경 애니메이션 — 느린 회전 + 펄스 스케일 + 색상 사이클
+        /// </summary>
+        private void StartBackgroundAnimation()
+        {
+            var bg = GameObject.Find("Gameplay_Background_3D");
+            if (bg == null) return;
+            StartCoroutine(BackgroundAnimationLoop(bg.transform, bg.GetComponent<SpriteRenderer>()));
+        }
+
+        private IEnumerator BackgroundAnimationLoop(Transform bgTransform, SpriteRenderer bgSr)
+        {
+            float baseScale = bgTransform.localScale.x;
+            float time = 0f;
+
+            while (bgTransform != null)
+            {
+                time += Time.deltaTime;
+
+                // 1) 느린 회전 (60초에 1바퀴)
+                bgTransform.Rotate(0f, 0f, 6f * Time.deltaTime);
+
+                // 2) 미세한 펄스 (±3%)
+                float pulse = 1f + 0.03f * Mathf.Sin(time * 1.5f);
+                float s = baseScale * pulse;
+                bgTransform.localScale = new Vector3(s, s, 1f);
+
+                // 3) 색상 사이클 (밝기 변조)
+                if (bgSr != null)
+                {
+                    float brightness = 0.85f + 0.15f * Mathf.Sin(time * 0.8f);
+                    bgSr.color = new Color(brightness, brightness, brightness, 1f);
+                }
+
+                yield return null;
             }
         }
 
