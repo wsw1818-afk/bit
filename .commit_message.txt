@@ -1,1 +1,1 @@
-🎨 Gemini AI 생성 배경 이미지 5종 적용 (Splash/Menu/SongSelect/Gameplay/Result) + AssetGenTrigger 덮어쓰기 버그 수정
+🎨 Gemini 배경 이미지 5종 적용 + Gameplay 배경을 3D SpriteRenderer로 변경 (UI Image가 노트 가리는 버그 수정)

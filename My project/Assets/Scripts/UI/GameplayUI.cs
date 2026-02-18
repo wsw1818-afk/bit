@@ -222,42 +222,55 @@ namespace AIBeat.UI
 
 
         /// <summary>
-        /// 배경 이미지 (절차적 Cyberpunk 배경 — Gameplay_BG는 HUD 프레임으로 분리)
+        /// 배경 이미지 — 3D SpriteRenderer로 노트 뒤에 배치 (UI Canvas 아래가 아님)
+        /// Screen Space Overlay 캔버스의 UI Image는 3D 노트를 완전히 가리므로
+        /// 3D 월드 공간에 배경을 배치해야 노트가 보임
         /// </summary>
         private void CreateGameplayBackground()
         {
-            var existing = transform.Find("Gameplay_Background");
-            if (existing != null) return;
+            // 기존 UI 배경 제거 (있다면)
+            var existingUI = transform.Find("Gameplay_Background");
+            if (existingUI != null) Destroy(existingUI.gameObject);
 
-            var bgGo = new GameObject("Gameplay_Background");
-            bgGo.transform.SetParent(transform, false);
-            bgGo.transform.SetAsFirstSibling();
+            // 3D 배경 이미 존재하면 스킵
+            var existing3D = GameObject.Find("Gameplay_Background_3D");
+            if (existing3D != null) return;
 
-            var rect = bgGo.AddComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
+            var cam = Camera.main;
+            if (cam == null) return;
 
-            var img = bgGo.AddComponent<Image>();
-            img.raycastTarget = false;
-
-            // AI 디자인 배경 이미지 로드 (Gameplay_BG.jpg - 네온 터널)
             Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Gameplay_BG");
+
+            var bgGo = new GameObject("Gameplay_Background_3D");
+            // 노트(Z=-1)보다 뒤에 배치 (카메라에서 더 먼 쪽)
+            bgGo.transform.position = new Vector3(cam.transform.position.x, cam.transform.position.y, 5f);
+
+            var sr = bgGo.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = -100; // 최후방 렌더링
+
             if (bgSprite != null)
             {
-                img.sprite = bgSprite;
-                img.type = Image.Type.Simple;
-                img.preserveAspect = false;
-                Debug.Log("[GameplayUI] Loaded Gameplay_BG as background");
+                sr.sprite = bgSprite;
+                Debug.Log("[GameplayUI] Loaded Gameplay_BG as 3D background");
             }
             else
             {
-                // 폴백: 절차적 배경
-                img.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
-                img.type = Image.Type.Sliced;
-                img.color = new Color(0.6f, 0.6f, 0.6f, 1f);
-                Debug.Log("[GameplayUI] Using procedural background (fallback)");
+                sr.sprite = ProceduralImageGenerator.CreateCyberpunkBackground();
+                sr.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+                Debug.Log("[GameplayUI] Using procedural 3D background (fallback)");
+            }
+
+            // 카메라 뷰를 꽉 채우도록 스케일 (Cover 방식)
+            if (sr.sprite != null)
+            {
+                float worldHeight = cam.orthographicSize * 2f;
+                float aspect = (float)Screen.width / Screen.height;
+                float worldWidth = worldHeight * aspect;
+
+                float spriteW = sr.sprite.bounds.size.x;
+                float spriteH = sr.sprite.bounds.size.y;
+                float scale = Mathf.Max(worldWidth / spriteW, worldHeight / spriteH);
+                bgGo.transform.localScale = new Vector3(scale, scale, 1f);
             }
         }
 
