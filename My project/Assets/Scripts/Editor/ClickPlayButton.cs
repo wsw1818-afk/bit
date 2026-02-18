@@ -6,6 +6,29 @@ using AIBeat.Data;
 
 public class ClickPlayButton
 {
+    [MenuItem("Tools/A.I. BEAT/Click Settings Button")]
+    public static void ClickSettings()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("[ClickSettings] Play 모드에서만 실행 가능합니다");
+            return;
+        }
+
+        Application.runInBackground = true;
+
+        var btn = GameObject.Find("SettingsButton")?.GetComponent<Button>();
+        if (btn != null)
+        {
+            Debug.Log("[ClickSettings] SettingsButton 클릭 실행");
+            btn.onClick.Invoke();
+        }
+        else
+        {
+            Debug.LogError("[ClickSettings] SettingsButton을 찾을 수 없습니다");
+        }
+    }
+
     [MenuItem("Tools/A.I. BEAT/Click Play Button")]
     public static void Click()
     {

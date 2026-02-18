@@ -132,11 +132,8 @@ namespace AIBeat.UI
             viewportRect.anchorMax = Vector2.one;
             viewportRect.offsetMin = Vector2.zero;
             viewportRect.offsetMax = Vector2.zero;
-            var viewportImg = viewportGo.AddComponent<Image>();
-            viewportImg.color = Color.clear;
-            viewportImg.raycastTarget = true;  // ScrollRect 터치 감지용
-            var mask = viewportGo.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
+            // RectMask2D 사용 (Image alpha 의존 없이 rect 기반 클리핑)
+            viewportGo.AddComponent<RectMask2D>();
 
             // Content (실제 항목들이 들어가는 영역)
             var contentGo = new GameObject("Content");
