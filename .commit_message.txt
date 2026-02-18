@@ -1,1 +1,1 @@
-✨ 설정 패널 재디자인 + BackgroundDim 기능 구현 + 5개 설정 모두 게임 연동
+🐛 BackgroundDim 셰이더 수정 (Unlit/Color→Sprites/Default, 투명도 지원)

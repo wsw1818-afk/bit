@@ -1332,18 +1332,9 @@ namespace AIBeat.Gameplay
             bgDimOverlay.transform.position = new Vector3(0f, 6f, 0.9f);
             bgDimOverlay.transform.localScale = new Vector3(15f, 20f, 1f);
 
-            // Unlit 투명 머티리얼
+            // Sprites/Default 셰이더 (알파 투명도 네이티브 지원)
             bgDimRenderer = bgDimOverlay.GetComponent<MeshRenderer>();
-            var mat = new Material(Shader.Find("Unlit/Color"));
-            // 투명 렌더링 설정
-            mat.SetFloat("_Mode", 3); // Transparent
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            mat.SetInt("_ZWrite", 0);
-            mat.DisableKeyword("_ALPHATEST_ON");
-            mat.EnableKeyword("_ALPHABLEND_ON");
-            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.renderQueue = 3000;
+            var mat = new Material(Shader.Find("Sprites/Default"));
 
             // 초기 어둡기 적용
             float dim = SettingsManager.Instance != null ? SettingsManager.Instance.BackgroundDim : 0.5f;
