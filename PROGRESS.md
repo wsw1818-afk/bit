@@ -517,5 +517,30 @@ private void CreateFloatingSettingsButton()
 **수정**: 씬 파일에서 3개의 잘못된 SerializedField 참조를 `{fileID: 0}`으로 초기화 + stale 오브젝트 3개 제거
 **교훈**: `[SerializeField]` 필드가 존재하면 Unity는 씬의 오브젝트를 연결할 수 있음 → 코드에서 동적 생성하는 패널이 씬에 빈 오브젝트로 남아있으면 생성 로직이 건너뛰어짐
 
+
+---
+
+### 🎨 NanoBanana 디자인 프롬프트 가이드 (AI 생성용)
+> **사용법**: 아래 영문 프롬프트를 NanoBanana(또는 이미지 생성 툴)에 입력하여 에셋을 생성하세요.
+
+#### 1. 씬(Scene)별 배경 및 화면
+| 화면 (Scene) | 프롬프트 (Core Prompt) | 스타일 키워드 | 비고 |
+|--------------|------------------------|---------------|------|
+| **Splash Screen** | `Futuristic typography logo "AI BEAT" glowing in neon cyan and magenta, floating in dark void, digital particles, glitch effect, minimalism, 8k resolution` | Cyberpunk, Minimalist, Tech | 앱 실행 로고 화면 |
+| **Main Menu** | `Cyberpunk city street at night, wet pavement reflecting neon signs, holographic advertisements, towering skyscrapers, dark blue and purple atmosphere, cinematic lighting, high detail` | Cyberpunk City, Atmospheric, Neon | 메인 메뉴 배경 |
+| **Song Select** | `Futuristic digital music library interface, floating holographic vinyl records, data streams, equalizer bars in background, cool blue tones, organized, sleek UI design` | Holographic, UI, Data | 곡 선택 화면 |
+| **Gameplay BG** | `Hyper-speed tunnel made of neon lights, abstract geometric shapes rushing past, deep depth of field, dark background for contrast, sense of speed and rhythm, music visualizer style` | Abstract, Speed, Dark | 게임 플레이 배경 |
+| **Result Screen** | `Cyberpunk concert stage with spotlights shining down, digital confetti falling, vibrant colors, sense of victory and celebration, dynamic lighting, stadium atmosphere` | Stage, Victory, Spotlight | 결과 화면 |
+| **Loading Screen** | `Abstract neon vortex or spinning digital circle, glowing lines, futuristic data loading visualization, dark background, clean and simple` | Abstract, Loading, Loop | 로딩 화면 |
+
+#### 2. 추가 이펙트 및 요소 (Assets)
+| 요소 (Element) | 프롬프트 (Core Prompt) | 용도 |
+|----------------|------------------------|------|
+| **Note Skin** | `Glowing neon bar, luminous crystal texture, cyan and magenta colors, 3d render, simple geometry` | 노트 디자인 (직사각형 바) |
+| **Explosion VFX** | `Digital explosion burst, neon sparks, light flares, starburst shape, transparent background, high contrast` | 노트 타격 이펙트 (파티클) |
+| **Character (DJ)** | `Cyberpunk DJ character wearing futuristic headphones and visor, mixing music on holographic deck, neon tattoos, anime style, cool pose` | 앨범 아트 또는 캐릭터 |
+
+---
+
 **마지막 업데이트**: 2026-02-18
 **다음 검토일**: 2026-02-19
