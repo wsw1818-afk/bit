@@ -1,1 +1,1 @@
-✨ 미구현 기능 5개 구현 (ListPool, 풀 동적 확장, AutoSave, 스킵/리트라이, AudioBuffer)
+🐛 UI 이벤트/리소스 누수 4건 수정 (SongSelectUI 리스너+슬라이더, MainMenuUI 코루틴 ref, GameplayUI 패널+이펙트풀)

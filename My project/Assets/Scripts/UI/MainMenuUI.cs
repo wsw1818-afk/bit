@@ -1063,9 +1063,12 @@ namespace AIBeat.UI
 
         private void OnDestroy()
         {
-            if (eqAnimCoroutine != null) StopCoroutine(eqAnimCoroutine);
-            if (breatheCoroutine != null) StopCoroutine(breatheCoroutine);
-            if (musicianAnimCoroutine != null) StopCoroutine(musicianAnimCoroutine);
+            // 코루틴 안전 정지 + 참조 해제
+            if (eqAnimCoroutine != null) { StopCoroutine(eqAnimCoroutine); eqAnimCoroutine = null; }
+            if (breatheCoroutine != null) { StopCoroutine(breatheCoroutine); breatheCoroutine = null; }
+            if (musicianAnimCoroutine != null) { StopCoroutine(musicianAnimCoroutine); musicianAnimCoroutine = null; }
+
+            // 버튼 이벤트 정리
             if (playButton != null) playButton.onClick.RemoveAllListeners();
             if (settingsButton != null) settingsButton.onClick.RemoveAllListeners();
             if (exitButton != null) exitButton.onClick.RemoveAllListeners();

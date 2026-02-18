@@ -6,6 +6,197 @@
 
 ---
 
+## 🆕 기획안 상세 보완 완료 (2026-02-18 19:01)
+
+> ⚠️ **다음 AI 작업자 필독**: 아래 작업 목록을 순서대로 진행하세요.
+
+---
+
+## 🚀 다음 AI 작업자를 위한 즉시 작업 가이드
+
+### 📋 작업 순서 (순차 진행 권장)
+
+#### Step 1: P1 작업 (UI 이벤트 리스너 해제) — ✅ 완료
+```
+1. SongSelectUI.cs 열기 ✅
+2. OnDestroy() 메서드에 버튼 이벤트 해제 코드 추가 ✅
+3. 슬라이더 참조 저장 리스트 추가 ✅
+4. 슬라이더 이벤트 해제 코드 추가 ✅
+```
+
+**수정 파일**: `My project/Assets/Scripts/UI/SongSelectUI.cs`
+
+**추가할 코드** (클래스 필드):
+```csharp
+private List<Slider> createdSliders = new List<Slider>();
+```
+
+**수정할 코드** (OnDestroy):
+```csharp
+private void OnDestroy()
+{
+    if (eqAnimCoroutine != null)
+    {
+        StopCoroutine(eqAnimCoroutine);
+        eqAnimCoroutine = null;
+    }
+    
+    // 버튼 이벤트 정리
+    if (backButton != null) backButton.onClick.RemoveAllListeners();
+    if (settingsFAB != null) settingsFAB.onClick.RemoveAllListeners();
+    
+    // 슬라이더 이벤트 정리
+    foreach (var slider in createdSliders)
+    {
+        if (slider != null)
+            slider.onValueChanged.RemoveAllListeners();
+    }
+    createdSliders.Clear();
+}
+```
+
+---
+
+#### Step 2: P2 작업 (UI 개선) — ✅ 완료
+```
+1. MainMenuUI.cs - 코루틴 ref null 설정 추가 ✅
+2. GameplayUI.cs - 동적 생성 패널+이펙트풀 정리 코드 추가 ✅
+```
+
+**수정 파일 1**: `My project/Assets/Scripts/UI/MainMenuUI.cs`
+
+**추가할 코드** (OnDestroy 개선):
+```csharp
+private void OnDestroy()
+{
+    SafeStopCoroutine(ref eqAnimCoroutine);
+    SafeStopCoroutine(ref breatheCoroutine);
+    SafeStopCoroutine(ref musicianAnimCoroutine);
+    
+    SafeRemoveListeners(playButton);
+    SafeRemoveListeners(settingsButton);
+    SafeRemoveListeners(exitButton);
+}
+
+private void SafeStopCoroutine(ref Coroutine coroutine)
+{
+    if (coroutine != null)
+    {
+        StopCoroutine(coroutine);
+        coroutine = null;
+    }
+}
+
+private void SafeRemoveListeners(Button btn)
+{
+    if (btn != null)
+        btn.onClick.RemoveAllListeners();
+}
+```
+
+**수정 파일 2**: `My project/Assets/Scripts/UI/GameplayUI.cs`
+
+**OnDestroy에 추가**:
+```csharp
+// 동적 생성 패널 정리
+if (resultPanel != null) Destroy(resultPanel);
+if (pausePanel != null) Destroy(pausePanel);
+if (countdownPanel != null) Destroy(countdownPanel);
+if (analysisOverlay != null) Destroy(analysisOverlay);
+```
+
+---
+
+#### Step 3: 신규 파일 생성 — ✅ 이전 세션에서 완료
+```
+1. Scripts/Core/ErrorHandler.cs 생성 ✅ (static 유틸리티 클래스)
+2. Scripts/Utils/ListPool.cs 생성 ✅
+```
+
+**생성 파일**: `My project/Assets/Scripts/Core/ErrorHandler.cs`
+
+```csharp
+using UnityEngine;
+using System;
+
+namespace AIBeat.Core
+{
+    public class ErrorHandler : MonoBehaviour
+    {
+        public static ErrorHandler Instance { get; private set; }
+        
+        public enum ErrorSeverity { Info, Warning, Error, Critical }
+        
+        public event Action<string, ErrorSeverity> OnErrorOccurred;
+        
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        
+        public void HandleError(string context, Exception exception, ErrorSeverity severity = ErrorSeverity.Error)
+        {
+            string message = $"[{context}] {exception.Message}";
+            
+            switch (severity)
+            {
+                case ErrorSeverity.Info: Debug.Log(message); break;
+                case ErrorSeverity.Warning: Debug.LogWarning(message); break;
+                case ErrorSeverity.Error:
+                case ErrorSeverity.Critical: Debug.LogError(message); break;
+            }
+            
+            OnErrorOccurred?.Invoke(message, severity);
+        }
+        
+        public bool TryExecute(string context, Action action, ErrorSeverity severity = ErrorSeverity.Warning)
+        {
+            try
+            {
+                action?.Invoke();
+                return true;
+            }
+            catch (Exception e)
+            {
+                HandleError(context, e, severity);
+                return false;
+            }
+        }
+    }
+}
+```
+
+---
+
+### 📄 상세 기획안 참조
+모든 수정 코드와 상세 설명은 [`Docs/BUG_FIX_AND_IMPROVEMENT_PLAN.md`](Docs/BUG_FIX_AND_IMPROVEMENT_PLAN.md) 참조
+
+### 🔍 UI 파일 추가 분석 결과
+
+#### 신규 발견 버그
+| ID | 문제 | 파일 | 우선순위 | 상태 |
+|----|------|------|----------|------|
+| UI-1 | ~~코루틴 null 체크 후 StopCoroutine 개선~~ | `MainMenuUI.cs` | P2 | ✅ 완료 | OnDestroy에서 coroutine ref = null 추가 |
+| UI-2 | FindDeepChild 성능 이슈 (캐싱 필요) | `MainMenuUI.cs` | P2 | ⏸ 스킵 | 초기화 시에만 호출 — premature optimization |
+| UI-3 | ~~이벤트 리스너 해제 누락~~ | `SongSelectUI.cs` | P1 | ✅ 완료 | backButton/FAB/slider OnDestroy 정리 추가 |
+| UI-4 | ~~설정 슬라이더 이벤트 메모리 누수~~ | `SongSelectUI.cs` | P2 | ✅ 완료 | createdSliders 리스트로 추적+정리 |
+| UI-5 | ~~동적 생성 UI 요소 명시적 정리~~ | `GameplayUI.cs` | P2 | ✅ 완료 | 패널4개+이펙트풀 OnDestroy에서 Destroy |
+
+### 📊 구현 우선순위 매트릭스
+| 우선순위 | 항목 수 | 예상 시간 | 상태 |
+|----------|---------|-----------|------|
+| P0 (즉시) | 0개 | — | ✅ 완료 (기존 버그 모두 해결됨) |
+| P1 (1주) | 1개 | 15분 | ✅ UI-3 완료 |
+| P2 (2주) | 4개 | 50분 | ✅ UI-1,UI-4,UI-5 완료 / UI-2 스킵 |
+
+---
+
 ## 🆕 신규 기획안 작성 완료 (2026-02-18)
 
 ### 📄 기획 문서
@@ -817,5 +1008,5 @@ public static class ErrorHandler
 
 ---
 
-**마지막 업데이트**: 2026-02-18 (미구현 기능 5개 구현: ListPool, ExpandPool, AutoSave, Skip/Retry, AudioBuffer)
+**마지막 업데이트**: 2026-02-18 (UI 버그 4개 수정: UI-1/UI-3/UI-4/UI-5 이벤트+리소스 정리)
 **다음 검토일**: 2026-02-19

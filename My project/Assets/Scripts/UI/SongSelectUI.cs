@@ -28,6 +28,10 @@ namespace AIBeat.UI
         private List<Image> eqBars = new List<Image>();
         private Coroutine eqAnimCoroutine;
 
+        // 이벤트 정리용 참조
+        private Button backButtonRef;
+        private List<Slider> createdSliders = new List<Slider>();
+
         private void Start()
         {
             Debug.Log("[SongSelectUI] Start() 호출됨 - 리디자인 v2");
@@ -277,6 +281,7 @@ namespace AIBeat.UI
 
             var backBtnComp = backBtn.AddComponent<Button>();
             backBtnComp.onClick.AddListener(OnBackClicked);
+            backButtonRef = backBtnComp;
 
             var backOutline = backBtn.AddComponent<Outline>();
             backOutline.effectColor = UIColorPalette.NEON_MAGENTA;
@@ -711,6 +716,8 @@ namespace AIBeat.UI
                 labelTmp.text = $"{label}: {val:F0}";
                 onChanged?.Invoke(val);
             });
+
+            createdSliders.Add(slider);
         }
 
         private void EnsureCanvasScaler()
@@ -734,7 +741,24 @@ namespace AIBeat.UI
 
         private void OnDestroy()
         {
-            if (eqAnimCoroutine != null) StopCoroutine(eqAnimCoroutine);
+            if (eqAnimCoroutine != null)
+            {
+                StopCoroutine(eqAnimCoroutine);
+                eqAnimCoroutine = null;
+            }
+
+            // 버튼 이벤트 정리
+            if (backButtonRef != null) backButtonRef.onClick.RemoveAllListeners();
+            var fabBtn = settingsFAB != null ? settingsFAB.GetComponent<Button>() : null;
+            if (fabBtn != null) fabBtn.onClick.RemoveAllListeners();
+
+            // 슬라이더 이벤트 정리
+            foreach (var slider in createdSliders)
+            {
+                if (slider != null)
+                    slider.onValueChanged.RemoveAllListeners();
+            }
+            createdSliders.Clear();
         }
     }
 }

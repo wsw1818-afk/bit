@@ -2192,6 +2192,23 @@ namespace AIBeat.UI
             if (retryButton != null) retryButton.onClick.RemoveAllListeners();
             if (menuButton != null) menuButton.onClick.RemoveAllListeners();
 
+            // 동적 생성 패널 명시적 정리
+            if (resultPanel != null) Destroy(resultPanel);
+            if (pausePanel != null) Destroy(pausePanel);
+            if (countdownPanel != null) Destroy(countdownPanel);
+            if (analysisPanel != null) Destroy(analysisPanel);
+
+            // 판정 이펙트 풀 정리
+            if (effectPool != null)
+            {
+                foreach (var effect in effectPool)
+                {
+                    if (effect != null && effect.gameObject != null)
+                        Destroy(effect.gameObject);
+                }
+                effectPool.Clear();
+            }
+
             // 영상 리소스 해제 (ShowLoadingVideo(false)에서 이미 해제되었을 수 있음)
             if (videoPlayer != null)
             {
