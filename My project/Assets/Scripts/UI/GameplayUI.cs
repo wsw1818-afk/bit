@@ -133,10 +133,6 @@ namespace AIBeat.UI
             if (resultPanel != null) resultPanel.SetActive(false);
             if (judgementText != null) judgementText.gameObject.SetActive(false);
 
-            // Z-order 보장: ✕ 버튼 → 일시정지 패널 순으로 최상위
-            if (pauseButton != null) pauseButton.transform.SetAsLastSibling();
-            if (pausePanel != null) pausePanel.transform.SetAsLastSibling();
-
             // Combo 초기 텍스트 비우기 (콤보 0일때 표시 안함)
             if (comboText != null) comboText.text = "";
 
@@ -149,6 +145,11 @@ namespace AIBeat.UI
                 hudFrame.SetSiblingIndex(1); // 0=배경, 1=프레임, 2+=HUD 요소들
 
             EnsureSafeArea(); // 모든 UI 셋업 후 마지막에 SafeArea 적용
+
+            // Z-order 보장: SafeAreaApplier 이후에 설정해야 유효함
+            // SafeAreaApplier가 모든 자식을 SafeAreaPanel로 이동시킴
+            if (pauseButton != null) pauseButton.transform.SetAsLastSibling();
+            if (pausePanel != null) pausePanel.transform.SetAsLastSibling();
 
             Debug.Log($"[GameplayUI] Awake complete - pauseBtn:{pauseButton != null}, pausePanel:{pausePanel != null}, gameplayCtrl:{gameplayController != null}");
         }
@@ -646,12 +647,13 @@ namespace AIBeat.UI
             pauseButton.targetGraphic = btnImage;
             pauseButton.onClick.AddListener(() =>
             {
-#if UNITY_EDITOR
-                Debug.Log("[GameplayUI] Pause button clicked!");
-#endif
+                Debug.Log($"[GameplayUI] ✕ button clicked! gameplayCtrl={gameplayController != null}");
                 if (gameplayController == null)
                     gameplayController = FindFirstObjectByType<GameplayController>();
-                gameplayController?.PauseGame();
+                if (gameplayController != null)
+                    gameplayController.PauseGame();
+                else
+                    Debug.LogError("[GameplayUI] GameplayController NOT found!");
             });
         }
 
