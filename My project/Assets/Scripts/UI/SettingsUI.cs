@@ -105,32 +105,65 @@ namespace AIBeat.UI
                 fullscreenBackground = null;
             }
 
-            // 전체 화면 배경 생성
+            // 불투명 배경 (SettingsUI 자식으로 생성 → z-order 자동 해결)
             CreateFullscreenBackground();
 
-            // 스크롤 가능한 콘텐츠 영역
-            var contentGo = new GameObject("Content");
-            contentGo.transform.SetParent(transform, false);
-            var contentRect = contentGo.AddComponent<RectTransform>();
-            contentRect.anchorMin = Vector2.zero;
-            contentRect.anchorMax = Vector2.one;
-            contentRect.offsetMin = new Vector2(20, 100); // 하단 버튼 영역 확보
-            contentRect.offsetMax = new Vector2(-20, 0); // 상단 여백 없음
+            // === ScrollRect로 스크롤 가능한 콘텐츠 영역 ===
+            var scrollGo = new GameObject("ScrollView");
+            scrollGo.transform.SetParent(transform, false);
+            var scrollRect = scrollGo.AddComponent<RectTransform>();
+            scrollRect.anchorMin = Vector2.zero;
+            scrollRect.anchorMax = Vector2.one;
+            scrollRect.offsetMin = new Vector2(0, 90);   // 하단 버튼 영역 확보
+            scrollRect.offsetMax = new Vector2(0, 0);
 
+            var scrollView = scrollGo.AddComponent<ScrollRect>();
+            scrollView.horizontal = false;
+            scrollView.vertical = true;
+            scrollView.movementType = ScrollRect.MovementType.Elastic;
+            scrollView.elasticity = 0.1f;
+            scrollView.scrollSensitivity = 30f;
+
+            // Viewport (마스크)
+            var viewportGo = new GameObject("Viewport");
+            viewportGo.transform.SetParent(scrollGo.transform, false);
+            var viewportRect = viewportGo.AddComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = Vector2.zero;
+            viewportRect.offsetMax = Vector2.zero;
+            var viewportImg = viewportGo.AddComponent<Image>();
+            viewportImg.color = Color.clear;
+            viewportImg.raycastTarget = true;  // ScrollRect 터치 감지용
+            var mask = viewportGo.AddComponent<Mask>();
+            mask.showMaskGraphic = false;
+
+            // Content (실제 항목들이 들어가는 영역)
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(viewportGo.transform, false);
+            var contentRect = contentGo.AddComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 1);  // 상단 기준
+            contentRect.anchorMax = new Vector2(1, 1);
+            contentRect.pivot = new Vector2(0.5f, 1);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0, 0);  // ContentSizeFitter가 조절
+
+            scrollView.viewport = viewportRect;
+            scrollView.content = contentRect;
 
             // VerticalLayoutGroup으로 항목 정렬
             var layout = contentGo.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(15, 15, 5, 5);
-            layout.spacing = 14;  // 여유있게
+            layout.padding = new RectOffset(20, 20, 10, 10);
+            layout.spacing = 12;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            // ContentSizeFitter 제거 - 콘텐츠가 화면 전체를 채우도록
-            // var fitter = contentGo.AddComponent<ContentSizeFitter>();
-            // fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // ContentSizeFitter로 콘텐츠 크기 자동 조절 (스크롤 활성화)
+            var fitter = contentGo.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // 타이틀
             CreateTitle(contentGo.transform, "설정");
@@ -719,60 +752,44 @@ namespace AIBeat.UI
             // 설정창을 최상위로 이동 (다른 UI 요소 위에 표시)
             transform.SetAsLastSibling();
 
-            // 전체 화면 배경이 없으면 생성
+            // 배경이 없으면 재생성
             if (fullscreenBackground == null)
-            {
                 CreateFullscreenBackground();
-            }
 
-            // 전체 화면 배경 표시 및 위치 조정 (SafeAreaPanel 뒤에)
             if (fullscreenBackground != null)
             {
                 fullscreenBackground.SetActive(true);
-                fullscreenBackground.transform.SetAsFirstSibling();  // 가장 먼저 렌더링 = 가장 뒤
+                fullscreenBackground.transform.SetAsFirstSibling();
             }
 
             RefreshValues();
         }
 
         /// <summary>
-        /// 전체 화면 배경 생성 (SafeArea 무시)
+        /// 불투명 배경 생성 (SettingsUI 자식 → z-order 자동 해결)
+        /// SafeArea 밖까지 커버하기 위해 오프셋 확장
         /// </summary>
         private void CreateFullscreenBackground()
         {
-            var canvas = GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                Debug.LogWarning("[SettingsUI] Canvas not found!");
-                return;
-            }
+            fullscreenBackground = new GameObject("SettingsBG");
+            fullscreenBackground.transform.SetParent(transform, false);
+            fullscreenBackground.transform.SetAsFirstSibling();  // Content보다 뒤에 렌더
 
-            fullscreenBackground = new GameObject("SettingsFullscreenBackground");
-            fullscreenBackground.transform.SetParent(canvas.transform, false);
             var bgRect = fullscreenBackground.AddComponent<RectTransform>();
             bgRect.anchorMin = Vector2.zero;
             bgRect.anchorMax = Vector2.one;
-            bgRect.offsetMin = Vector2.zero;
-            bgRect.offsetMax = Vector2.zero;
+            // SafeArea 밖까지 커버하기 위해 여유있게 확장
+            bgRect.offsetMin = new Vector2(-100, -100);
+            bgRect.offsetMax = new Vector2(100, 100);
+
             var panelImage = fullscreenBackground.AddComponent<Image>();
-            panelImage.color = new Color(0.02f, 0.02f, 0.06f, 1f);  // 완전 불투명 어두운 배경
-            panelImage.raycastTarget = true;  // 클릭 차단
-
-            // 네온 테두리
-            var outline = fullscreenBackground.AddComponent<Outline>();
-            outline.effectColor = BORDER_CYAN;
-            outline.effectDistance = new Vector2(3, -3);
-
-            Debug.Log($"[SettingsUI] Fullscreen background created. Canvas: {canvas.name}");
+            panelImage.color = new Color(0.02f, 0.02f, 0.06f, 1f);  // 완전 불투명
+            panelImage.raycastTarget = true;  // 뒤쪽 터치 차단
         }
 
         private void OnDisable()
         {
-            // 전체 화면 배경 숨기기
-            if (fullscreenBackground != null)
-            {
-                fullscreenBackground.SetActive(false);
-            }
+            // 배경은 SettingsUI 자식이므로 패널 비활성화 시 자동으로 숨겨짐
         }
 
         /// <summary>
