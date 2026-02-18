@@ -228,7 +228,9 @@ namespace AIBeat.Gameplay
             // 노트 크기: 1.1 x 0.3
             noteObj.transform.localScale = new Vector3(1.1f, 0.3f, 1f);
 
+#if UNITY_EDITOR
             Debug.Log($"[NoteSpawner] Note {name} created: MeshRenderer, shader={shader?.name}, color={color}, scale={noteObj.transform.localScale}");
+#endif
 
             // Note 컴포넌트 추가
             noteObj.AddComponent<Note>();
@@ -349,7 +351,9 @@ namespace AIBeat.Gameplay
             if (notes.Count > 0 && notes[0].HitTime < minHitTime)
             {
                 float offset = minHitTime - notes[0].HitTime;
+#if UNITY_EDITOR
                 Debug.Log($"[NoteSpawner] Notes start too early ({notes[0].HitTime:F2}s), adding {offset:F2}s offset to all notes");
+#endif
                 for (int i = 0; i < notes.Count; i++)
                 {
                     var n = notes[i];

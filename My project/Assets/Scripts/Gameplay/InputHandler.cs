@@ -117,6 +117,7 @@ namespace AIBeat.Gameplay
             laneBoundaries[0] = 0f;
             laneBoundaries[touchZoneCount] = 1f;
 
+#if UNITY_EDITOR
             string boundaryStr = "";
             for (int j = 0; j < laneBoundaries.Length; j++)
                 boundaryStr += (j > 0 ? ", " : "") + laneBoundaries[j].ToString("F3");
@@ -130,6 +131,7 @@ namespace AIBeat.Gameplay
                 centerStr += (j > 0 ? ", " : "") + (sp.x / Screen.width).ToString("F3");
             }
             Debug.Log($"[InputHandler] Lane centers (normalized): {centerStr}");
+#endif
         }
 
         /// <summary>

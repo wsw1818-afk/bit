@@ -6,20 +6,20 @@
 
 ### 🐛 발견된 버그 및 수정 필요 사항
 
-#### 🔴 Critical (즉시 수정 필요)
-| # | 문제 | 위치 | 상태 | 수정 가이드 | 비고 |
-|---|------|------|------|-------------|------|
-| 1 | **SettingsManager DontDestroyOnLoad 누락** | `SettingsManager.cs:98-106` | ❌ 미수정 | 아래 수정 가이드 #1 참고 | 씬 전환 시 설정 초기화됨 |
-| 2 | **AudioManager DontDestroyOnLoad 누락** | `AudioManager.cs:72-83` | ❌ 미수정 | 아래 수정 가이드 #2 참고 | 씬 전환 시 오디오 끊김 |
-| 3 | **JudgementSystem 이벤트 구독 해제 누락** | `JudgementSystem.cs:79-80` | ❌ 미수정 | 아래 수정 가이드 #3 참고 | 메모리 누수 위험 |
-| 4 | **NoteSpawner 동적 프리팹 메모리 누수** | `NoteSpawner.cs:40-42` | ❌ 미수정 | 아래 수정 가이드 #4 참고 | 동적 생성된 Material 정리 필요 |
+#### 🔴 Critical (분석 완료 - 2026-02-18)
+| # | 문제 | 위치 | 상태 | 비고 |
+|---|------|------|------|------|
+| 1 | ~~SettingsManager DontDestroyOnLoad 누락~~ | `SettingsManager.cs:96-107` | ✅ 오진 | 의도적 미사용 (에디터 인스턴스 중복 방지, PlayerPrefs로 설정 유지) |
+| 2 | ~~AudioManager DontDestroyOnLoad 누락~~ | `AudioManager.cs:72-83` | ✅ 오진 | 의도적 미사용 (씬별 재생성, 코드 주석으로 확인) |
+| 3 | ~~JudgementSystem 이벤트 구독 해제 누락~~ | `JudgementSystem.cs:287-290` | ✅ 수정완료 | OnDestroy()에서 이벤트 해제 구현됨 |
+| 4 | ~~NoteSpawner 동적 프리팹 메모리 누수~~ | `NoteSpawner.cs:644-669` | ✅ 수정완료 | OnDestroy()에서 Material/프리팹 정리 구현됨 |
 
-#### 🟡 High (1주 내 수정 권장)
-| # | 문제 | 위치 | 상태 | 수정 가이드 | 비고 |
-|---|------|------|------|-------------|------|
-| 5 | **GameplayController debugMode 런타임 토글** | `GameplayController.cs:31-35` | ❌ 미수정 | 개발 중이므로 우선순위 낮음 | 현재 컴파일 조걶 사용 중 |
-| 6 | **InputHandler 레인 경계 예외 처리** | `InputHandler.cs:62-66` | ❌ 미수정 | try-catch 강화, 폴팰백 추가 | 치메라 미확보 시 크래시 |
-| 7 | **Coroutine 중복 시작 방지** | `GameplayController.cs:55-72` | ❌ 미수정 | null 체크 후 시작 | 성능 이슈 |
+#### 🟡 High (분석 완료 - 2026-02-18)
+| # | 문제 | 위치 | 상태 | 비고 |
+|---|------|------|------|------|
+| 5 | ~~GameplayController debugMode 런타임 토글~~ | `GameplayController.cs:31-35` | ✅ 수정완료 | `#if UNITY_EDITOR` 컴파일 조건 사용 중 |
+| 6 | ~~InputHandler 레인 경계 예외 처리~~ | `InputHandler.cs:58-66` | ✅ 수정완료 | try-catch + 균등분할 폴백 구현됨 |
+| 7 | ~~Coroutine 중복 시작 방지~~ | `GameplayController.cs:59-62, 79-82` | ✅ 수정완료 | null 체크 후 시작 구현됨 |
 
 #### 🟢 Medium (개선 권장)
 | # | 문제 | 위치 | 상태 | 비고 |
@@ -520,6 +520,238 @@ private void CreateFloatingSettingsButton()
 
 ---
 
+## 🔧 추가 개선 기획안 (2026-02-18 분석)
+
+### 1. 아키텍처/구조적 개선
+
+#### 1.1 싱글톤 관리 (2026-02-18 검증 완료)
+| 항목 | 현재 상태 | 설계 의도 | 비고 |
+|------|-----------|-----------|------|
+| **SettingsManager** | `DontDestroyOnLoad` 미사용 | ✅ 의도적 — PlayerPrefs로 설정 유지, 씬별 재생성 | 에디터 인스턴스 중복 방지 |
+| **AudioManager** | `DontDestroyOnLoad` 미사용 | ✅ 의도적 — 씬별 재생성, 코루틴 문제 회피 | OnDestroy에서 이벤트 해제 |
+| **GameManager** | `DontDestroyOnLoad` 사용 | ✅ 양호 — 게임 상태 관리용 | 참조용으로 유지 |
+
+#### 1.2 이벤트 구독 관리 (2026-02-18 검증 완료)
+| 위치 | 이벤트 구독 | 해제 여부 | 비고 |
+|------|-------------|-----------|------|
+| **JudgementSystem** | `SettingsManager.OnSettingChanged` | ✅ 해제됨 | `OnDestroy()` (L287-290) |
+| **NoteSpawner** | `SettingsManager.OnSettingChanged` | ✅ 해제됨 | `OnDestroy()` (L648) |
+| **AudioManager** | `SettingsManager.OnSettingChanged` | ✅ 해제됨 | `OnDestroy()` (L87) |
+| **GameplayController** | 여러 이벤트 | ✅ 해제됨 | `OnDestroy()` (L1173-1204) |
+
+**권장 패턴:**
+```csharp
+private void OnEnable()  // 또는 Awake/Start
+{
+    SettingsManager.OnSettingChanged += OnSettingChanged;
+}
+
+private void OnDisable()  // 또는 OnDestroy
+{
+    SettingsManager.OnSettingChanged -= OnSettingChanged;
+}
+```
+
+### 2. 성능 최적화
+
+#### 2.1 오브젝트 풀링 개선
+**현재:** `NoteSpawner.cs:30-31` - 고정 크기 풀
+```csharp
+[SerializeField] private int poolSize = 100;  // 고정 크기
+```
+
+**개선안 - 동적 풀 확장:**
+```csharp
+public class NotePool : MonoBehaviour
+{
+    [Header("Pool Configuration")]
+    [SerializeField] private int initialSize = 50;
+    [SerializeField] private int maxSize = 200;
+    [SerializeField] private float expandThreshold = 0.8f;  // 80% 사용 시 확장
+    
+    private Dictionary<NoteType, Queue<Note>> pools = new();
+    private Dictionary<NoteType, int> activeCounts = new();
+    
+    public Note GetNote(NoteType type)
+    {
+        // 풀이 부족하면 동적 확장
+        if (pools[type].Count == 0 && activeCounts[type] < maxSize)
+        {
+            ExpandPool(type, 20);  // 20개씩 증가
+        }
+        
+        var note = pools[type].Dequeue();
+        activeCounts[type]++;
+        return note;
+    }
+}
+```
+
+#### 2.2 GC Allocation 최적화
+**문제 지점:**
+1. **InputHandler.cs** - 터치 처리 시 매 프레임 Dictionary 순회
+2. **GameplayController.cs** - 롱노트 홀드 복합 계산 시 List 할당
+3. **JudgementSystem.cs** - 판정 시 이벤트 호출 (Action 할당)
+
+**개선 방안:**
+```csharp
+// Object Pooling for Lists
+private static class ListPool<T>
+{
+    private static readonly Queue<List<T>> pool = new();
+    
+    public static List<T> Get()
+    {
+        return pool.Count > 0 ? pool.Dequeue() : new List<T>(32);
+    }
+    
+    public static void Return(List<T> list)
+    {
+        list.Clear();
+        pool.Enqueue(list);
+    }
+}
+```
+
+### 3. 게임플레이 개선
+
+#### 3.1 자동 저장 시스템
+**신규 - AutoSave.cs:**
+```csharp
+public class AutoSave : MonoBehaviour
+{
+    [SerializeField] private float saveInterval = 30f;
+    
+    private void Start()
+    {
+        InvokeRepeating(nameof(SaveProgress), saveInterval, saveInterval);
+    }
+    
+    private void SaveProgress()
+    {
+        if (!GameplayController.IsPlaying) return;
+        
+        PlayerPrefs.SetString("LastPlayDate", DateTime.Now.ToString("O"));
+        PlayerPrefs.SetInt("TotalPlayCount", PlayerPrefs.GetInt("TotalPlayCount", 0) + 1);
+        PlayerPrefs.SetString("LastSong", GameManager.Instance.CurrentSongData?.Title ?? "");
+        PlayerPrefs.Save();
+    }
+}
+```
+
+#### 3.2 스킵/리트라이 기능
+**GameplayController.cs에 추가:**
+```csharp
+public void SkipToResult()
+{
+    if (!isPlaying) return;
+    isPlaying = false;
+    ShowResultScreen();
+}
+
+public void QuickRestart()
+{
+    Time.timeScale = 1f;
+    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+}
+```
+
+### 4. 코드 품질 개선
+
+#### 4.1 Magic Number 상수화
+**GameConstants.cs (신규):**
+```csharp
+public static class GameConstants
+{
+    // 레인 설정
+    public const int LaneCount = 4;
+    public const float LaneWidth = 1.4f;
+    public const float LaneCenterOffset = 0.5f;
+    
+    // 노트 설정
+    public const float DefaultNoteSpeed = 5f;
+    public const float MinNoteSpeed = 1f;
+    public const float MaxNoteSpeed = 15f;
+    public const float NoteSpawnDistance = 12f;
+    public const float NoteLookAheadTime = 3f;
+    
+    // 판정 윈도우 (초)
+    public const float PerfectWindow = 0.050f;  // ±50ms
+    public const float GreatWindow = 0.100f;    // ±100ms
+    public const float GoodWindow = 0.200f;     // ±200ms
+    public const float BadWindow = 0.350f;      // ±350ms
+    
+    // 점수 설정
+    public const int BaseScorePerNote = 1000;
+    public const float MaxComboBonus = 0.5f;
+    public const int ComboForMaxBonus = 100;
+    public const float HoldBonusTickInterval = 0.1f;
+    public const int HoldBonusPerTick = 50;
+}
+```
+
+#### 4.2 ErrorHandler 시스템
+**ErrorHandler.cs (신규):**
+```csharp
+public static class ErrorHandler
+{
+    public static void SafeCall(Action action, string context = "")
+    {
+        try { action?.Invoke(); }
+        catch (Exception e)
+        {
+            Debug.LogError($"[{context}] Error: {e.Message}\n{e.StackTrace}");
+        }
+    }
+    
+    public static T SafeCall<T>(Func<T> func, T defaultValue, string context = "")
+    {
+        try { return func.Invoke(); }
+        catch (Exception e)
+        {
+            Debug.LogError($"[{context}] Error: {e.Message}");
+            return defaultValue;
+        }
+    }
+}
+```
+
+### 5. 📋 구현 우선순위 (2026-02-18 검증 완료)
+
+#### ~~즉시 (Critical)~~ — 모두 해결됨
+- [x] **SettingsManager** DontDestroyOnLoad → 오진 (의도적 미사용)
+- [x] **AudioManager** DontDestroyOnLoad → 오진 (의도적 미사용)
+- [x] **JudgementSystem** 이벤트 구독 해제 → OnDestroy() 구현됨
+- [x] **NoteSpawner** OnDestroy 정리 → Material/프리팹 정리 구현됨
+- [x] **Debug.Log** 빌드 성능 → `#if UNITY_EDITOR` 래핑 완료 (GameplayController, NoteSpawner, InputHandler)
+
+#### ~~고우선순위 (1-2주)~~ — 모두 완료됨
+- [x] **UIColorPalette** 색상 개선
+- [x] **콤보 UI** 구현 (GameplayUI.UpdateCombo)
+- [x] **판정 표시** 개선 (GameplayUI.ShowJudgementDetailed)
+- [x] **SETTINGS FAB** 버튼
+
+#### 중우선순위 (다음)
+- [x] **ErrorHandler** 시스템
+- [x] **GameConstants** 상수화
+- [ ] **오브젝트 풀** 동적 확장
+- [ ] **자동 저장** 시스템
+
+### 6. 📁 신규 파일 목록
+
+| 파일명 | 위치 | 설명 |
+|--------|------|------|
+| `GameConstants.cs` | `Scripts/Core/` | 상수 정의 |
+| `ErrorHandler.cs` | `Scripts/Core/` | 예외 처리 유틸 |
+| `NullCheckUtility.cs` | `Scripts/Utils/` | 널 체크 확장메서드 |
+| `AutoSave.cs` | `Scripts/Core/` | 자동 저장 기능 |
+| `AudioBuffer.cs` | `Scripts/Audio/` | 오디오 버퍼링 |
+| `NotePool.cs` | `Scripts/Gameplay/` | 향상된 풀링 |
+| `ListPool.cs` | `Scripts/Utils/` | List 오브젝트 풀 |
+| `ResultUI.cs` | `Scripts/UI/` | 상세 결과 화면 |
+
+---
+
 ### 🎨 NanoBanana 디자인 프롬프트 가이드 (AI 생성용)
 > **사용법**: 아래 영문 프롬프트를 NanoBanana(또는 이미지 생성 툴)에 입력하여 에셋을 생성하세요.
 
@@ -542,5 +774,5 @@ private void CreateFloatingSettingsButton()
 
 ---
 
-**마지막 업데이트**: 2026-02-18
+**마지막 업데이트**: 2026-02-18 (버그 검증 + Debug.Log 래핑 + PROGRESS 정리)
 **다음 검토일**: 2026-02-19

@@ -200,18 +200,24 @@ namespace AIBeat.Gameplay
 
         private void Initialize()
         {
+#if UNITY_EDITOR
             Debug.Log($"[GameplayController] Initialize - debugMode={debugMode}");
+#endif
 
             // 디버그 모드: 테스트 곡 데이터 사용
             if (debugMode && debugSongData != null)
             {
                 currentSong = debugSongData;
+#if UNITY_EDITOR
                 Debug.Log($"[GameplayController] Debug mode: Using {debugSongData.Title}");
+#endif
             }
             else
             {
                 currentSong = GameManager.Instance?.CurrentSongData;
+#if UNITY_EDITOR
                 Debug.Log($"[GameplayController] Normal mode: song={(currentSong != null ? currentSong.Title : "NULL")}");
+#endif
             }
 
             if (currentSong == null)
@@ -222,7 +228,9 @@ namespace AIBeat.Gameplay
                     Debug.LogError("[GameplayController] No song data found!");
                     return;
                 }
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] Loaded test song from Resources");
+#endif
             }
 
             // AudioManager 자동 생성 (없으면)
@@ -230,7 +238,9 @@ namespace AIBeat.Gameplay
             {
                 var audioGo = new GameObject("AudioManager");
                 audioGo.AddComponent<AudioManager>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] AudioManager 자동 생성됨");
+#endif
             }
 
             // 컴포넌트 참조 자동 연결 (없으면 자동 생성)
@@ -240,7 +250,9 @@ namespace AIBeat.Gameplay
             {
                 var go = new GameObject("NoteSpawner");
                 noteSpawner = go.AddComponent<NoteSpawner>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] NoteSpawner 자동 생성됨");
+#endif
             }
 
             if (judgementSystem == null)
@@ -249,7 +261,9 @@ namespace AIBeat.Gameplay
             {
                 var go = new GameObject("JudgementSystem");
                 judgementSystem = go.AddComponent<JudgementSystem>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] JudgementSystem 자동 생성됨");
+#endif
             }
 
             if (inputHandler == null)
@@ -258,7 +272,9 @@ namespace AIBeat.Gameplay
             {
                 var go = new GameObject("InputHandler");
                 inputHandler = go.AddComponent<InputHandler>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] InputHandler 자동 생성됨");
+#endif
             }
 
             if (smartBeatMapper == null)
@@ -267,7 +283,9 @@ namespace AIBeat.Gameplay
             {
                 var go = new GameObject("SmartBeatMapper");
                 smartBeatMapper = go.AddComponent<SmartBeatMapper>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] SmartBeatMapper 자동 생성됨");
+#endif
             }
 
             if (noteSpawner == null || judgementSystem == null || inputHandler == null)
@@ -286,7 +304,9 @@ namespace AIBeat.Gameplay
             {
                 var feedbackGo = new GameObject("LaneVisualFeedback");
                 feedbackGo.AddComponent<LaneVisualFeedback>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] LaneVisualFeedback created");
+#endif
             }
 
             // VFX 시스템 자동 생성
@@ -294,19 +314,25 @@ namespace AIBeat.Gameplay
             {
                 var vfxGo = new GameObject("BackgroundVFX");
                 vfxGo.AddComponent<BackgroundVFX>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] BackgroundVFX created");
+#endif
             }
             if (FindFirstObjectByType<HitParticleEffect>() == null)
             {
                 var particleGo = new GameObject("HitParticleEffect");
                 particleGo.AddComponent<HitParticleEffect>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] HitParticleEffect created");
+#endif
             }
             if (FindFirstObjectByType<HitImpactEffect>() == null)
             {
                 var impactGo = new GameObject("HitImpactEffect");
                 impactGo.AddComponent<HitImpactEffect>();
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] HitImpactEffect created");
+#endif
             }
 
             // 이벤트 연결
@@ -332,7 +358,9 @@ namespace AIBeat.Gameplay
             }
 
             // 일반 모드: 오디오 로드 → 게임 시작
+#if UNITY_EDITOR
             Debug.Log($"[GameplayController] Normal mode: AudioClip={(currentSong.AudioClip != null)}, AudioUrl={currentSong.AudioUrl ?? "null"}");
+#endif
 
             AudioManager.Instance.OnBGMLoaded -= OnAudioLoaded;
             AudioManager.Instance.OnBGMEnded -= OnSongEnd;
@@ -343,12 +371,16 @@ namespace AIBeat.Gameplay
 
             if (currentSong.AudioClip != null)
             {
+#if UNITY_EDITOR
                 Debug.Log("[GameplayController] AudioClip already loaded, starting game");
+#endif
                 OnAudioLoaded();
             }
             else if (!string.IsNullOrEmpty(currentSong.AudioUrl))
             {
+#if UNITY_EDITOR
                 Debug.Log($"[GameplayController] Loading audio from URL: {currentSong.AudioUrl}");
+#endif
                 AudioManager.Instance.LoadBGMFromUrl(currentSong.AudioUrl);
             }
             else
@@ -732,7 +764,9 @@ namespace AIBeat.Gameplay
 
         private void HandleInput(int lane, InputHandler.InputType inputType)
         {
+#if UNITY_EDITOR
             Debug.Log($"[HandleInput] lane={lane} type={inputType} isPlaying={isPlaying}");
+#endif
             if (!isPlaying) return;
 
             float currentTime = AudioManager.Instance?.CurrentTime ?? 0f;
@@ -759,7 +793,9 @@ namespace AIBeat.Gameplay
         private void ProcessNoteHit(int lane, float currentTime)
         {
             Note nearestNote = noteSpawner.GetNearestNote(lane);
+#if UNITY_EDITOR
             Debug.Log($"[ProcessNoteHit] lane={lane} time={currentTime:F2} note={(nearestNote != null ? nearestNote.name : "null")}");
+#endif
             if (nearestNote == null) return;
 
             if (nearestNote.NoteType == NoteType.Long)
@@ -791,7 +827,9 @@ namespace AIBeat.Gameplay
             }
 
             var result = judgementSystem.Judge(currentTime, nearestNote.HitTime);
+#if UNITY_EDITOR
             Debug.Log($"[Judge Result] lane={lane} result={result} noteTime={nearestNote.HitTime:F2} inputTime={currentTime:F2} diff={(currentTime-nearestNote.HitTime)*1000:F1}ms");
+#endif
             if (result != JudgementResult.Miss)
             {
                 nearestNote.MarkAsJudged();
@@ -1027,7 +1065,9 @@ namespace AIBeat.Gameplay
             AudioManager.Instance?.PauseBGM();
             if (noteSpawner != null) noteSpawner.enabled = false;
             gameplayUI?.ShowPauseMenu(true);
+#if UNITY_EDITOR
             Debug.Log($"[GameplayController] Game paused, isPaused={isPaused}, isPlaying={isPlaying}");
+#endif
         }
 
         public void ResumeGame()
@@ -1045,7 +1085,9 @@ namespace AIBeat.Gameplay
             AudioManager.Instance?.ResumeBGM();
             if (noteSpawner != null) noteSpawner.enabled = true;
             gameplayUI?.ShowPauseMenu(false);
+#if UNITY_EDITOR
             Debug.Log($"[GameplayController] Game resumed, isPaused={isPaused}, isPlaying={isPlaying}");
+#endif
         }
 
         /// <summary>
