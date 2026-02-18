@@ -85,6 +85,18 @@ namespace AIBeat.UI
         private GameObject loadingVideoPanel;
         private VideoPlayer videoPlayer;
         private RawImage videoDisplay;
+
+        // 분석 오버레이 (전용)
+        private GameObject analysisPanel;
+        private Image analysisProgressBar;
+        private Image analysisProgressGlow;
+        private TMP_Text analysisStatusText;
+        private TMP_Text analysisPercentText;
+        private TMP_Text analysisSongText;
+        private TMP_Text analysisTipText;
+        private Image[] analysisEqBars;
+        private Coroutine analysisAnimCoroutine;
+        private Coroutine analysisEqCoroutine;
         private RenderTexture videoRenderTexture;
 
         // Visual Effects
@@ -106,6 +118,7 @@ namespace AIBeat.UI
             CreatePauseButton();
             CreatePausePanel();
             CreateCountdownPanel();
+            CreateAnalysisOverlay();
             // CreateLoadingVideoPanel(); // 필요할 때만 생성 (ShowLoadingVideo(true) 호출 시)
             CreateGameplayBackground(); // Cyberpunk 배경 활성화
             CreateLaneDividers();       // 레인 구분선 (3D)
@@ -114,6 +127,7 @@ namespace AIBeat.UI
             RepositionHUD();
 
             // 패널은 Awake에서 즉시 숨기기 (loadingVideoPanel은 더 이상 Awake에서 생성 안 함)
+            if (analysisPanel != null) analysisPanel.SetActive(false);
             if (countdownPanel != null) countdownPanel.SetActive(false);
             if (pausePanel != null) pausePanel.SetActive(false);
             if (resultPanel != null) resultPanel.SetActive(false);
@@ -749,6 +763,315 @@ namespace AIBeat.UI
             if (korFont3 != null) countdownText.font = korFont3;
             // countdownText.outlineWidth = 0.2f; // Dynamic SDF에서 outline 비활성화
             // countdownText.outlineColor = new Color32(0, 120, 255, 200);
+        }
+
+        /// <summary>
+        /// 분석 오버레이 패널 생성 (전체 화면 - 카운트다운과 분리)
+        /// </summary>
+        private void CreateAnalysisOverlay()
+        {
+            if (analysisPanel != null) return;
+
+            var korFont = KoreanFontManager.KoreanFont;
+
+            // 전체 화면 패널
+            analysisPanel = new GameObject("AnalysisOverlay");
+            analysisPanel.transform.SetParent(transform, false);
+            var panelRect = analysisPanel.AddComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            // 배경 (어두운 오버레이)
+            var bg = analysisPanel.AddComponent<Image>();
+            bg.color = new Color(0.01f, 0.005f, 0.03f, 0.92f);
+            bg.raycastTarget = true; // 뒤 UI 클릭 차단
+
+            // ── 상단: 곡 제목 (anchor 0.3~0.5 영역) ──
+            var songGo = new GameObject("AnalysisSongTitle");
+            songGo.transform.SetParent(analysisPanel.transform, false);
+            var songRect = songGo.AddComponent<RectTransform>();
+            songRect.anchorMin = new Vector2(0.05f, 0.62f);
+            songRect.anchorMax = new Vector2(0.95f, 0.72f);
+            songRect.offsetMin = Vector2.zero;
+            songRect.offsetMax = Vector2.zero;
+            analysisSongText = songGo.AddComponent<TextMeshProUGUI>();
+            analysisSongText.text = "";
+            analysisSongText.fontSize = 32;
+            analysisSongText.color = UIColorPalette.NEON_GOLD;
+            analysisSongText.alignment = TextAlignmentOptions.Center;
+            analysisSongText.fontStyle = FontStyles.Bold;
+            analysisSongText.raycastTarget = false;
+            if (korFont != null) analysisSongText.font = korFont;
+
+            // ── 중앙: 상태 텍스트 "분석 중..." ──
+            var statusGo = new GameObject("AnalysisStatusText");
+            statusGo.transform.SetParent(analysisPanel.transform, false);
+            var statusRect = statusGo.AddComponent<RectTransform>();
+            statusRect.anchorMin = new Vector2(0.05f, 0.48f);
+            statusRect.anchorMax = new Vector2(0.95f, 0.60f);
+            statusRect.offsetMin = Vector2.zero;
+            statusRect.offsetMax = Vector2.zero;
+            analysisStatusText = statusGo.AddComponent<TextMeshProUGUI>();
+            analysisStatusText.text = "분석 중...";
+            analysisStatusText.fontSize = 36;
+            analysisStatusText.color = new Color(0.7f, 0.75f, 0.9f, 0.9f);
+            analysisStatusText.alignment = TextAlignmentOptions.Center;
+            analysisStatusText.raycastTarget = false;
+            if (korFont != null) analysisStatusText.font = korFont;
+
+            // ── 프로그레스 바 영역 (anchor 0.38~0.46) ──
+            // 바 배경 (외곽선)
+            var barBgGo = new GameObject("AnalysisBarBg");
+            barBgGo.transform.SetParent(analysisPanel.transform, false);
+            var barBgRect = barBgGo.AddComponent<RectTransform>();
+            barBgRect.anchorMin = new Vector2(0.1f, 0.40f);
+            barBgRect.anchorMax = new Vector2(0.9f, 0.44f);
+            barBgRect.offsetMin = Vector2.zero;
+            barBgRect.offsetMax = Vector2.zero;
+            var barBgImg = barBgGo.AddComponent<Image>();
+            barBgImg.color = new Color(0.15f, 0.12f, 0.25f, 0.8f);
+            barBgImg.raycastTarget = false;
+
+            // 바 외곽선
+            var outlineGo = new GameObject("AnalysisBarOutline");
+            outlineGo.transform.SetParent(barBgGo.transform, false);
+            var outlineRect = outlineGo.AddComponent<RectTransform>();
+            outlineRect.anchorMin = Vector2.zero;
+            outlineRect.anchorMax = Vector2.one;
+            outlineRect.offsetMin = Vector2.zero;
+            outlineRect.offsetMax = Vector2.zero;
+            var outline = outlineGo.AddComponent<Outline>();
+            outline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.5f);
+            outline.effectDistance = new Vector2(1.5f, 1.5f);
+            var outlineImg = outlineGo.AddComponent<Image>();
+            outlineImg.color = Color.clear;
+            outlineImg.raycastTarget = false;
+
+            // 프로그레스 바 (채우기)
+            var barFillGo = new GameObject("AnalysisBarFill");
+            barFillGo.transform.SetParent(barBgGo.transform, false);
+            var barFillRect = barFillGo.AddComponent<RectTransform>();
+            barFillRect.anchorMin = new Vector2(0f, 0.1f);
+            barFillRect.anchorMax = new Vector2(0f, 0.9f);
+            barFillRect.pivot = new Vector2(0f, 0.5f);
+            barFillRect.offsetMin = new Vector2(4f, 0f);
+            barFillRect.offsetMax = new Vector2(4f, 0f);
+            analysisProgressBar = barFillGo.AddComponent<Image>();
+            analysisProgressBar.color = UIColorPalette.NEON_CYAN;
+            analysisProgressBar.raycastTarget = false;
+
+            // 글로우 이펙트
+            var glowGo = new GameObject("AnalysisBarGlow");
+            glowGo.transform.SetParent(barFillGo.transform, false);
+            var glowRect = glowGo.AddComponent<RectTransform>();
+            glowRect.anchorMin = new Vector2(1f, -1f);
+            glowRect.anchorMax = new Vector2(1f, 2f);
+            glowRect.pivot = new Vector2(0.5f, 0.5f);
+            glowRect.sizeDelta = new Vector2(30f, 0f);
+            analysisProgressGlow = glowGo.AddComponent<Image>();
+            analysisProgressGlow.color = UIColorPalette.NEON_CYAN.WithAlpha(0.5f);
+            analysisProgressGlow.raycastTarget = false;
+
+            // ── 퍼센트 텍스트 ──
+            var pctGo = new GameObject("AnalysisPercentText");
+            pctGo.transform.SetParent(analysisPanel.transform, false);
+            var pctRect = pctGo.AddComponent<RectTransform>();
+            pctRect.anchorMin = new Vector2(0.1f, 0.33f);
+            pctRect.anchorMax = new Vector2(0.9f, 0.40f);
+            pctRect.offsetMin = Vector2.zero;
+            pctRect.offsetMax = Vector2.zero;
+            analysisPercentText = pctGo.AddComponent<TextMeshProUGUI>();
+            analysisPercentText.text = "0%";
+            analysisPercentText.fontSize = 28;
+            analysisPercentText.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            analysisPercentText.alignment = TextAlignmentOptions.Center;
+            analysisPercentText.fontStyle = FontStyles.Bold;
+            analysisPercentText.raycastTarget = false;
+            if (korFont != null) analysisPercentText.font = korFont;
+
+            // ── 이퀄라이저 바 (하단) ──
+            int barCount = 16;
+            analysisEqBars = new Image[barCount];
+            var eqContainer = new GameObject("AnalysisEqualizer");
+            eqContainer.transform.SetParent(analysisPanel.transform, false);
+            var eqRect = eqContainer.AddComponent<RectTransform>();
+            eqRect.anchorMin = new Vector2(0.05f, 0.08f);
+            eqRect.anchorMax = new Vector2(0.95f, 0.28f);
+            eqRect.offsetMin = Vector2.zero;
+            eqRect.offsetMax = Vector2.zero;
+
+            float barWidth = 1f / barCount;
+            float gap = 0.003f;
+            for (int i = 0; i < barCount; i++)
+            {
+                var barGo = new GameObject($"EqBar_{i}");
+                barGo.transform.SetParent(eqContainer.transform, false);
+                var bRect = barGo.AddComponent<RectTransform>();
+                bRect.anchorMin = new Vector2(i * barWidth + gap, 0f);
+                bRect.anchorMax = new Vector2((i + 1) * barWidth - gap, 0.2f);
+                bRect.offsetMin = Vector2.zero;
+                bRect.offsetMax = Vector2.zero;
+
+                analysisEqBars[i] = barGo.AddComponent<Image>();
+                float t = (float)i / (barCount - 1);
+                Color barColor = t < 0.5f
+                    ? Color.Lerp(UIColorPalette.NEON_PURPLE, UIColorPalette.NEON_CYAN, t * 2f)
+                    : Color.Lerp(UIColorPalette.NEON_CYAN, UIColorPalette.NEON_GOLD, (t - 0.5f) * 2f);
+                analysisEqBars[i].color = barColor.WithAlpha(0.7f);
+                analysisEqBars[i].raycastTarget = false;
+            }
+
+            // ── 하단 팁 텍스트 ──
+            var tipGo = new GameObject("AnalysisTipText");
+            tipGo.transform.SetParent(analysisPanel.transform, false);
+            var tipRect = tipGo.AddComponent<RectTransform>();
+            tipRect.anchorMin = new Vector2(0.05f, 0.02f);
+            tipRect.anchorMax = new Vector2(0.95f, 0.08f);
+            tipRect.offsetMin = Vector2.zero;
+            tipRect.offsetMax = Vector2.zero;
+            analysisTipText = tipGo.AddComponent<TextMeshProUGUI>();
+            analysisTipText.fontSize = 16;
+            analysisTipText.color = new Color(0.5f, 0.55f, 0.7f, 0.6f);
+            analysisTipText.alignment = TextAlignmentOptions.Center;
+            analysisTipText.raycastTarget = false;
+            if (korFont != null) analysisTipText.font = korFont;
+        }
+
+        // 분석 오버레이 팁 목록
+        private static readonly string[] ANALYSIS_TIPS = new string[]
+        {
+            "AI가 오디오를 분석하여 노트를 배치합니다",
+            "BPM과 비트를 감지하여 리듬에 맞는 패턴을 생성합니다",
+            "곡의 강약에 따라 노트 밀도가 달라집니다",
+            "PERFECT 판정은 \u00b150ms 이내입니다",
+            "콤보를 유지하면 점수 보너스!",
+            "노트가 판정선에 닿을 때 터치하세요",
+            "리듬에 집중하면 높은 점수를 얻을 수 있어요"
+        };
+
+        /// <summary>
+        /// 분석 오버레이 표시
+        /// </summary>
+        public void ShowAnalysisOverlay(bool show)
+        {
+            if (analysisPanel == null) return;
+
+            if (show)
+            {
+                analysisPanel.SetActive(true);
+                analysisPanel.transform.SetAsLastSibling();
+                UpdateAnalysisProgress(0f);
+
+                // 랜덤 팁
+                if (analysisTipText != null)
+                    analysisTipText.text = $"TIP: {ANALYSIS_TIPS[Random.Range(0, ANALYSIS_TIPS.Length)]}";
+
+                // 애니메이션 시작
+                if (analysisAnimCoroutine != null) StopCoroutine(analysisAnimCoroutine);
+                analysisAnimCoroutine = StartCoroutine(AnalysisAnimationLoop());
+                if (analysisEqCoroutine != null) StopCoroutine(analysisEqCoroutine);
+                analysisEqCoroutine = StartCoroutine(AnalysisEqualizerLoop());
+            }
+            else
+            {
+                if (analysisAnimCoroutine != null) { StopCoroutine(analysisAnimCoroutine); analysisAnimCoroutine = null; }
+                if (analysisEqCoroutine != null) { StopCoroutine(analysisEqCoroutine); analysisEqCoroutine = null; }
+                analysisPanel.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// 분석 오버레이에 곡 제목 설정
+        /// </summary>
+        public void SetAnalysisSongTitle(string title)
+        {
+            if (analysisSongText != null)
+                analysisSongText.text = title ?? "";
+        }
+
+        /// <summary>
+        /// 분석 진행률 업데이트 (0~1)
+        /// </summary>
+        public void UpdateAnalysisProgress(float progress)
+        {
+            progress = Mathf.Clamp01(progress);
+            int pct = Mathf.RoundToInt(progress * 100);
+
+            if (analysisPercentText != null)
+                analysisPercentText.text = $"{pct}%";
+
+            if (analysisProgressBar != null)
+            {
+                var rect = analysisProgressBar.rectTransform;
+                rect.anchorMax = new Vector2(progress, 0.9f);
+                rect.offsetMax = new Vector2(-4f, 0f);
+            }
+
+            // 상태 텍스트 업데이트
+            if (analysisStatusText != null)
+            {
+                int dots = (int)(Time.unscaledTime * 2f) % 4;
+                string dotStr = new string('.', dots);
+                analysisStatusText.text = $"AI 분석 중{dotStr}";
+            }
+        }
+
+        /// <summary>
+        /// 분석 오버레이 이퀄라이저 애니메이션
+        /// </summary>
+        private IEnumerator AnalysisEqualizerLoop()
+        {
+            if (analysisEqBars == null) yield break;
+
+            float[] phases = new float[analysisEqBars.Length];
+            float[] speeds = new float[analysisEqBars.Length];
+            for (int i = 0; i < phases.Length; i++)
+            {
+                phases[i] = Random.Range(0f, Mathf.PI * 2f);
+                speeds[i] = Random.Range(2f, 5f);
+            }
+
+            while (true)
+            {
+                float time = Time.unscaledTime;
+                for (int i = 0; i < analysisEqBars.Length; i++)
+                {
+                    float height = 0.15f + 0.85f * Mathf.Abs(Mathf.Sin(time * speeds[i] + phases[i]));
+                    var bRect = analysisEqBars[i].rectTransform;
+                    bRect.anchorMax = new Vector2(bRect.anchorMax.x, height);
+                }
+                yield return null;
+            }
+        }
+
+        /// <summary>
+        /// 분석 오버레이 글로우/상태 텍스트 애니메이션
+        /// </summary>
+        private IEnumerator AnalysisAnimationLoop()
+        {
+            while (true)
+            {
+                float time = Time.unscaledTime;
+
+                // 글로우 펄스
+                if (analysisProgressGlow != null)
+                {
+                    float glowAlpha = 0.3f + 0.4f * Mathf.Abs(Mathf.Sin(time * 3f));
+                    analysisProgressGlow.color = UIColorPalette.NEON_CYAN.WithAlpha(glowAlpha);
+                }
+
+                // 상태 텍스트 점 애니메이션
+                if (analysisStatusText != null)
+                {
+                    int dots = (int)(time * 2f) % 4;
+                    string dotStr = new string('.', dots);
+                    analysisStatusText.text = $"AI 분석 중{dotStr}";
+                }
+
+                yield return null;
+            }
         }
 
         /// <summary>

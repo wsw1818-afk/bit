@@ -64,6 +64,47 @@ public class ClickPlayButton
         Debug.Log("[ForceShowResult] Result 화면 강제 표시 완료");
     }
 
+    [MenuItem("Tools/A.I. BEAT/Test Analysis Overlay")]
+    public static void TestAnalysisOverlay()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("[TestAnalysisOverlay] Play 모드에서만 실행 가능합니다");
+            return;
+        }
+
+        Application.runInBackground = true;
+
+        var gameplayUI = Object.FindFirstObjectByType<AIBeat.UI.GameplayUI>();
+        if (gameplayUI == null)
+        {
+            Debug.LogError("[TestAnalysisOverlay] GameplayUI를 찾을 수 없습니다");
+            return;
+        }
+
+        gameplayUI.SetAnalysisSongTitle("Test Song - AI Analysis");
+        gameplayUI.ShowAnalysisOverlay(true);
+        // 코루틴으로 프로그레스 시뮬레이션
+        var mono = Object.FindFirstObjectByType<MonoBehaviour>();
+        mono?.StartCoroutine(SimulateAnalysisProgress(gameplayUI));
+        Debug.Log("[TestAnalysisOverlay] 분석 오버레이 테스트 시작");
+    }
+
+    private static System.Collections.IEnumerator SimulateAnalysisProgress(AIBeat.UI.GameplayUI ui)
+    {
+        float progress = 0f;
+        while (progress < 1f)
+        {
+            progress += UnityEngine.Random.Range(0.005f, 0.02f);
+            if (progress > 1f) progress = 1f;
+            ui.UpdateAnalysisProgress(progress);
+            yield return new WaitForSeconds(0.05f);
+        }
+        yield return new WaitForSeconds(1f);
+        ui.ShowAnalysisOverlay(false);
+        Debug.Log("[TestAnalysisOverlay] 분석 오버레이 테스트 완료");
+    }
+
     [MenuItem("Tools/A.I. BEAT/Start Test Game")]
     public static void StartTestGame()
     {
