@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using AIBeat.Data;
 using AIBeat.Network;
+using AIBeat.UI;
 
 namespace AIBeat.Core
 {
@@ -82,6 +83,21 @@ namespace AIBeat.Core
             Screen.autorotateToPortraitUpsideDown = false;
             Screen.autorotateToLandscapeLeft = false;
             Screen.autorotateToLandscapeRight = false;
+
+            // LoadingScreen 싱글톤 생성 (없으면)
+            EnsureLoadingScreen();
+        }
+
+        /// <summary>
+        /// LoadingScreen 싱글톤이 없으면 자동 생성
+        /// </summary>
+        private void EnsureLoadingScreen()
+        {
+            if (LoadingScreen.Instance == null)
+            {
+                var loadingGo = new GameObject("LoadingScreen");
+                loadingGo.AddComponent<LoadingScreen>();
+            }
         }
 
         /// <summary>
@@ -154,11 +170,81 @@ namespace AIBeat.Core
             isLoadingScene = true;
 
             ChangeState(GameState.Loading);
-            StartCoroutine(LoadSceneWithFade(sceneName));
+
+            // Gameplay 씬 전환 시 로딩 화면 사용
+            if (sceneName == "Gameplay" && LoadingScreen.Instance != null)
+            {
+                Debug.Log("[GameManager] 로딩 화면 경로로 씬 전환 시작");
+                StartCoroutine(LoadSceneWithLoadingScreen(sceneName));
+            }
+            else
+            {
+                Debug.Log($"[GameManager] 일반 페이드 경로로 씬 전환: {sceneName}");
+                StartCoroutine(LoadSceneWithFade(sceneName));
+            }
         }
 
         /// <summary>
-        /// 페이드 효과와 함께 씬 로드
+        /// 로딩 화면과 함께 씬 로드 (Gameplay 전환용)
+        /// </summary>
+        private IEnumerator LoadSceneWithLoadingScreen(string sceneName)
+        {
+            var loadingScreen = LoadingScreen.Instance;
+
+            // 페이드 아웃
+            EnsureFadeOverlay();
+            yield return StartCoroutine(FadeCoroutine(0f, 1f, FADE_DURATION));
+
+            // 로딩 화면 표시 (페이드 뒤에 보이도록)
+            if (CurrentSongData != null)
+                loadingScreen.SetSongInfo(CurrentSongData);
+            loadingScreen.Show();
+
+            // 페이드 인 (로딩 화면이 보이도록)
+            yield return StartCoroutine(FadeCoroutine(1f, 0f, FADE_DURATION));
+
+            // 비동기 씬 로드
+            var op = SceneManager.LoadSceneAsync(sceneName);
+            if (op != null)
+            {
+                op.allowSceneActivation = false;
+                float minDisplayTime = 1.0f;
+                float elapsed = 0f;
+
+                while (!op.isDone)
+                {
+                    elapsed += Time.unscaledDeltaTime;
+                    float progress = Mathf.Clamp01(op.progress / 0.9f);
+                    loadingScreen.UpdateProgress(progress);
+
+                    if (op.progress >= 0.9f && elapsed >= minDisplayTime)
+                    {
+                        loadingScreen.UpdateProgress(1f);
+                        yield return new WaitForSecondsRealtime(0.3f);
+
+                        // 페이드 아웃 → 씬 활성화 → 페이드 인
+                        EnsureFadeOverlay();
+                        yield return StartCoroutine(FadeCoroutine(0f, 1f, FADE_DURATION));
+
+                        loadingScreen.Hide();
+                        op.allowSceneActivation = true;
+                    }
+
+                    yield return null;
+                }
+            }
+
+            // 새 씬에서 페이드 인
+            yield return new WaitForSecondsRealtime(0.1f);
+            EnsureFadeOverlay();
+            fadeOverlay.alpha = 1f;
+            yield return StartCoroutine(FadeCoroutine(1f, 0f, FADE_DURATION));
+
+            isLoadingScene = false;
+        }
+
+        /// <summary>
+        /// 페이드 효과와 함께 씬 로드 (일반 전환용)
         /// </summary>
         private IEnumerator LoadSceneWithFade(string sceneName)
         {
