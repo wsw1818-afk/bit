@@ -278,8 +278,9 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 레인 구분선 — 3D 월드에 반투명 네온 라인으로 표시
-        /// 4레인 (간격 1.4f) 사이 3개 + 좌우 테두리 2개 = 5개 라인
+        /// 레인 시각화 — 반투명 스트립(교대 색조) + 엣지 라인 + 하단 글로우
+        /// whiteSprite 기본 크기 = 4px / 100PPU = 0.04 world units
+        /// → 원하는 월드 크기로 변환: scale = worldSize / 0.04 = worldSize * 25
         /// </summary>
         private void CreateLaneDividers()
         {
@@ -293,32 +294,78 @@ namespace AIBeat.UI
 
             const float laneWidth = 1.4f;
             const int laneCount = 4;
+            const float S = 25f; // sprite→world 스케일 팩터 (1 / 0.04)
             float camY = cam.transform.position.y;
-            float lineHeight = cam.orthographicSize * 2.5f; // 화면보다 약간 넓게
-            float lineZ = -0.5f; // 노트(Z=-1)보다 뒤, 배경(Z=5)보다 앞
+            float viewHeight = cam.orthographicSize * 2.5f; // 화면보다 약간 넓게
+            float stripZ = 0f;   // 배경(Z=5)보다 앞, 노트(Z=-1)보다 뒤
+            float lineZ = -0.5f; // 엣지 라인은 노트에 가깝게
 
-            // 5개 라인: 좌측 테두리, 3개 내부 구분선, 우측 테두리
+            // 레인별 색상 (사이버펑크 네온)
+            Color[] laneColors = {
+                new Color(0.6f, 0.2f, 1f, 1f),   // Lane 0: 퍼플
+                new Color(0f, 0.9f, 1f, 1f),      // Lane 1: 시안
+                new Color(1f, 1f, 0f, 1f),         // Lane 2: 옐로우
+                new Color(1f, 0.4f, 0f, 1f)        // Lane 3: 오렌지
+            };
+
+            var whiteSprite = Sprite.Create(
+                Texture2D.whiteTexture,
+                new Rect(0, 0, 4, 4),
+                new Vector2(0.5f, 0.5f), 100f
+            );
+
+            // --- 1) 반투명 레인 스트립 (교대 명암) ---
+            for (int i = 0; i < laneCount; i++)
+            {
+                float x = (i - 1.5f) * laneWidth;
+                bool isDark = (i % 2 == 0);
+
+                var stripGo = new GameObject($"LaneStrip_{i}");
+                stripGo.transform.SetParent(parent.transform);
+                stripGo.transform.position = new Vector3(x, camY, stripZ);
+                stripGo.transform.localScale = new Vector3(laneWidth * S, viewHeight * S, 1f);
+
+                var sr = stripGo.AddComponent<SpriteRenderer>();
+                sr.sprite = whiteSprite;
+                sr.sortingOrder = -90;
+                sr.color = isDark
+                    ? new Color(0f, 0f, 0.08f, 0.3f)
+                    : new Color(0.06f, 0.06f, 0.15f, 0.18f);
+            }
+
+            // --- 2) 엣지 라인 (레인 경계 5개) ---
             for (int i = 0; i <= laneCount; i++)
             {
                 float x = (i - laneCount / 2f) * laneWidth;
-                bool isEdge = (i == 0 || i == laneCount);
 
                 var lineGo = new GameObject($"LaneLine_{i}");
                 lineGo.transform.SetParent(parent.transform);
                 lineGo.transform.position = new Vector3(x, camY, lineZ);
-                lineGo.transform.localScale = new Vector3(isEdge ? 0.06f : 0.04f, lineHeight, 1f);
+                lineGo.transform.localScale = new Vector3(0.05f * S, viewHeight * S, 1f);
 
                 var sr = lineGo.AddComponent<SpriteRenderer>();
-                sr.sprite = Sprite.Create(
-                    Texture2D.whiteTexture,
-                    new Rect(0, 0, 4, 4),
-                    new Vector2(0.5f, 0.5f), 100f
-                );
-                sr.sortingOrder = -50; // 배경(-100)보다 앞, 노트보다 뒤
-                // 테두리: 밝은 시안, 내부: 반투명 화이트
-                sr.color = isEdge
-                    ? new Color(0f, 1f, 1f, 0.4f)
-                    : new Color(1f, 1f, 1f, 0.2f);
+                sr.sprite = whiteSprite;
+                sr.sortingOrder = -50;
+                sr.color = new Color(0f, 0.8f, 1f, 0.35f);
+            }
+
+            // --- 3) 하단 판정선 글로우 (레인별 색상) ---
+            float judgeY = camY - cam.orthographicSize + 1.5f;
+            float glowHeight = 4f; // 4 world units 높이
+            for (int i = 0; i < laneCount; i++)
+            {
+                float x = (i - 1.5f) * laneWidth;
+
+                var glowGo = new GameObject($"LaneGlow_{i}");
+                glowGo.transform.SetParent(parent.transform);
+                glowGo.transform.position = new Vector3(x, judgeY, lineZ);
+                glowGo.transform.localScale = new Vector3(laneWidth * S, glowHeight * S, 1f);
+
+                var sr = glowGo.AddComponent<SpriteRenderer>();
+                sr.sprite = whiteSprite;
+                sr.sortingOrder = -40;
+                Color c = laneColors[i];
+                sr.color = new Color(c.r, c.g, c.b, 0.12f);
             }
         }
 
