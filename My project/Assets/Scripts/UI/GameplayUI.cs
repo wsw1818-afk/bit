@@ -580,14 +580,14 @@ namespace AIBeat.UI
                 comboText.text = "";
             }
 
-            // --- 일시정지 버튼 (TopBar 내부 우측 끝, 마젠타) ---
+            // --- 일시정지 버튼 (TopBar 내부 우측 끝, 레드-핑크 ✕) ---
             if (pauseButton != null)
             {
                 pauseButton.transform.SetParent(topBar.transform, false);
                 var pauseLE = pauseButton.gameObject.AddComponent<LayoutElement>();
-                pauseLE.preferredWidth = 70;
-                pauseLE.preferredHeight = 70;
-                pauseLE.minWidth = 70;
+                pauseLE.preferredWidth = 90;
+                pauseLE.preferredHeight = 90;
+                pauseLE.minWidth = 90;
             }
 
             // ============================================================
@@ -621,13 +621,13 @@ namespace AIBeat.UI
             pauseBtnGo.transform.SetParent(transform, false);
 
             var btnRect = pauseBtnGo.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(70, 70); // 56 → 70 (더 크게)
+            btnRect.sizeDelta = new Vector2(90, 90);
 
             var btnImage = pauseBtnGo.AddComponent<Image>();
-            btnImage.color = UIColorPalette.PAUSE_BTN_BG;
+            btnImage.color = new Color(0.9f, 0.15f, 0.3f, 0.95f); // 밝은 레드-핑크 (고가시성)
             btnImage.raycastTarget = true;
 
-            // "||" 아이콘 (흰색)
+            // "✕" 아이콘 (흰색, 큰 폰트)
             var textGo = new GameObject("PauseIcon");
             textGo.transform.SetParent(pauseBtnGo.transform, false);
             var textRect = textGo.AddComponent<RectTransform>();
@@ -636,8 +636,8 @@ namespace AIBeat.UI
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
             var iconText = textGo.AddComponent<TextMeshProUGUI>();
-            iconText.text = "||";
-            iconText.fontSize = 40; // 28 → 40 (더 크게)
+            iconText.text = "✕";
+            iconText.fontSize = 52;
             iconText.color = Color.white;
             iconText.alignment = TextAlignmentOptions.Center;
             iconText.fontStyle = FontStyles.Bold;
@@ -647,7 +647,9 @@ namespace AIBeat.UI
             pauseButton.targetGraphic = btnImage;
             pauseButton.onClick.AddListener(() =>
             {
+#if UNITY_EDITOR
                 Debug.Log("[GameplayUI] Pause button clicked!");
+#endif
                 if (gameplayController == null)
                     gameplayController = FindFirstObjectByType<GameplayController>();
                 gameplayController?.PauseGame();
