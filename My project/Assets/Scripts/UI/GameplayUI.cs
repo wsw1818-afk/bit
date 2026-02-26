@@ -106,6 +106,9 @@ namespace AIBeat.UI
 
         private void Awake()
         {
+            // 포커스를 잃어도 게임 루프 유지 (MCP 원격 제어 중 필수)
+            Application.runInBackground = true;
+
             // TMP_Text 생성 전에 한국어 폰트를 글로벌 기본값으로 설정
             // (AddComponent<TextMeshProUGUI>() 시점에 LiberationSans SDF 경고 방지)
             var _ = KoreanFontManager.KoreanFont;
@@ -190,39 +193,15 @@ namespace AIBeat.UI
                     quitButton = pausePanel.transform.Find("QuitButton")?.GetComponent<Button>();
             }
 
-            // Result Panel
-            if (resultPanel == null)
-                resultPanel = transform.Find("ResultPanel")?.gameObject;
-            if (resultPanel == null)
-            {
-                resultPanel = CreateResultPanel();
-            }
-            if (resultPanel != null)
-            {
-                var rp = resultPanel.transform;
-                if (resultScoreText == null)
-                    resultScoreText = rp.Find("ResultScoreText")?.GetComponent<TMP_Text>();
-                if (resultComboText == null)
-                    resultComboText = rp.Find("ResultComboText")?.GetComponent<TMP_Text>();
-                if (resultAccuracyText == null)
-                    resultAccuracyText = rp.Find("ResultAccuracyText")?.GetComponent<TMP_Text>();
-                if (resultRankText == null)
-                    resultRankText = rp.Find("ResultRankText")?.GetComponent<TMP_Text>();
-                if (resultPerfectText == null)
-                    resultPerfectText = rp.Find("PerfectText")?.GetComponent<TMP_Text>();
-                if (resultGreatText == null)
-                    resultGreatText = rp.Find("GreatText")?.GetComponent<TMP_Text>();
-                if (resultGoodText == null)
-                    resultGoodText = rp.Find("GoodText")?.GetComponent<TMP_Text>();
-                if (resultBadText == null)
-                    resultBadText = rp.Find("BadText")?.GetComponent<TMP_Text>();
-                if (resultMissText == null)
-                    resultMissText = rp.Find("MissText")?.GetComponent<TMP_Text>();
-                if (retryButton == null)
-                    retryButton = rp.Find("RetryButton")?.GetComponent<Button>();
-                if (menuButton == null)
-                    menuButton = rp.Find("MenuButton")?.GetComponent<Button>();
-            }
+            // Result Panel — 항상 코드로 재생성 (씬 저장 오브젝트 우선 파괴)
+            var existingResult = transform.Find("ResultPanel");
+            if (existingResult != null) Destroy(existingResult.gameObject);
+            resultPanel = null;
+            resultScoreText = null; resultComboText = null; resultAccuracyText = null;
+            resultRankText = null; resultPerfectText = null; resultGreatText = null;
+            resultGoodText = null; resultBadText = null; resultMissText = null;
+            retryButton = null; menuButton = null;
+            resultPanel = CreateResultPanel();
 
             // JudgementSystem, GameplayController 참조
             judgementSystem = FindFirstObjectByType<JudgementSystem>();
@@ -1689,10 +1668,21 @@ namespace AIBeat.UI
                 bg.sprite = resultBgSprite;
                 bg.type = Image.Type.Simple;
                 bg.preserveAspect = false;
-                bg.color = new Color(0.7f, 0.7f, 0.7f, 1f); // 살짝 어둡게 (텍스트 가독성)
+                bg.color = new Color(0.55f, 0.55f, 0.55f, 1f); // 더 어둡게 (텍스트 가독성)
 #if UNITY_EDITOR
                 Debug.Log("[GameplayUI] Loaded Result_BG as result background");
 #endif
+                // 배경 이미지 위에 반투명 다크 오버레이 추가
+                var overlayGo = new GameObject("DarkOverlay");
+                overlayGo.transform.SetParent(panelGo.transform, false);
+                var overlayRect = overlayGo.AddComponent<RectTransform>();
+                overlayRect.anchorMin = Vector2.zero;
+                overlayRect.anchorMax = Vector2.one;
+                overlayRect.offsetMin = Vector2.zero;
+                overlayRect.offsetMax = Vector2.zero;
+                var overlayImg = overlayGo.AddComponent<Image>();
+                overlayImg.color = new Color(0.02f, 0.03f, 0.10f, 0.72f); // 반투명 네이비
+                overlayImg.raycastTarget = false;
             }
             else
             {
@@ -1702,104 +1692,166 @@ namespace AIBeat.UI
 
             var korFont = KoreanFontManager.KoreanFont;
 
+            // ===== 레이아웃 y 기준 (위→아래) =====
+            // [0.94 ~ 1.00] RESULT 타이틀
+            // [0.90 ~ 0.94] 곡 정보 (제목/장르/BPM) - 타이틀 바로 아래
+            // [0.89 ~ 0.90] 구분선
+            // [0.72 ~ 0.89] 랭크카드(좌) + 점수(우)
+            // [0.60 ~ 0.72] 콤보 + 정확도
+            // [0.59 ~ 0.60] 구분선
+            // [0.10 ~ 0.59] 판정 카드 (5개, 넓게)
+            // [0.09 ~ 0.10] 구분선
+            // [0.02 ~ 0.09] 버튼 2개
+
             // ===== "RESULT" 타이틀 =====
-            var titleText = CreateResultText(panelGo.transform, "ResultTitle", "RESULT", 36,
-                new Vector2(0.1f, 0.92f), new Vector2(0.9f, 0.98f), korFont);
+            var titleText = CreateResultText(panelGo.transform, "ResultTitle", "RESULT", 52,
+                new Vector2(0.0f, 0.945f), new Vector2(1.0f, 1.00f), korFont);
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.color = UIColorPalette.NEON_CYAN;
             titleText.fontStyle = FontStyles.Bold;
+            titleText.characterSpacing = 10f;
+
+            // ===== 곡 정보 (타이틀 아래 바로) - 미리 생성 =====
+            var songInfoGoEarly = new GameObject("ResultSongInfo");
+            songInfoGoEarly.transform.SetParent(panelGo.transform, false);
+            var songInfoRectEarly = songInfoGoEarly.AddComponent<RectTransform>();
+            songInfoRectEarly.anchorMin = new Vector2(0.04f, 0.900f);
+            songInfoRectEarly.anchorMax = new Vector2(0.96f, 0.944f);
+            songInfoRectEarly.offsetMin = Vector2.zero;
+            songInfoRectEarly.offsetMax = Vector2.zero;
+            resultSongInfoText = songInfoGoEarly.AddComponent<TextMeshProUGUI>();
+            resultSongInfoText.text = "";
+            resultSongInfoText.fontSize = 24;
+            resultSongInfoText.color = new Color(0.7f, 0.85f, 1f, 0.85f);
+            resultSongInfoText.alignment = TextAlignmentOptions.Center;
+            resultSongInfoText.enableAutoSizing = true;
+            resultSongInfoText.fontSizeMin = 16;
+            resultSongInfoText.fontSizeMax = 24;
+            if (korFont != null) resultSongInfoText.font = korFont;
 
             // ===== 상단 구분선 =====
-            CreateResultDivider(panelGo.transform, 0.915f);
+            CreateResultDivider(panelGo.transform, 0.893f);
 
-            // ===== 랭크 카드 배경 (밝은 보라/마젠타 - 눈에 확 띄게) =====
+            // ===== 랭크 카드 (좌측 26%) =====
             var rankCard = new GameObject("RankCard");
             rankCard.transform.SetParent(panelGo.transform, false);
             var rankCardRect = rankCard.AddComponent<RectTransform>();
-            rankCardRect.anchorMin = new Vector2(0.15f, 0.70f);
-            rankCardRect.anchorMax = new Vector2(0.85f, 0.91f);
+            rankCardRect.anchorMin = new Vector2(0.04f, 0.72f);
+            rankCardRect.anchorMax = new Vector2(0.30f, 0.885f);
             rankCardRect.offsetMin = Vector2.zero;
             rankCardRect.offsetMax = Vector2.zero;
             var rankCardBg = rankCard.AddComponent<Image>();
-            rankCardBg.color = new Color(0.45f, 0.20f, 0.70f, 1f); // 밝은 보라 배경 (높은 대비)
+            rankCardBg.color = new Color(0.40f, 0.15f, 0.65f, 0.97f);
             rankCardBg.raycastTarget = false;
+            var rankCardOutline = rankCard.AddComponent<UnityEngine.UI.Outline>();
+            rankCardOutline.effectColor = new Color(0.8f, 0.4f, 1f, 0.7f);
+            rankCardOutline.effectDistance = new Vector2(3f, -3f);
 
-            // 랭크 텍스트 (카드 안에)
-            resultRankText = CreateResultText(rankCard.transform, "ResultRankText", "", 100,
-                Vector2.zero, Vector2.one, korFont);
+            // 랭크 텍스트
+            resultRankText = CreateResultText(rankCard.transform, "ResultRankText", "", 88,
+                new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), korFont);
             resultRankText.alignment = TextAlignmentOptions.Center;
             resultRankText.fontStyle = FontStyles.Bold;
             resultRankText.enableAutoSizing = true;
-            resultRankText.fontSizeMin = 40;
-            resultRankText.fontSizeMax = 100;
+            resultRankText.fontSizeMin = 50;
+            resultRankText.fontSizeMax = 88;
 
-            // ===== 점수 =====
-            resultScoreText = CreateResultText(panelGo.transform, "ResultScoreText", "0", 52,
-                new Vector2(0.05f, 0.63f), new Vector2(0.95f, 0.72f), korFont);
-            resultScoreText.alignment = TextAlignmentOptions.Center;
+            // ===== SCORE 레이블 =====
+            var scoreLabelText = CreateResultText(panelGo.transform, "ScoreLabel", "SCORE", 26,
+                new Vector2(0.32f, 0.845f), new Vector2(0.97f, 0.889f), korFont);
+            scoreLabelText.alignment = TextAlignmentOptions.Right;
+            scoreLabelText.color = UIColorPalette.NEON_CYAN.WithAlpha(0.65f);
+            scoreLabelText.characterSpacing = 4f;
+
+            // ===== 점수 (큰 숫자) =====
+            resultScoreText = CreateResultText(panelGo.transform, "ResultScoreText", "0", 72,
+                new Vector2(0.30f, 0.72f), new Vector2(0.97f, 0.848f), korFont);
+            resultScoreText.alignment = TextAlignmentOptions.Right;
             resultScoreText.color = UIColorPalette.NEON_CYAN;
             resultScoreText.fontStyle = FontStyles.Bold;
             resultScoreText.enableAutoSizing = true;
-            resultScoreText.fontSizeMin = 28;
-            resultScoreText.fontSizeMax = 52;
+            resultScoreText.fontSizeMin = 44;
+            resultScoreText.fontSizeMax = 72;
 
-            // ===== 콤보 + 정확도 (한 줄에) =====
-            resultComboText = CreateResultText(panelGo.transform, "ResultComboText", "", 24,
-                new Vector2(0.05f, 0.58f), new Vector2(0.5f, 0.63f), korFont);
+            // ===== 콤보 + 정확도 =====
+            resultComboText = CreateResultText(panelGo.transform, "ResultComboText", "", 34,
+                new Vector2(0.04f, 0.61f), new Vector2(0.50f, 0.72f), korFont);
             resultComboText.alignment = TextAlignmentOptions.Center;
             resultComboText.color = UIColorPalette.NEON_GOLD;
+            resultComboText.enableAutoSizing = true;
+            resultComboText.fontSizeMin = 22; resultComboText.fontSizeMax = 34;
 
-            resultAccuracyText = CreateResultText(panelGo.transform, "ResultAccuracyText", "", 24,
-                new Vector2(0.5f, 0.58f), new Vector2(0.95f, 0.63f), korFont);
+            resultAccuracyText = CreateResultText(panelGo.transform, "ResultAccuracyText", "", 34,
+                new Vector2(0.50f, 0.61f), new Vector2(0.97f, 0.72f), korFont);
             resultAccuracyText.alignment = TextAlignmentOptions.Center;
             resultAccuracyText.color = UIColorPalette.NEON_GOLD;
+            resultAccuracyText.enableAutoSizing = true;
+            resultAccuracyText.fontSizeMin = 22; resultAccuracyText.fontSizeMax = 34;
 
-            // ===== 판정 섹션 구분선 =====
-            CreateResultDivider(panelGo.transform, 0.575f);
+            // ===== 판정 구분선 =====
+            CreateResultDivider(panelGo.transform, 0.604f);
 
-            // ===== 판정별 카운트 (카드 안에) =====
+            // ===== 판정 카드 (넓게!) =====
             var judgeCard = new GameObject("JudgeCard");
             judgeCard.transform.SetParent(panelGo.transform, false);
             var judgeCardRect = judgeCard.AddComponent<RectTransform>();
-            judgeCardRect.anchorMin = new Vector2(0.08f, 0.32f);
-            judgeCardRect.anchorMax = new Vector2(0.92f, 0.57f);
+            judgeCardRect.anchorMin = new Vector2(0.04f, 0.11f);
+            judgeCardRect.anchorMax = new Vector2(0.96f, 0.602f);
             judgeCardRect.offsetMin = Vector2.zero;
             judgeCardRect.offsetMax = Vector2.zero;
             var judgeCardBg = judgeCard.AddComponent<Image>();
-            judgeCardBg.color = new Color(0.10f, 0.12f, 0.30f, 1f); // 네이비 카드 배경
+            judgeCardBg.color = new Color(0.03f, 0.05f, 0.15f, 0.96f);
             judgeCardBg.raycastTarget = false;
+            var judgeOutline = judgeCard.AddComponent<UnityEngine.UI.Outline>();
+            judgeOutline.effectColor = UIColorPalette.NEON_CYAN.WithAlpha(0.3f);
+            judgeOutline.effectDistance = new Vector2(1f, -1f);
 
-            // 판정 텍스트들 (카드 내부 상대 위치)
-            resultPerfectText = CreateResultText(judgeCard.transform, "PerfectText", "", 22,
-                new Vector2(0.05f, 0.80f), new Vector2(0.95f, 1.0f), korFont);
+            // 판정 텍스트 5개 — 각 20%, 좌측 라벨 + 우측 숫자 (autoSize로 카드 채움)
+            resultPerfectText = CreateResultText(judgeCard.transform, "PerfectText", "", 40,
+                new Vector2(0.04f, 0.80f), new Vector2(0.96f, 1.00f), korFont);
             resultPerfectText.color = UIColorPalette.JUDGE_PERFECT;
+            resultPerfectText.alignment = TextAlignmentOptions.Left;
+            resultPerfectText.enableAutoSizing = true;
+            resultPerfectText.fontSizeMin = 26; resultPerfectText.fontSizeMax = 40;
 
-            resultGreatText = CreateResultText(judgeCard.transform, "GreatText", "", 22,
-                new Vector2(0.05f, 0.60f), new Vector2(0.95f, 0.80f), korFont);
+            resultGreatText = CreateResultText(judgeCard.transform, "GreatText", "", 40,
+                new Vector2(0.04f, 0.60f), new Vector2(0.96f, 0.80f), korFont);
             resultGreatText.color = UIColorPalette.JUDGE_GREAT;
+            resultGreatText.alignment = TextAlignmentOptions.Left;
+            resultGreatText.enableAutoSizing = true;
+            resultGreatText.fontSizeMin = 26; resultGreatText.fontSizeMax = 40;
 
-            resultGoodText = CreateResultText(judgeCard.transform, "GoodText", "", 22,
-                new Vector2(0.05f, 0.40f), new Vector2(0.95f, 0.60f), korFont);
+            resultGoodText = CreateResultText(judgeCard.transform, "GoodText", "", 40,
+                new Vector2(0.04f, 0.40f), new Vector2(0.96f, 0.60f), korFont);
             resultGoodText.color = UIColorPalette.JUDGE_GOOD;
+            resultGoodText.alignment = TextAlignmentOptions.Left;
+            resultGoodText.enableAutoSizing = true;
+            resultGoodText.fontSizeMin = 26; resultGoodText.fontSizeMax = 40;
 
-            resultBadText = CreateResultText(judgeCard.transform, "BadText", "", 22,
-                new Vector2(0.05f, 0.20f), new Vector2(0.95f, 0.40f), korFont);
+            resultBadText = CreateResultText(judgeCard.transform, "BadText", "", 40,
+                new Vector2(0.04f, 0.20f), new Vector2(0.96f, 0.40f), korFont);
             resultBadText.color = UIColorPalette.JUDGE_BAD;
+            resultBadText.alignment = TextAlignmentOptions.Left;
+            resultBadText.enableAutoSizing = true;
+            resultBadText.fontSizeMin = 26; resultBadText.fontSizeMax = 40;
 
-            resultMissText = CreateResultText(judgeCard.transform, "MissText", "", 22,
-                new Vector2(0.05f, 0.0f), new Vector2(0.95f, 0.20f), korFont);
-            resultMissText.color = new Color(0.6f, 0.6f, 0.6f);
+            resultMissText = CreateResultText(judgeCard.transform, "MissText", "", 40,
+                new Vector2(0.04f, 0.00f), new Vector2(0.96f, 0.20f), korFont);
+            resultMissText.color = new Color(0.72f, 0.72f, 0.72f);
+            resultMissText.alignment = TextAlignmentOptions.Left;
+            resultMissText.enableAutoSizing = true;
+            resultMissText.fontSizeMin = 26; resultMissText.fontSizeMax = 40;
 
             // ===== 하단 구분선 =====
-            CreateResultDivider(panelGo.transform, 0.31f);
+            CreateResultDivider(panelGo.transform, 0.105f);
 
-            // ===== 버튼 영역 (더 크게) =====
+            // ===== 버튼 (두껍고 크게, 하단에 붙여서) =====
             retryButton = CreateResultButton(panelGo.transform, "RetryButton", "다시하기",
-                new Vector2(0.08f, 0.18f), new Vector2(0.48f, 0.28f), korFont);
+                new Vector2(0.04f, 0.01f), new Vector2(0.47f, 0.10f), korFont);
             retryButton.onClick.AddListener(() => GameManager.Instance?.LoadScene("Gameplay"));
 
             menuButton = CreateResultButton(panelGo.transform, "MenuButton", "메뉴로",
-                new Vector2(0.52f, 0.18f), new Vector2(0.92f, 0.28f), korFont);
+                new Vector2(0.53f, 0.01f), new Vector2(0.96f, 0.10f), korFont);
             menuButton.onClick.AddListener(() => GameManager.Instance?.LoadScene("MainMenuScene"));
 
             panelGo.SetActive(false);
@@ -1856,10 +1908,23 @@ namespace AIBeat.UI
             rect.offsetMax = Vector2.zero;
 
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.55f, 0.25f, 0.90f, 1f); // 밝은 보라 버튼
+            // 다시하기: 시안 계열, 메뉴로: 보라 계열
+            img.color = name == "RetryButton"
+                ? new Color(0.05f, 0.55f, 0.75f, 1f)   // 네온 블루-시안
+                : new Color(0.40f, 0.18f, 0.68f, 1f);  // 보라
 
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
+            // 버튼 눌림 색상
+            var colors = btn.colors;
+            colors.highlightedColor = new Color(1f, 1f, 1f, 0.15f);
+            colors.pressedColor = new Color(0f, 0f, 0f, 0.3f);
+            btn.colors = colors;
+
+            // 아웃라인 효과
+            var outline = go.AddComponent<UnityEngine.UI.Outline>();
+            outline.effectColor = new Color(0f, 1f, 1f, 0.5f);
+            outline.effectDistance = new Vector2(2f, -2f);
 
             var textGo = new GameObject("Text");
             textGo.transform.SetParent(go.transform, false);
@@ -1870,13 +1935,13 @@ namespace AIBeat.UI
             textRect.offsetMax = Vector2.zero;
             var tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
-            tmp.fontSize = 30;
+            tmp.fontSize = 40;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
             tmp.enableAutoSizing = true;
-            tmp.fontSizeMin = 18;
-            tmp.fontSizeMax = 30;
+            tmp.fontSizeMin = 26;
+            tmp.fontSizeMax = 40;
             tmp.raycastTarget = false;
             if (font != null) tmp.font = font;
 
@@ -1925,10 +1990,18 @@ namespace AIBeat.UI
             CreateResultBonusScore(result);
 
             if (resultComboText != null)
+            {
                 resultComboText.text = $"최대 콤보: {result.MaxCombo}";
+                var kf = KoreanFontManager.KoreanFont;
+                if (kf != null) resultComboText.font = kf;
+            }
 
             if (resultAccuracyText != null)
+            {
                 resultAccuracyText.text = $"정확도: {result.Accuracy:F1}%";
+                var kf = KoreanFontManager.KoreanFont;
+                if (kf != null) resultAccuracyText.font = kf;
+            }
 
             if (resultRankText != null)
             {
@@ -1937,19 +2010,19 @@ namespace AIBeat.UI
             }
 
             if (resultPerfectText != null)
-                resultPerfectText.text = $"퍼펙트: {result.PerfectCount}";
+                resultPerfectText.text = $"PERFECT  <color=#FFD700>{result.PerfectCount}</color>";
 
             if (resultGreatText != null)
-                resultGreatText.text = $"그레이트: {result.GreatCount}";
+                resultGreatText.text = $"GREAT  <color=#00CCD1>{result.GreatCount}</color>";
 
             if (resultGoodText != null)
-                resultGoodText.text = $"굿: {result.GoodCount}";
+                resultGoodText.text = $"GOOD  <color=#66CC33>{result.GoodCount}</color>";
 
             if (resultBadText != null)
-                resultBadText.text = $"배드: {result.BadCount}";
+                resultBadText.text = $"BAD  <color=#FF8833>{result.BadCount}</color>";
 
             if (resultMissText != null)
-                resultMissText.text = $"미스: {result.MissCount}";
+                resultMissText.text = $"MISS  <color=#AAAAAA>{result.MissCount}</color>";
 
             // NEW RECORD 체크 및 표시
             CheckAndShowNewRecord(result);
@@ -1975,6 +2048,9 @@ namespace AIBeat.UI
             rrt.offsetMax = Vector2.zero;
             resultPanel.transform.SetAsLastSibling();
             resultPanel.transform.localScale = Vector3.one;
+
+            // 한국어 폰트 재적용 (동적 생성 텍스트 포함)
+            KoreanFontManager.ApplyFontToAll(resultPanel);
 
             // 안전장치: 1프레임 후 활성 상태 재확인
             StartCoroutine(EnsureResultPanelActive());
@@ -2006,28 +2082,10 @@ namespace AIBeat.UI
         /// </summary>
         private void CreateResultSongInfo(GameResult result)
         {
-            if (resultPanel == null || currentSongData == null) return;
+            if (resultSongInfoText == null || currentSongData == null) return;
 
-            // 이미 생성되어 있으면 업데이트만
-            if (resultSongInfoText != null)
-            {
-                resultSongInfoText.text = $"{currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
-                return;
-            }
-
-            var songInfoGo = new GameObject("ResultSongInfo");
-            songInfoGo.transform.SetParent(resultPanel.transform, false);
-            var songInfoRect = songInfoGo.AddComponent<RectTransform>();
-            songInfoRect.anchorMin = new Vector2(0.05f, 0.92f);
-            songInfoRect.anchorMax = new Vector2(0.95f, 1f);
-            songInfoRect.offsetMin = Vector2.zero;
-            songInfoRect.offsetMax = Vector2.zero;
-
-            resultSongInfoText = songInfoGo.AddComponent<TextMeshProUGUI>();
+            // CreateResultPanel()에서 이미 생성됨 - 텍스트만 업데이트
             resultSongInfoText.text = $"{currentSongData.Title}  |  {AIBeat.Data.PromptOptions.GetGenreDisplay(currentSongData.Genre)}  |  BPM {currentSongData.BPM:F0}";
-            resultSongInfoText.fontSize = 18;
-            resultSongInfoText.color = UIColorPalette.NEON_BLUE;
-            resultSongInfoText.alignment = TextAlignmentOptions.Center;
         }
 
         /// <summary>

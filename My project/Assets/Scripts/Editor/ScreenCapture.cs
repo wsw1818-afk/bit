@@ -72,9 +72,9 @@ namespace AIBeat.Editor
             }
             else
             {
-                // Fallback: ScreenCapture API
-                UnityEngine.ScreenCapture.CaptureScreenshot(fullPath, 1);
-                for (int i = 0; i < 3; i++)
+                // Fallback: ScreenCapture API (superSize 4 = 4배 해상도)
+                UnityEngine.ScreenCapture.CaptureScreenshot(fullPath, 4);
+                for (int i = 0; i < 5; i++)
                     EditorApplication.Step();
             }
 
