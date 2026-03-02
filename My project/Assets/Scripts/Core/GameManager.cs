@@ -226,26 +226,24 @@ namespace AIBeat.Core
                     if (op.progress >= 0.9f && elapsed >= minDisplayTime)
                     {
                         loadingScreen.UpdateProgress(1f);
-                        yield return new WaitForSecondsRealtime(0.3f);
+                        yield return new WaitForSecondsRealtime(0.2f);
 
-                        // 페이드 아웃 → 씬 활성화 → 페이드 인
-                        EnsureFadeOverlay();
-                        yield return StartCoroutine(FadeCoroutine(0f, 1f, FADE_DURATION));
-
-                        loadingScreen.Hide();
+                        // AI 분석 모드로 전환 후 씬 활성화
+                        loadingScreen.SwitchToAnalysisMode(CurrentSongData?.Title);
                         op.allowSceneActivation = true;
+
+                        // 씬 활성화 대기 (while 루프에서 UpdateProgress 재호출 방지)
+                        while (!op.isDone)
+                            yield return null;
+                        break;
                     }
 
                     yield return null;
                 }
             }
 
-            // 새 씬에서 페이드 인
-            yield return new WaitForSecondsRealtime(0.1f);
-            EnsureFadeOverlay();
-            fadeOverlay.alpha = 1f;
-            yield return StartCoroutine(FadeCoroutine(1f, 0f, FADE_DURATION));
-
+            // LoadingScreen이 계속 표시 중이므로 페이드 불필요
+            // GameplayController가 AI 분석 완료 후 Hide() 호출
             isLoadingScene = false;
         }
 

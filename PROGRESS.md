@@ -1023,5 +1023,25 @@ public static class ErrorHandler
 
 ---
 
-**마지막 업데이트**: 2026-02-18 (Debug.Log 전체 #if UNITY_EDITOR 래핑 완료 - 11개 파일, 빌드 성능 최적화)
-**다음 검토일**: 2026-02-19
+### 2026-03-02 (로딩화면 중복 + 앨범아트 수정)
+- [x] **로딩화면 중복 표시 수정** (4차 수정 최종)
+  - 근본 원인: 씬 로딩 100% → AI분석 0%로 리셋되면서 로딩화면이 2번 나타나는 것처럼 보임
+  - 해결: 통합 프로그레스 시스템 도입 (씬 로딩 0-30%, AI분석 30-100%)
+  - `LoadingScreen.cs`: `UpdateProgress()` (0→30%), `UpdateAnalysisProgress()` (30→100%), `SetProgressDirect()` 분리
+  - `GameManager.cs`: Gameplay 씬 전환 시 불필요한 페이드 효과 제거
+  - `GameplayController.cs`: 중복 `SwitchToAnalysisMode()` 호출 제거, 프로그레스 콜백을 `UpdateAnalysisProgress`로 변경
+- [x] **앨범아트 폰 미표시 수정**
+  - `SongLibraryUI.cs`: `ReadJavaInputStream` 128KB→512KB 확장, 16KB 청크 읽기
+  - Android 10+ `ContentResolver.loadThumbnail()` API를 1차 경로로 추가
+  - Android ARGB Bitmap → Unity RGBA32 Texture2D 변환 시 Y축 플립 추가
+  - `GetApiLevel()` 헬퍼 메서드 추가
+- [x] **로딩화면 중복 표시 근본 수정** (5차 - 진짜 근본 원인)
+  - 근본 원인: `DebugAnalyzeAndStart()`에서 LoadingScreen이 이미 표시 중인지 확인하지 않고 `ShowAnalysisOverlay(true)` 호출 → 두 개의 로딩 화면 동시 표시
+  - `AnalyzeAndGenerateNotes()`에는 `useLoadingScreen` 체크가 있었지만 `DebugAnalyzeAndStart()`에는 누락
+  - 해결: `DebugAnalyzeAndStart()`에 동일한 `useLoadingScreen` 체크 추가 + `HideLoadingOrOverlay()` 통합 헬퍼 사용
+  - 2차 분석(AutoTuner) 프로그레스 콜백도 `null`로 변경하여 100%→0% 리셋 방지
+  - `LoadingScreen.cs`에 `isInAnalysisMode` 플래그 추가하여 분석 모드 진입 후 씬 로딩 프로그레스 무시
+- [x] APK 빌드 및 adb 설치 완료 (192.168.45.4:38791)
+
+**마지막 업데이트**: 2026-03-02 (로딩화면 근본 수정 - DebugAnalyzeAndStart useLoadingScreen 체크 추가)
+**다음 검토일**: 2026-03-03

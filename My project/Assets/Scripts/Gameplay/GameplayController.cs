@@ -75,6 +75,7 @@ namespace AIBeat.Gameplay
             Screen.orientation = ScreenOrientation.Portrait;
             // 세로 모드에서 레인이 화면 너비를 꽉 채우도록 카메라 조정
             AdjustCameraForPortrait();
+            // LoadingScreen은 AI 분석이 끝난 후에 숨김 (AnalyzeAndGenerateNotes → HideLoadingOrOverlay)
             // gameplayUI가 Inspector에서 할당되지 않은 경우 자동 탐색
             if (gameplayUI == null)
                 gameplayUI = FindFirstObjectByType<GameplayUI>();
@@ -369,7 +370,7 @@ namespace AIBeat.Gameplay
 
             // 일반 모드: 오디오 로드 → 게임 시작
 #if UNITY_EDITOR
-            Debug.Log($"[GameplayController] Normal mode: AudioClip={(currentSong.AudioClip != null)}, AudioUrl={currentSong.AudioUrl ?? "null"}");
+            Debug.Log($"[GPC] Normal mode: clip={currentSong.AudioClip != null}, url={currentSong.AudioUrl ?? "null"}, title={currentSong.Title}");
 #endif
 
             AudioManager.Instance.OnBGMLoaded -= OnAudioLoaded;
@@ -677,9 +678,17 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
             Debug.Log($"[GameplayController] Starting offline audio analysis: {clip.name}");
 #endif
-            gameplayUI?.Initialize(currentSong);
-            gameplayUI?.SetAnalysisSongTitle(currentSong?.Title ?? "Unknown");
-            gameplayUI?.ShowAnalysisOverlay(true);
+            // gameplayUI?.Initialize()는 StartGameWithNotes→StartCountdown 전에 호출됨
+            // 여기서 중복 호출하면 UI가 깜빡일 수 있으므로 제거
+
+            // LoadingScreen이 이미 표시 중이면 그대로 사용 (GameManager가 이미 분석 모드로 전환함)
+            // 없으면 AnalysisOverlay 사용
+            bool useLoadingScreen = LoadingScreen.Instance != null && LoadingScreen.Instance.gameObject.activeSelf;
+            if (!useLoadingScreen)
+            {
+                gameplayUI?.SetAnalysisSongTitle(currentSong?.Title ?? "Unknown");
+                gameplayUI?.ShowAnalysisOverlay(true);
+            }
 
             // 1프레임 대기 (UI 갱신)
             yield return null;
@@ -688,12 +697,14 @@ namespace AIBeat.Gameplay
             var analyzer = new OfflineAudioAnalyzer();
             OfflineAudioAnalyzer.AnalysisResult result = null;
 
-            yield return analyzer.AnalyzeAsync(clip,
-                progress => gameplayUI?.UpdateAnalysisProgress(progress),
-                r => result = r);
+            // 프로그레스 콜백: LoadingScreen(30%~100%) 또는 AnalysisOverlay(0%~100%)
+            System.Action<float> progressCallback = useLoadingScreen
+                ? (progress) => LoadingScreen.Instance?.UpdateAnalysisProgress(progress)
+                : (progress) => gameplayUI?.UpdateAnalysisProgress(progress);
 
-            // 분석 완료 → 오버레이 숨김
-            gameplayUI?.ShowAnalysisOverlay(false);
+            yield return analyzer.AnalyzeAsync(clip,
+                progressCallback,
+                r => result = r);
 
             // 분석 중에 게임이 시작되었으면 중단
             if (isPlaying)
@@ -701,6 +712,7 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
                 Debug.Log("[GameplayController] AnalyzeAndGenerateNotes aborted after analysis - game already playing");
 #endif
+                HideLoadingOrOverlay(useLoadingScreen);
                 isAnalyzing = false;
                 yield break;
             }
@@ -710,6 +722,7 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
                 Debug.LogWarning("[GameplayController] Audio analysis failed, using BPM fallback");
 #endif
+                HideLoadingOrOverlay(useLoadingScreen);
                 var fallbackSections = currentSong.Sections ?? BeatMapper.CreateDefaultSections(currentSong.Duration);
                 var fallbackNotes = beatMapper.GenerateNotesFromBPM(currentSong.BPM, currentSong.Duration, fallbackSections);
                 isAnalyzing = false;
@@ -717,20 +730,87 @@ namespace AIBeat.Gameplay
                 yield break;
             }
 
-            // 난이도 전달 후 노트 생성
+            // === 자동 최적화 파이프라인 ===
+            // Phase 1: 셀프 튜닝 — 1차 분석 결과로 최적 파라미터 계산
+            var tunedAnalysisParams = AnalysisAutoTuner.TuneAnalysisParams(result);
+            var tunedMappingParams = AnalysisAutoTuner.TuneMappingParams(result, currentSong.Difficulty);
+
+            // Phase 2: 재분석 필요 여부 판단 → 2차 분석 (오버레이는 1차부터 끝까지 유지)
+#if UNITY_EDITOR
+            Debug.Log($"[GameplayController] AutoTuner pipeline complete: " +
+                      $"α={tunedAnalysisParams.OnsetThresholdAlpha:F1}, " +
+                      $"interval={tunedMappingParams.MinNoteInterval:F2}s, " +
+                      $"dropDensity={tunedMappingParams.DropDensity:F1}");
+#endif
+            bool needsReanalysis = AnalysisAutoTuner.NeedsReanalysis(AnalysisParams.Default, tunedAnalysisParams);
+            if (needsReanalysis)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameplayController] AutoTuner: re-analyzing with tuned params...");
+#endif
+                // 2차 분석: 프로그레스를 리셋하지 않음 (이미 100%에 도달한 상태)
+                // 2차 분석 콜백을 무시하여 프로그레스가 0%로 돌아가지 않도록 함
+                OfflineAudioAnalyzer.AnalysisResult result2 = null;
+                yield return analyzer.AnalyzeAsync(clip,
+                    null, // 2차 분석 시 프로그레스 콜백 무시
+                    r => result2 = r,
+                    tunedAnalysisParams);
+
+                if (result2 != null)
+                {
+                    // 2차 분석 결과로 매핑 파라미터 재계산
+                    tunedMappingParams = AnalysisAutoTuner.TuneMappingParams(result2, currentSong.Difficulty);
+                    result = result2;
+                }
+            }
+
+            // Phase 3: 적응형 보정 — 플레이 히스토리가 2세션 이상이면 적용
+            string songId = currentSong?.Title ?? clip.name;
+            var history = PlayDataCollector.LoadHistory(songId);
+            if (history.Sessions != null && history.Sessions.Count >= 2)
+            {
+                var adaptResult = AdaptiveTuner.AdaptParams(tunedMappingParams, history);
+                if (adaptResult.WasAdapted)
+                    tunedMappingParams = adaptResult.AdjustedParams;
+#if UNITY_EDITOR
+                Debug.Log(adaptResult.Summary);
+#endif
+            }
+
+            // 난이도 전달 + 최적화된 파라미터 주입 후 노트 생성
             smartBeatMapper.SetDifficulty(currentSong.Difficulty);
+            smartBeatMapper.SetMappingParams(tunedMappingParams);
             var notes = smartBeatMapper.GenerateNotes(result);
+
+            // PlayDataCollector 수집 시작
+            PlayDataCollector.Instance?.StartCollecting(
+                songId, currentSong.Difficulty,
+                needsReanalysis ? tunedAnalysisParams : AnalysisParams.Default,
+                tunedMappingParams, result.Sections);
 
             // SongData에 분석 결과 반영
             if (currentSong.BPM <= 0) currentSong.BPM = result.BPM;
             currentSong.Sections = smartBeatMapper.ConvertSections(result);
 
 #if UNITY_EDITOR
-            Debug.Log($"[GameplayController] Analysis complete: BPM={result.BPM}, notes={notes.Count}, sections={result.Sections.Count}");
+            Debug.Log($"[GameplayController] Analysis complete: BPM={result.BPM}, notes={notes.Count}, " +
+                      $"sections={result.Sections.Count}, reanalyzed={needsReanalysis}");
 #endif
 
             isAnalyzing = false;
+            HideLoadingOrOverlay(useLoadingScreen);
             StartGameWithNotes(notes);
+        }
+
+        /// <summary>
+        /// LoadingScreen 또는 AnalysisOverlay 숨기기 (통합 헬퍼)
+        /// </summary>
+        private void HideLoadingOrOverlay(bool useLoadingScreen)
+        {
+            if (useLoadingScreen)
+                LoadingScreen.Instance?.Hide();
+            else
+                gameplayUI?.ShowAnalysisOverlay(false);
         }
 
         /// <summary>
@@ -751,6 +831,9 @@ namespace AIBeat.Gameplay
 
         private System.Collections.IEnumerator StartCountdown()
         {
+            // 안전장치: 분석 오버레이/로딩 화면이 남아있으면 확실히 숨기기
+            LoadingScreen.Instance?.Hide();
+            gameplayUI?.ShowAnalysisOverlay(false);
             gameplayUI?.ShowLoadingVideo(false); // 영상 정지 보장
             gameplayUI?.ShowCountdown(true);
 
@@ -764,26 +847,33 @@ namespace AIBeat.Gameplay
             yield return new WaitForSeconds(0.5f);
 
             gameplayUI?.ShowCountdown(false);
-            StartGame();
+            StartCoroutine(StartGameCoroutine());
         }
 
-        private void StartGame()
+        private System.Collections.IEnumerator StartGameCoroutine()
         {
             isPlaying = true;
             gameStartTime = Time.time;
 
             GameManager.Instance?.ChangeState(GameManager.GameState.Gameplay);
-            noteSpawner.StartSpawning();
 
-            // AudioClip이 있으면 AudioManager에 설정 후 재생
+            // 오디오를 먼저 재생하여 CurrentTime이 즉시 유효하도록 함
             if (currentSong.AudioClip != null && AudioManager.Instance != null)
             {
                 AudioManager.Instance.SetBGM(currentSong.AudioClip);
             }
             AudioManager.Instance.PlayBGM();
 
+            // DSP 클럭 안정화 대기: PlayBGM() 직후 dspTime이 불안정할 수 있음
+            // 2프레임 대기하여 오디오 스레드가 안정화된 후 노트 스폰 시작
+            yield return null;
+            yield return null;
+
+            // 오디오 재생 후 노트 스폰 시작 (CurrentTime 기반으로 정확한 타이밍)
+            noteSpawner.StartSpawning();
+
 #if UNITY_EDITOR
-            Debug.Log("[GameplayController] Game started!");
+            Debug.Log($"[GameplayController] Game started! AudioTime={AudioManager.Instance?.CurrentTime:F3}s");
 #endif
         }
 
@@ -930,6 +1020,10 @@ namespace AIBeat.Gameplay
         {
             gameplayUI?.ShowJudgementDetailed(result, rawDiff);
 
+            // 플레이 데이터 수집 (현재 오디오 시간을 noteTime 근사값으로 사용)
+            float currentAudioTime = AudioManager.Instance?.CurrentTime ?? 0f;
+            PlayDataCollector.Instance?.RecordJudgement(result, rawDiff, currentAudioTime);
+
             // VFX: Perfect/Great 히트 시 화면 비트 플래시
             if (result == JudgementResult.Perfect)
                 BackgroundVFX.TriggerBeatFlash(new Color(1f, 0.84f, 0f), 0.1f);  // Gold
@@ -943,27 +1037,84 @@ namespace AIBeat.Gameplay
         private System.Collections.IEnumerator DebugAnalyzeAndStart()
         {
             gameplayUI?.Initialize(currentSong);
-            gameplayUI?.SetAnalysisSongTitle(currentSong?.Title ?? "Unknown");
-            gameplayUI?.ShowAnalysisOverlay(true);
+
+            // LoadingScreen이 이미 표시 중이면 그대로 사용 (GameManager가 이미 분석 모드로 전환함)
+            bool useLoadingScreen = LoadingScreen.Instance != null && LoadingScreen.Instance.gameObject.activeSelf;
+            if (!useLoadingScreen)
+            {
+                gameplayUI?.SetAnalysisSongTitle(currentSong?.Title ?? "Unknown");
+                gameplayUI?.ShowAnalysisOverlay(true);
+            }
             yield return null;
 
             // 비동기 분석 (청크 단위)
             var analyzer = new OfflineAudioAnalyzer();
             OfflineAudioAnalyzer.AnalysisResult result = null;
 
+            // 프로그레스 콜백: LoadingScreen(30%~100%) 또는 AnalysisOverlay(0%~100%)
+            System.Action<float> progressCallback = useLoadingScreen
+                ? (progress) => LoadingScreen.Instance?.UpdateAnalysisProgress(progress)
+                : (progress) => gameplayUI?.UpdateAnalysisProgress(progress);
+
             yield return analyzer.AnalyzeAsync(currentSong.AudioClip,
-                progress => gameplayUI?.UpdateAnalysisProgress(progress),
+                progressCallback,
                 r => result = r);
 
             List<NoteData> notes;
             if (result != null)
             {
+                // === 자동 최적화 파이프라인 (DebugAnalyzeAndStart) ===
+                var tunedAnalysisParams = AnalysisAutoTuner.TuneAnalysisParams(result);
+                var tunedMappingParams = AnalysisAutoTuner.TuneMappingParams(result, currentSong.Difficulty);
+#if UNITY_EDITOR
+                Debug.Log($"[AutoTuner] DebugPath — α={tunedAnalysisParams.OnsetThresholdAlpha:F1}, " +
+                          $"interval={tunedMappingParams.MinNoteInterval:F2}s, " +
+                          $"dropDensity={tunedMappingParams.DropDensity:F1}");
+#endif
+                bool needsReanalysis = AnalysisAutoTuner.NeedsReanalysis(AnalysisParams.Default, tunedAnalysisParams);
+                if (needsReanalysis)
+                {
+#if UNITY_EDITOR
+                    Debug.Log("[AutoTuner] DebugPath — re-analyzing with tuned params...");
+#endif
+                    // 2차 분석: 프로그레스 콜백을 무시하여 100%→0% 리셋 방지
+                    OfflineAudioAnalyzer.AnalysisResult result2 = null;
+                    yield return analyzer.AnalyzeAsync(currentSong.AudioClip,
+                        null, // 2차 분석 시 프로그레스 콜백 무시
+                        r => result2 = r,
+                        tunedAnalysisParams);
+                    if (result2 != null)
+                    {
+                        tunedMappingParams = AnalysisAutoTuner.TuneMappingParams(result2, currentSong.Difficulty);
+                        result = result2;
+                    }
+                }
+
+                // 적응형 보정
+                string songId = currentSong?.Title ?? currentSong.AudioClip.name;
+                var history = PlayDataCollector.LoadHistory(songId);
+                if (history.Sessions != null && history.Sessions.Count >= 2)
+                {
+                    var adaptResult = AdaptiveTuner.AdaptParams(tunedMappingParams, history);
+                    if (adaptResult.WasAdapted)
+                        tunedMappingParams = adaptResult.AdjustedParams;
+#if UNITY_EDITOR
+                    Debug.Log(adaptResult.Summary);
+#endif
+                }
+
                 smartBeatMapper.SetDifficulty(currentSong.Difficulty);
+                smartBeatMapper.SetMappingParams(tunedMappingParams);
                 notes = smartBeatMapper.GenerateNotes(result);
                 if (currentSong.BPM <= 0) currentSong.BPM = result.BPM;
                 currentSong.Sections = smartBeatMapper.ConvertSections(result);
+
+                PlayDataCollector.Instance?.StartCollecting(
+                    songId, currentSong.Difficulty,
+                    needsReanalysis ? tunedAnalysisParams : AnalysisParams.Default,
+                    tunedMappingParams, result.Sections);
 #if UNITY_EDITOR
-                Debug.Log($"[GameplayController] Debug analysis: BPM={result.BPM}, notes={notes.Count}");
+                Debug.Log($"[GameplayController] Debug analysis: BPM={result.BPM}, notes={notes.Count}, reanalyzed={needsReanalysis}");
 #endif
             }
             else
@@ -977,8 +1128,8 @@ namespace AIBeat.Gameplay
             noteSpawner?.LoadNotes(notes);
             judgementSystem?.Initialize(notes.Count);
 
-            // 분석 완료 → 오버레이 숨김
-            gameplayUI?.ShowAnalysisOverlay(false);
+            // 분석 완료 → 로딩/오버레이 숨김
+            HideLoadingOrOverlay(useLoadingScreen);
 
             // 카운트다운 표시 (노트 스폰/음악 재생 전에 완료)
             for (int i = 3; i > 0; i--)
@@ -1052,6 +1203,9 @@ namespace AIBeat.Gameplay
 #if UNITY_EDITOR
                 Debug.Log($"[GameplayController] Game ended - Score:{gameResult.Score}, Rank:{gameResult.Rank}, P:{gameResult.PerfectCount} G:{gameResult.GreatCount} Good:{gameResult.GoodCount} B:{gameResult.BadCount} M:{gameResult.MissCount}");
 #endif
+                // 플레이 데이터 수집 종료 → JSON 저장
+                PlayDataCollector.Instance?.EndCollecting(gameResult);
+
                 // 자동 저장: 플레이 기록
                 AutoSave.RecordSongPlay(currentSong?.Title);
 

@@ -3,40 +3,63 @@ using UnityEngine;
 
 namespace AIBeat.Editor
 {
+    /// <summary>
+    /// MCP 안전한 Play 모드 제어.
+    /// EditorApplication.update 콜백으로 Play 모드 전환 (포커스 없어도 실행됨).
+    /// delayCall은 에디터 포커스 없을 때 실행 안 되므로 사용 금지.
+    /// </summary>
     public static class PlayModeController
     {
+        private static bool _pendingPlay;
+        private static bool _pendingStop;
+
         [MenuItem("Tools/A.I. BEAT/Toggle Play Mode _F5")]
         public static void TogglePlayMode()
         {
-            EditorApplication.isPlaying = !EditorApplication.isPlaying;
-            Debug.Log($"[PlayModeController] Play Mode: {(EditorApplication.isPlaying ? "Started" : "Stopped")}");
+            if (EditorApplication.isPlaying)
+                StopPlayMode();
+            else
+                StartPlayMode();
         }
 
         [MenuItem("Tools/A.I. BEAT/Start Play Mode")]
         public static void StartPlayMode()
         {
-            if (!EditorApplication.isPlaying)
-            {
-                Debug.Log("[PlayModeController] Starting Play Mode...");
-                EditorApplication.isPlaying = true;
-            }
-            else
+            if (EditorApplication.isPlaying)
             {
                 Debug.Log("[PlayModeController] Already in Play Mode");
+                return;
             }
+            Debug.Log("[PlayModeController] Starting Play Mode (next update)...");
+            _pendingPlay = true;
+            EditorApplication.update += OnUpdate;
         }
 
         [MenuItem("Tools/A.I. BEAT/Stop Play Mode")]
         public static void StopPlayMode()
         {
-            if (EditorApplication.isPlaying)
-            {
-                Debug.Log("[PlayModeController] Stopping Play Mode...");
-                EditorApplication.isPlaying = false;
-            }
-            else
+            if (!EditorApplication.isPlaying)
             {
                 Debug.Log("[PlayModeController] Not in Play Mode");
+                return;
+            }
+            Debug.Log("[PlayModeController] Stopping Play Mode (next update)...");
+            _pendingStop = true;
+            EditorApplication.update += OnUpdate;
+        }
+
+        private static void OnUpdate()
+        {
+            EditorApplication.update -= OnUpdate;
+            if (_pendingPlay)
+            {
+                _pendingPlay = false;
+                EditorApplication.isPlaying = true;
+            }
+            if (_pendingStop)
+            {
+                _pendingStop = false;
+                EditorApplication.isPlaying = false;
             }
         }
 
@@ -56,7 +79,6 @@ namespace AIBeat.Editor
                 return;
             }
 
-            // settingsPanel 필드에 접근
             var settingsPanelField = typeof(UI.MainMenuUI).GetField("settingsPanel",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
@@ -66,13 +88,8 @@ namespace AIBeat.Editor
                 if (settingsPanel != null)
                 {
                     settingsPanel.SetActive(true);
-
-                    // SettingsUI 컴포넌트 추가/확인
                     if (settingsPanel.GetComponent<UI.SettingsUI>() == null)
-                    {
                         settingsPanel.AddComponent<UI.SettingsUI>();
-                    }
-
                     Debug.Log("[PlayModeController] Settings Panel 열림");
                 }
             }

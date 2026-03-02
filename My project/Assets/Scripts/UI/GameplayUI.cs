@@ -655,7 +655,15 @@ namespace AIBeat.UI
         /// </summary>
         private void CreatePausePanel()
         {
-            if (pausePanel != null) return; // 씬에 이미 있으면 스킵
+            // 씬에 이미 있으면 파괴 후 재생성 (코드 기반 크기/앵커 적용 보장)
+            if (pausePanel != null)
+            {
+                DestroyImmediate(pausePanel); // Awake에서 즉시 파괴 (Destroy는 프레임 끝에 파괴됨)
+                pausePanel = null;
+                resumeButton = null;
+                restartButton = null;
+                quitButton = null;
+            }
 
             pausePanel = new GameObject("PausePanel");
             pausePanel.transform.SetParent(transform, false);
@@ -671,40 +679,25 @@ namespace AIBeat.UI
             bg.color = UIColorPalette.BG_DEEP.WithAlpha(0.85f);
             bg.raycastTarget = true; // 뒤의 터치 차단
 
-            // 세로 레이아웃 컨테이너 (가운데 정렬)
-            var contentGo = new GameObject("PauseContent");
-            contentGo.transform.SetParent(pausePanel.transform, false);
-            var contentRect = contentGo.AddComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0.15f, 0.25f);
-            contentRect.anchorMax = new Vector2(0.85f, 0.75f);
-            contentRect.offsetMin = Vector2.zero;
-            contentRect.offsetMax = Vector2.zero;
-
-            var vLayout = contentGo.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 30;
-            vLayout.childAlignment = TextAnchor.MiddleCenter;
-            vLayout.childControlWidth = true;
-            vLayout.childControlHeight = false;
-            vLayout.childForceExpandWidth = true;
-            vLayout.childForceExpandHeight = false;
-            vLayout.padding = new RectOffset(20, 20, 20, 20);
-
-            // 타이틀: "일시정지"
+            // 타이틀: "일시정지" — 화면 중앙 기준 오프셋
             var titleGo = new GameObject("PauseTitle");
-            titleGo.transform.SetParent(contentGo.transform, false);
-            var titleLE = titleGo.AddComponent<LayoutElement>();
-            titleLE.preferredHeight = 80;
+            titleGo.transform.SetParent(pausePanel.transform, false);
+            var titleRect = titleGo.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0.5f, 0.5f);
+            titleRect.anchorMax = new Vector2(0.5f, 0.5f);
+            titleRect.sizeDelta = new Vector2(600f, 80f);
+            titleRect.anchoredPosition = new Vector2(0f, 220f);
             var titleText = titleGo.AddComponent<TextMeshProUGUI>();
             titleText.text = "일시정지";
-            titleText.fontSize = 60;
+            titleText.fontSize = 52;
             titleText.color = UIColorPalette.NEON_CYAN_BRIGHT;
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.fontStyle = FontStyles.Bold;
 
-            // 버튼들 생성
-            resumeButton = CreatePauseMenuButton(contentGo.transform, "ResumeButton", "이어하기");
-            restartButton = CreatePauseMenuButton(contentGo.transform, "RestartButton", "다시하기");
-            quitButton = CreatePauseMenuButton(contentGo.transform, "QuitButton", "나가기");
+            // 버튼들 — 화면 중앙 기준 오프셋 (높이 100px, 간격 20px)
+            resumeButton  = CreatePauseMenuButton(pausePanel.transform, "ResumeButton",  "이어하기", new Vector2(0f,  80f));
+            restartButton = CreatePauseMenuButton(pausePanel.transform, "RestartButton", "다시하기", new Vector2(0f, -40f));
+            quitButton    = CreatePauseMenuButton(pausePanel.transform, "QuitButton",    "나가기",   new Vector2(0f,-160f));
 
             pausePanel.SetActive(false);
         }
@@ -712,10 +705,21 @@ namespace AIBeat.UI
         /// <summary>
         /// 일시정지 메뉴 버튼 생성 헬퍼 (디자인 에셋 사용)
         /// </summary>
-        private Button CreatePauseMenuButton(Transform parent, string name, string label)
+        private Button CreatePauseMenuButton(Transform parent, string name, string label,
+            Vector2 anchoredPos)
         {
-            return UIButtonStyleHelper.CreateStyledButton(parent, name, label,
-                preferredHeight: 80f, fontSize: 36f);
+            var btn = UIButtonStyleHelper.CreateStyledButton(parent, name, label,
+                preferredHeight: 100f, fontSize: 40f);
+            // 중앙 앵커 + 픽셀 오프셋 방식
+            var rect = btn.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(620f, 100f);
+            rect.anchoredPosition = anchoredPos;
+            // LayoutElement 제거 (수동 크기 제어와 충돌)
+            var le = btn.GetComponent<LayoutElement>();
+            if (le != null) Object.Destroy(le);
+            return btn;
         }
 
         /// <summary>
@@ -770,18 +774,29 @@ namespace AIBeat.UI
 
             var korFont = KoreanFontManager.KoreanFont;
 
-            // 전체 화면 패널
+            // 독립 Canvas로 생성 — SafeAreaPanel/HUD와 무관하게 전체 화면 덮음
             analysisPanel = new GameObject("AnalysisOverlay");
-            analysisPanel.transform.SetParent(transform, false);
-            var panelRect = analysisPanel.AddComponent<RectTransform>();
+            var overlayCanvas = analysisPanel.AddComponent<Canvas>();
+            overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            overlayCanvas.sortingOrder = 999; // LoadingScreen(998)보다 위, FadeOverlay(9999)보다 아래
+            analysisPanel.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = analysisPanel.GetComponent<CanvasScaler>();
+            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.matchWidthOrHeight = 0.5f;
+            analysisPanel.AddComponent<GraphicRaycaster>();
+
+            // 배경 패널 (전체 화면)
+            var bgGo = new GameObject("AnalysisBG");
+            bgGo.transform.SetParent(analysisPanel.transform, false);
+            var panelRect = bgGo.AddComponent<RectTransform>();
             panelRect.anchorMin = Vector2.zero;
             panelRect.anchorMax = Vector2.one;
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
-            // 배경 (어두운 오버레이)
-            var bg = analysisPanel.AddComponent<Image>();
-            bg.color = new Color(0.01f, 0.005f, 0.03f, 0.92f);
+            // 배경 (완전 불투명 — 게임 배경이 비쳐 보이지 않도록)
+            var bg = bgGo.AddComponent<Image>();
+            bg.color = new Color(0.01f, 0.005f, 0.03f, 1f);
             bg.raycastTarget = true; // 뒤 UI 클릭 차단
 
             // ── 상단: 곡 제목 (anchor 0.3~0.5 영역) ──
@@ -956,9 +971,10 @@ namespace AIBeat.UI
 
             if (show)
             {
+                bool wasAlreadyActive = analysisPanel.activeSelf;
                 analysisPanel.SetActive(true);
-                analysisPanel.transform.SetAsLastSibling();
-                UpdateAnalysisProgress(0f);
+                if (!wasAlreadyActive)
+                    UpdateAnalysisProgress(0f); // 최초 표시 시에만 0으로 리셋
 
                 // 랜덤 팁
                 if (analysisTipText != null)
@@ -1390,17 +1406,11 @@ namespace AIBeat.UI
             if (judgementSystem == null)
                 judgementSystem = FindFirstObjectByType<JudgementSystem>();
 
-            // 모바일 버튼 최소 크기 보장
-            EnsureMinButtonSize(resumeButton);
-            EnsureMinButtonSize(restartButton);
-            EnsureMinButtonSize(quitButton);
+            // 모바일 버튼 최소 크기 보장 (퍼즈 버튼은 앵커로 크기 제어 — 제외)
             EnsureMinButtonSize(retryButton);
             EnsureMinButtonSize(menuButton);
 
-            // 한국어 버튼 텍스트 + 스타일 적용
-            ApplyButtonStyle(resumeButton, "이어하기");
-            ApplyButtonStyle(restartButton, "다시하기");
-            ApplyButtonStyle(quitButton, "나가기");
+            // 한국어 버튼 텍스트 + 스타일 적용 (퍼즈 버튼은 CreatePausePanel에서 이미 설정됨)
             ApplyButtonStyle(retryButton, "재시도");
             ApplyButtonStyle(menuButton, "메뉴");
         }
@@ -1639,6 +1649,12 @@ namespace AIBeat.UI
                 {
                     // 최상위에 렌더링되도록 보장
                     pausePanel.transform.SetAsLastSibling();
+                    // 디버그: 버튼 실제 크기 확인
+                    if (resumeButton != null)
+                    {
+                        var r = resumeButton.GetComponent<RectTransform>();
+                        Debug.Log($"[PauseBtn] ResumeButton rect={r.rect}, sizeDelta={r.sizeDelta}, anchorMin={r.anchorMin}, anchorMax={r.anchorMax}, parent.rect={((RectTransform)r.parent).rect}");
+                    }
                 }
             }
             // 일시정지 중에는 버튼 숨김
@@ -1721,12 +1737,12 @@ namespace AIBeat.UI
             songInfoRectEarly.offsetMax = Vector2.zero;
             resultSongInfoText = songInfoGoEarly.AddComponent<TextMeshProUGUI>();
             resultSongInfoText.text = "";
-            resultSongInfoText.fontSize = 24;
+            resultSongInfoText.fontSize = 28;
             resultSongInfoText.color = new Color(0.7f, 0.85f, 1f, 0.85f);
             resultSongInfoText.alignment = TextAlignmentOptions.Center;
             resultSongInfoText.enableAutoSizing = true;
-            resultSongInfoText.fontSizeMin = 16;
-            resultSongInfoText.fontSizeMax = 24;
+            resultSongInfoText.fontSizeMin = 20;
+            resultSongInfoText.fontSizeMax = 28;
             if (korFont != null) resultSongInfoText.font = korFont;
 
             // ===== 상단 구분선 =====
@@ -1774,19 +1790,19 @@ namespace AIBeat.UI
             resultScoreText.fontSizeMax = 72;
 
             // ===== 콤보 + 정확도 =====
-            resultComboText = CreateResultText(panelGo.transform, "ResultComboText", "", 34,
+            resultComboText = CreateResultText(panelGo.transform, "ResultComboText", "", 40,
                 new Vector2(0.04f, 0.61f), new Vector2(0.50f, 0.72f), korFont);
             resultComboText.alignment = TextAlignmentOptions.Center;
             resultComboText.color = UIColorPalette.NEON_GOLD;
             resultComboText.enableAutoSizing = true;
-            resultComboText.fontSizeMin = 22; resultComboText.fontSizeMax = 34;
+            resultComboText.fontSizeMin = 26; resultComboText.fontSizeMax = 40;
 
-            resultAccuracyText = CreateResultText(panelGo.transform, "ResultAccuracyText", "", 34,
+            resultAccuracyText = CreateResultText(panelGo.transform, "ResultAccuracyText", "", 40,
                 new Vector2(0.50f, 0.61f), new Vector2(0.97f, 0.72f), korFont);
             resultAccuracyText.alignment = TextAlignmentOptions.Center;
             resultAccuracyText.color = UIColorPalette.NEON_GOLD;
             resultAccuracyText.enableAutoSizing = true;
-            resultAccuracyText.fontSizeMin = 22; resultAccuracyText.fontSizeMax = 34;
+            resultAccuracyText.fontSizeMin = 26; resultAccuracyText.fontSizeMax = 40;
 
             // ===== 판정 구분선 =====
             CreateResultDivider(panelGo.transform, 0.604f);

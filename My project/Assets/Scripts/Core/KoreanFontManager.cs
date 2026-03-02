@@ -99,13 +99,31 @@ namespace AIBeat.Core
                 if (created != null)
                 {
                     created.name = "Korean Dynamic Font (Resources)";
-                    created.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+                    // Static 모드: 글리프 미리 생성 후 고정 → TMP가 자체 Material 재생성 안 함
+                    created.atlasPopulationMode = AtlasPopulationMode.Static;
 
-                    // 실제 글리프 렌더링 가능한지 검증
-                    if (created.TryAddCharacters("가나다"))
+                    // 한국어 + 영문/숫자 글리프 미리 포함
+                    created.TryAddCharacters("가나다라마바사아자차카타파하걸고곡곧공과관광교구국권귀기길김나남너노녹높뇨눈늘다달담당대더도독동두든등디딩따때려로록롭롯료루룹류름릇리릭링마막많말맞매맵먹메명모목못무문물므미믹밀바박밖반발밝밟방배백번벌범별보복본볼봄봐부북분불붙비빠빨사산상새색생서석선설성세소속손솔송수순술쉬스슬슴습시식신실심싱쓰아악안않알앞야약양어없에여역연열영예오온완왜요우운울움워원위음이인일임입자장재저적전절점정제조족존종주줄중지직진짜째초촉총최추출충취치카타터파팔패편평포폭표하학한할합해핵행향허현호혹홀홈화확환활황회효후힘");
+                    created.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+                    created.TryAddCharacters("0123456789 .·,!?%()+-:/·★♪▶◀■□▼▲←→↑↓_@#$&'\"~^`…·•");
+
+                    // 아틀라스 텍스처 GPU 업로드 + Material._MainTex 직접 연결
+                    int texCount = created.atlasTextures?.Length ?? 0;
+                    if (texCount > 0 && created.atlasTextures[0] != null)
+                    {
+                        var atlasTex = created.atlasTextures[0];
+                        atlasTex.Apply(false, false);
+                        var mat = created.material;
+                        if (mat != null)
+                            mat.SetTexture(ShaderUtilities.ID_MainTex, atlasTex);
+                    }
+
+                    Debug.Log($"[KoreanFontManager] atlasTextures={texCount}, glyphTable={created.glyphTable.Count}, charTable={created.characterTable.Count}");
+
+                    if (created.characterTable.Count > 0)
                     {
                         _koreanFont = created;
-                        Debug.Log("[KoreanFontManager] Resources TTF → Dynamic SDF 성공");
+                        Debug.Log($"[KoreanFontManager] Resources TTF → Static SDF 성공 (글리프 수: {created.characterTable.Count})");
                         return;
                     }
                     else
@@ -148,7 +166,10 @@ namespace AIBeat.Core
                         {
                             created.name = "Korean Dynamic Font (OS)";
                             created.atlasPopulationMode = AtlasPopulationMode.Dynamic;
-                            if (created.TryAddCharacters("가나다"))
+                            created.TryAddCharacters("가나다라마바사아자차카타파하");
+                            created.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+                            created.TryAddCharacters("0123456789 .·,!?%()+-:/★♪▶◀■□");
+                            if (created.characterTable.Count > 0)
                             {
                                 _koreanFont = created;
                                 Debug.Log($"[KoreanFontManager] Android OS 폰트 → Dynamic SDF 성공: {fontPath}");
@@ -175,7 +196,10 @@ namespace AIBeat.Core
                     {
                         created.name = $"Korean Dynamic Font ({name})";
                         created.atlasPopulationMode = AtlasPopulationMode.Dynamic;
-                        if (created.TryAddCharacters("가나다"))
+                        created.TryAddCharacters("가나다라마바사아자차카타파하");
+                        created.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+                        created.TryAddCharacters("0123456789 .·,!?%()+-:/★♪▶◀■□");
+                        if (created.characterTable.Count > 0)
                         {
                             _koreanFont = created;
                             Debug.Log($"[KoreanFontManager] OS 폰트 이름 → Dynamic SDF 성공: {name}");
@@ -185,19 +209,35 @@ namespace AIBeat.Core
                 }
             }
 
-            // 최종 폴백: 검증 없이라도 Resources TTF로 생성
+            // 최종 폴백: Resources TTF로 생성 후 Dynamic으로 글리프 요청
             ttfFont = Resources.Load<Font>("Fonts/MalgunGothicBold");
             if (ttfFont != null)
             {
                 _koreanFont = TMP_FontAsset.CreateFontAsset(
                     ttfFont, 44, 5,
                     UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
-                    2048, 2048);
+                    4096, 4096);
                 if (_koreanFont != null)
                 {
                     _koreanFont.name = "Korean Dynamic Font (Fallback)";
                     _koreanFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
-                    Debug.LogWarning("[KoreanFontManager] 최종 폴백: 검증 없이 생성 (글리프 렌더링 불확실)");
+
+                    // Dynamic 모드에서 TryAddCharacters로 글리프 채우기
+                    _koreanFont.TryAddCharacters("가나다라마바사아자차카타파하걸고곡곧공과관광교구국권귀기길김나남너노녹높뇨눈늘다달담당대더도독동두든등디딩따때려로록롭롯료루룹류름릇리릭링마막많말맞매맵먹메명모목못무문물므미믹밀바박밖반발밝밟방배백번벌범별보복본볼봄봐부북분불붙비빠빨사산상새색생서석선설성세소속손솔송수순술쉬스슬슴습시식신실심싱쓰아악안않알앞야약양어없에여역연열영예오온완왜요우운울움워원위음이인일임입자장재저적전절점정제조족존종주줄중지직진짜째초촉총최추출충취치카타터파팔패편평포폭표하학한할합해핵행향허현호혹홀홈화확환활황회효후힘");
+                    _koreanFont.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+                    _koreanFont.TryAddCharacters("0123456789 .·,!?%()+-:/·★♪▶◀■□▼▲←→↑↓_@#$&'\"~^`…·•");
+
+                    int texCount = _koreanFont.atlasTextures?.Length ?? 0;
+                    if (texCount > 0 && _koreanFont.atlasTextures[0] != null)
+                    {
+                        var atlasTex = _koreanFont.atlasTextures[0];
+                        atlasTex.Apply(false, false);
+                        var mat = _koreanFont.material;
+                        if (mat != null)
+                            mat.SetTexture(ShaderUtilities.ID_MainTex, atlasTex);
+                    }
+
+                    Debug.LogWarning($"[KoreanFontManager] 최종 폴백 생성 완료 (charCount={_koreanFont.characterTable?.Count})");
                 }
             }
 

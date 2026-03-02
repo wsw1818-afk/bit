@@ -37,6 +37,7 @@ namespace AIBeat.Audio
         public class AnalysisResult
         {
             public float BPM;
+            public float BeatPhaseOffset;    // 첫 박자 시작 시점(초) - beat grid 원점
             public float Duration;
             public List<OnsetData> Onsets;
             public List<SectionData> Sections;
@@ -80,10 +81,11 @@ namespace AIBeat.Audio
         }
 
         /// <summary>
-        /// AudioClip을 완전히 분석하여 결과 반환
+        /// AudioClip을 완전히 분석하여 결과 반환 (커스텀 파라미터 지원)
         /// </summary>
-        public AnalysisResult Analyze(AudioClip clip)
+        public AnalysisResult Analyze(AudioClip clip, AnalysisParams? customParams = null)
         {
+            var ap = customParams ?? AnalysisParams.Default;
             if (clip == null)
             {
 #if UNITY_EDITOR
@@ -170,19 +172,20 @@ namespace AIBeat.Audio
             }
 
             // 2단계: 온셋 감지 (적응형 임계값)
-            List<OnsetData> onsets = DetectOnsets(spectralFlux, dominantBands, sampleRate, totalFrames);
+            List<OnsetData> onsets = DetectOnsets(spectralFlux, dominantBands, sampleRate, totalFrames, bandEnergies, ap);
 #if UNITY_EDITOR
             Debug.Log($"[OfflineAudioAnalyzer] Detected {onsets.Count} onsets");
 #endif
 
             // 3단계: BPM 추출
-            float bpm = EstimateBPM(onsets, duration);
+            float bpm = EstimateBPM(onsets, duration, ap);
+            float beatPhase = EstimateBeatPhase(onsets, bpm, ap);
 #if UNITY_EDITOR
-            Debug.Log($"[OfflineAudioAnalyzer] Estimated BPM: {bpm:F1}");
+            Debug.Log($"[OfflineAudioAnalyzer] Estimated BPM: {bpm:F1}, phase: {beatPhase:F3}s");
 #endif
 
             // 4단계: 구간 감지
-            List<SectionData> sections = DetectSections(totalEnergy, sampleRate, totalFrames, duration);
+            List<SectionData> sections = DetectSections(totalEnergy, sampleRate, totalFrames, duration, ap);
 #if UNITY_EDITOR
             Debug.Log($"[OfflineAudioAnalyzer] Detected {sections.Count} sections");
 #endif
@@ -190,6 +193,7 @@ namespace AIBeat.Audio
             return new AnalysisResult
             {
                 BPM = bpm,
+                BeatPhaseOffset = beatPhase,
                 Duration = duration,
                 Onsets = onsets,
                 Sections = sections,
@@ -205,8 +209,10 @@ namespace AIBeat.Audio
         /// <param name="clip">분석할 AudioClip</param>
         /// <param name="onProgress">진행률 0~1 콜백</param>
         /// <param name="onComplete">완료 콜백 (null이면 실패)</param>
-        public IEnumerator AnalyzeAsync(AudioClip clip, Action<float> onProgress, Action<AnalysisResult> onComplete)
+        public IEnumerator AnalyzeAsync(AudioClip clip, Action<float> onProgress, Action<AnalysisResult> onComplete,
+            AnalysisParams? customParams = null)
         {
+            var ap = customParams ?? AnalysisParams.Default;
             if (clip == null)
             {
 #if UNITY_EDITOR
@@ -298,26 +304,28 @@ namespace AIBeat.Audio
             onProgress?.Invoke(0.8f);
 
             // 2단계: 온셋 감지 (가벼움, yield 불필요)
-            List<OnsetData> onsets = DetectOnsets(spectralFlux, dominantBands, sampleRate, totalFrames);
+            List<OnsetData> onsets = DetectOnsets(spectralFlux, dominantBands, sampleRate, totalFrames, bandEnergies, ap);
             onProgress?.Invoke(0.85f);
             yield return null;
 
             // 3단계: BPM 추출
-            float bpm = EstimateBPM(onsets, duration);
+            float bpm = EstimateBPM(onsets, duration, ap);
+            float beatPhase = EstimateBeatPhase(onsets, bpm, ap);
             onProgress?.Invoke(0.9f);
             yield return null;
 
             // 4단계: 구간 감지
-            List<SectionData> sections = DetectSections(totalEnergy, sampleRate, totalFrames, duration);
+            List<SectionData> sections = DetectSections(totalEnergy, sampleRate, totalFrames, duration, ap);
             onProgress?.Invoke(1f);
 
 #if UNITY_EDITOR
-            Debug.Log($"[OfflineAudioAnalyzer] AnalyzeAsync complete: BPM={bpm:F1}, onsets={onsets.Count}, sections={sections.Count}");
+            Debug.Log($"[OfflineAudioAnalyzer] AnalyzeAsync complete: BPM={bpm:F1}, phase={beatPhase:F3}s, onsets={onsets.Count}, sections={sections.Count}");
 #endif
 
             onComplete?.Invoke(new AnalysisResult
             {
                 BPM = bpm,
+                BeatPhaseOffset = beatPhase,
                 Duration = duration,
                 Onsets = onsets,
                 Sections = sections,
@@ -387,15 +395,35 @@ namespace AIBeat.Audio
 
         /// <summary>
         /// 적응형 임계값으로 온셋 감지
+        /// 저주파 밴드(킥/스네어)에 가중치를 부여하여 리듬 박자에 더 정확히 반응
         /// </summary>
-        private List<OnsetData> DetectOnsets(float[] flux, int[] bands, float sampleRate, int totalFrames)
+        private List<OnsetData> DetectOnsets(float[] flux, int[] bands, float sampleRate, int totalFrames,
+            float[][] bandEnergies = null, AnalysisParams? customParams = null)
         {
+            var ap = customParams ?? AnalysisParams.Default;
             var onsets = new List<OnsetData>();
             float frameTime = (float)HOP_SIZE / sampleRate;
-            int halfWindow = ONSET_MEDIAN_WINDOW / 2;
+            int halfWindow = ap.OnsetMedianWindow / 2;
 
-            // 최소 간격 (연속 온셋 방지, 약 50ms)
-            float minOnsetInterval = 0.05f;
+            // 저주파 flux 계산 (밴드 0~2: ~400Hz 이하 = 킥/베이스/스네어)
+            float[] lowBandFlux = null;
+            if (bandEnergies != null)
+            {
+                lowBandFlux = new float[totalFrames];
+                for (int i = 1; i < totalFrames; i++)
+                {
+                    float lowDiff = 0f;
+                    for (int b = 0; b <= 2; b++) // 밴드 0~2 (0~400Hz)
+                    {
+                        float diff = bandEnergies[i][b] - bandEnergies[i - 1][b];
+                        if (diff > 0) lowDiff += diff;
+                    }
+                    lowBandFlux[i] = lowDiff;
+                }
+            }
+
+            // 최소 간격 (연속 온셋 방지)
+            float minOnsetInterval = ap.MinOnsetInterval;
             float lastOnsetTime = -1f;
 
             for (int i = halfWindow; i < totalFrames - halfWindow; i++)
@@ -404,26 +432,42 @@ namespace AIBeat.Audio
                 float mean = 0f;
                 for (int j = i - halfWindow; j <= i + halfWindow; j++)
                     mean += flux[j];
-                mean /= ONSET_MEDIAN_WINDOW;
+                mean /= ap.OnsetMedianWindow;
 
                 float variance = 0f;
                 for (int j = i - halfWindow; j <= i + halfWindow; j++)
                     variance += (flux[j] - mean) * (flux[j] - mean);
-                variance /= ONSET_MEDIAN_WINDOW;
+                variance /= ap.OnsetMedianWindow;
                 float std = Mathf.Sqrt(variance);
 
-                float threshold = mean + ONSET_THRESHOLD_ALPHA * std;
+                float threshold = mean + ap.OnsetThresholdAlpha * std;
+
+                // 저주파 보너스: 킥/스네어가 강하면 임계값을 낮춤 (비트 감지 강화)
+                float lowBoost = 1f;
+                if (lowBandFlux != null && lowBandFlux[i] > 0f)
+                {
+                    // 저주파 flux가 전체 flux의 일정 비율 이상이면 임계값 낮춤
+                    float lowRatio = lowBandFlux[i] / Mathf.Max(flux[i], 0.001f);
+                    if (lowRatio > ap.LowRatioThreshold)
+                        lowBoost = ap.LowBoostFactor;
+                }
+                float adjustedThreshold = threshold * lowBoost;
 
                 // 임계값 초과 + 로컬 피크 확인
-                if (flux[i] > threshold && flux[i] > flux[i - 1] && flux[i] >= flux[i + 1])
+                if (flux[i] > adjustedThreshold && flux[i] > flux[i - 1] && flux[i] >= flux[i + 1])
                 {
                     float time = i * frameTime;
                     if (time - lastOnsetTime >= minOnsetInterval)
                     {
+                        // 강도에 저주파 가중치 반영 (리듬감 있는 onset이 더 강하게)
+                        float strength = flux[i];
+                        if (lowBandFlux != null)
+                            strength += lowBandFlux[i] * ap.LowBandWeight;
+
                         onsets.Add(new OnsetData
                         {
                             Time = time,
-                            Strength = flux[i],
+                            Strength = strength,
                             DominantBand = bands[i]
                         });
                         lastOnsetTime = time;
@@ -437,44 +481,58 @@ namespace AIBeat.Audio
         /// <summary>
         /// Autocorrelation 기반 BPM 추출
         /// </summary>
-        private float EstimateBPM(List<OnsetData> onsets, float duration)
+        private float EstimateBPM(List<OnsetData> onsets, float duration, AnalysisParams? customParams = null)
         {
+            var ap = customParams ?? AnalysisParams.Default;
             if (onsets == null || onsets.Count < 4) return 120f; // 기본값
 
+            // 강한 onset만 사용 (상위 60%) - 노이즈 IOI 제거
+            float maxStr = 0f;
+            foreach (var o in onsets) if (o.Strength > maxStr) maxStr = o.Strength;
+            float strCut = maxStr * 0.4f;
+            var strongOnsets = onsets.FindAll(o => o.Strength >= strCut);
+            if (strongOnsets.Count < 4) strongOnsets = onsets;
+
             // IOI (Inter-Onset Interval) 히스토그램
-            float[] iois = new float[onsets.Count - 1];
-            for (int i = 0; i < iois.Length; i++)
-                iois[i] = onsets[i + 1].Time - onsets[i].Time;
+            var iois = new System.Collections.Generic.List<float>();
+            for (int i = 0; i < strongOnsets.Count - 1; i++)
+            {
+                float ioi = strongOnsets[i + 1].Time - strongOnsets[i].Time;
+                // 너무 짧은 IOI(노이즈)와 너무 긴 IOI(묵음) 제외
+                if (ioi >= 0.1f && ioi <= 2.0f)
+                    iois.Add(ioi);
+            }
+            if (iois.Count < 4) return 120f;
 
             // BPM 후보 스코어 (히스토그램 기반)
             float bestBPM = 120f;
             float bestScore = 0f;
             float bpmResolution = 0.5f;
 
-            for (float candidateBPM = MIN_BPM; candidateBPM <= MAX_BPM; candidateBPM += bpmResolution)
+            for (float candidateBPM = ap.MinBPM; candidateBPM <= ap.MaxBPM; candidateBPM += bpmResolution)
             {
                 float beatInterval = 60f / candidateBPM;
                 float score = 0f;
 
                 foreach (float ioi in iois)
                 {
-                    // IOI가 비트 간격의 정수배에 가까운지 확인
+                    // IOI가 비트 간격의 정수배(1~4)에 가까운지 확인
                     for (int mult = 1; mult <= 4; mult++)
                     {
                         float expectedInterval = beatInterval * mult;
                         float diff = Mathf.Abs(ioi - expectedInterval);
-                        float tolerance = beatInterval * 0.1f; // 10% 허용
+                        float tolerance = beatInterval * 0.12f; // 12% 허용
                         if (diff < tolerance)
                         {
-                            float weight = 1f / mult; // 1배 > 2배 > 4배
+                            float weight = 1f / mult; // 1배 가중치 가장 높음
                             score += weight * (1f - diff / tolerance);
                         }
                     }
                 }
 
-                // 선호 BPM 범위 보너스
-                if (candidateBPM >= PREFERRED_BPM_MIN && candidateBPM <= PREFERRED_BPM_MAX)
-                    score *= 1.2f;
+                // 선호 BPM 범위 보너스 (강하게)
+                if (candidateBPM >= ap.PreferredBPMMin && candidateBPM <= ap.PreferredBPMMax)
+                    score *= 1.5f;
 
                 if (score > bestScore)
                 {
@@ -483,18 +541,66 @@ namespace AIBeat.Audio
                 }
             }
 
-            // 옥타브 에러 보정 (너무 느리면 2배, 너무 빠르면 1/2)
-            while (bestBPM < 80f) bestBPM *= 2f;
-            while (bestBPM > 180f) bestBPM /= 2f;
+            // 옥타브 에러 보정: 선호 범위(120~160)로 끌어당김
+            while (bestBPM < ap.PreferredBPMMin * 0.75f) bestBPM *= 2f;
+            while (bestBPM > ap.PreferredBPMMax * 1.5f) bestBPM /= 2f;
 
             return Mathf.Round(bestBPM);
         }
 
         /// <summary>
+        /// BPM의 phase offset 추정: 비트 그리드가 시작되는 시간(초)
+        /// onset들을 beat grid에 정렬했을 때 총 오차가 최소인 offset을 찾음
+        /// </summary>
+        private float EstimateBeatPhase(List<OnsetData> onsets, float bpm, AnalysisParams? customParams = null)
+        {
+            var ap = customParams ?? AnalysisParams.Default;
+            if (onsets == null || onsets.Count < 2 || bpm <= 0f) return 0f;
+
+            float beatInterval = 60f / bpm;
+            float halfBeat = beatInterval / 2f; // 8분음표 간격으로 phase 정렬
+            float bestPhase = 0f;
+            float bestScore = float.MaxValue;
+            float step = ap.PhaseSearchStep;
+
+            // 상위 50% onset 사용 (이전 30% → 더 많은 onset 참여로 정확도 향상)
+            float maxStr = 0f;
+            foreach (var o in onsets) if (o.Strength > maxStr) maxStr = o.Strength;
+            float strThreshold = maxStr * Mathf.Min(ap.PhaseStrengthFilter, 0.5f);
+
+            for (float phase = 0f; phase < halfBeat; phase += step)
+            {
+                float totalError = 0f;
+                int count = 0;
+                foreach (var onset in onsets)
+                {
+                    if (onset.Strength < strThreshold) continue;
+                    // 8분음표 그리드 기준으로 오차 계산 (1박이 아닌 1/2박)
+                    float relative = onset.Time - phase;
+                    float distToBeat = relative - Mathf.Round(relative / halfBeat) * halfBeat;
+                    totalError += distToBeat * distToBeat * (onset.Strength / maxStr); // 강도 가중
+                    count++;
+                }
+                if (count > 0 && totalError < bestScore)
+                {
+                    bestScore = totalError;
+                    bestPhase = phase;
+                }
+            }
+
+#if UNITY_EDITOR
+            Debug.Log($"[OfflineAudioAnalyzer] Beat phase offset: {bestPhase:F3}s (BPM={bpm}, onsets used: threshold={strThreshold:F2})");
+#endif
+            return bestPhase;
+        }
+
+        /// <summary>
         /// 에너지 프로필 기반 구간 감지
         /// </summary>
-        private List<SectionData> DetectSections(float[] energy, float sampleRate, int totalFrames, float duration)
+        private List<SectionData> DetectSections(float[] energy, float sampleRate, int totalFrames, float duration,
+            AnalysisParams? customParams = null)
         {
+            var ap = customParams ?? AnalysisParams.Default;
             var sections = new List<SectionData>();
             float frameTime = (float)HOP_SIZE / sampleRate;
 
@@ -513,8 +619,8 @@ namespace AIBeat.Audio
             for (int i = 0; i < totalFrames; i++)
                 normalized[i] = energy[i] / maxEnergy;
 
-            // 구간 크기: 약 4초씩
-            int sectionFrameSize = Mathf.Max(1, Mathf.RoundToInt(4f / frameTime));
+            // 구간 크기: 튜닝 파라미터 기반
+            int sectionFrameSize = Mathf.Max(1, Mathf.RoundToInt(ap.SectionSize / frameTime));
             int numSections = Mathf.Max(1, totalFrames / sectionFrameSize);
 
             float[] sectionEnergies = new float[numSections];
@@ -546,9 +652,9 @@ namespace AIBeat.Audio
                     type = SectionType.Intro;
                 else if (s >= numSections - 2)
                     type = SectionType.Outro;
-                else if (e > globalAvg * 1.3f)
+                else if (e > globalAvg * ap.DropThreshold)
                     type = SectionType.Drop;
-                else if (e > globalAvg * 0.8f)
+                else if (e > globalAvg * ap.BuildThreshold)
                     type = SectionType.Build;
                 else
                     type = SectionType.Calm;

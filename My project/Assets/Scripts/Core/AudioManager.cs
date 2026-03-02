@@ -51,8 +51,43 @@ namespace AIBeat.Core
         }
 
         public bool IsPlaying => isDebugMode ? isDebugPlaying : (bgmSource != null && bgmSource.isPlaying);
-        public float CurrentTime => isDebugMode ? debugTime : (bgmSource != null ? bgmSource.time : 0f);
         public float Duration => bgmSource != null && bgmSource.clip != null ? bgmSource.clip.length : debugDuration;
+
+        // DSP 기반 정밀 시간 추적
+        private double dspStartTime;     // AudioSettings.dspTime at play start
+        private float playStartOffset;   // bgmSource.time offset when Play() called
+        private bool useDSPTime;
+
+        /// <summary>
+        /// 정밀 현재 시간: DSP 클럭 기반으로 프레임 독립적 시간 반환
+        /// bgmSource.time은 프레임 내 갱신이 불규칙하지만,
+        /// AudioSettings.dspTime은 오디오 스레드 클럭으로 샘플 정확도
+        /// </summary>
+        public float CurrentTime
+        {
+            get
+            {
+                if (isDebugMode) return debugTime;
+                if (bgmSource == null || !bgmSource.isPlaying) return 0f;
+
+                if (useDSPTime)
+                {
+                    // DSP 클럭 기반 시간 (샘플 정확도)
+                    float dspElapsed = (float)(AudioSettings.dspTime - dspStartTime) + playStartOffset;
+                    // bgmSource.time과 큰 차이가 나면 (일시정지/탐색 등) bgmSource.time으로 보정
+                    float srcTime = bgmSource.time;
+                    if (Mathf.Abs(dspElapsed - srcTime) > 0.1f)
+                    {
+                        dspStartTime = AudioSettings.dspTime;
+                        playStartOffset = srcTime;
+                        return srcTime;
+                    }
+                    return dspElapsed;
+                }
+
+                return bgmSource.time;
+            }
+        }
 
             // 디버그 모드 (오디오 없이 시간만 진행)
         private bool isDebugMode;
@@ -210,6 +245,12 @@ namespace AIBeat.Core
 
             bgmSource.time = startTime;
             bgmSource.Play();
+
+            // DSP 기반 정밀 시간 추적 시작
+            dspStartTime = AudioSettings.dspTime;
+            playStartOffset = startTime;
+            useDSPTime = true;
+
             OnBGMStarted?.Invoke();
 
             if (checkBGMEndCoroutine != null)

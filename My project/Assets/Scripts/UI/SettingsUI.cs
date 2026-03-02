@@ -580,7 +580,7 @@ namespace AIBeat.UI
             statusLayout.preferredHeight = 28;
 
             calibrationStatusText = statusGo.AddComponent<TextMeshProUGUI>();
-            calibrationStatusText.fontSize = 18;
+            calibrationStatusText.fontSize = 24;
             calibrationStatusText.color = new Color(0.7f, 0.7f, 0.8f, 1f);  // 연한 회색
             calibrationStatusText.alignment = TextAlignmentOptions.Center;
             calibrationStatusText.text = "탭 테스트로 오프셋 자동 감지";

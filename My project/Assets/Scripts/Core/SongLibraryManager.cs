@@ -57,9 +57,57 @@ namespace AIBeat.Core
                 libraryData = new SongLibraryData();
             }
 
+            // CoverImagePath가 없는 기존 레코드에 소급 적용
+            MigrateCoverImages();
+
 #if UNITY_EDITOR
             Debug.Log($"[SongLibrary] Loaded: {libraryData.songs.Count} songs");
 #endif
+        }
+
+        /// <summary>
+        /// 기존 SongRecord의 CoverImagePath를 최신화.
+        /// - 비어 있으면: FindCoverImage로 탐색 (ID3 임베드 우선)
+        /// - 이미 있지만 "id3:" 접두사가 아닌 파일 경로면: ID3 임베드가 있을 경우 "id3:" 경로로 업그레이드
+        /// </summary>
+        private void MigrateCoverImages()
+        {
+            bool changed = false;
+            foreach (var record in libraryData.songs)
+            {
+                string fullPath = ResolveAudioPath(record.AudioFileName);
+                if (string.IsNullOrEmpty(fullPath)) continue;
+
+                // 이미 id3: 경로면 스킵
+                if (!string.IsNullOrEmpty(record.CoverImagePath) &&
+                    record.CoverImagePath.StartsWith("id3:")) continue;
+
+                // 비어 있거나 파일 경로인 경우: FindCoverImage로 재탐색
+                // (ID3 임베드가 있으면 "id3:" 접두사 반환, 없으면 파일 경로)
+                string cover = AndroidMusicScanner.FindCoverImage(fullPath);
+                if (!string.IsNullOrEmpty(cover) && cover != record.CoverImagePath)
+                {
+                    record.CoverImagePath = cover;
+                    changed = true;
+                }
+            }
+            if (changed) SaveLibrary();
+        }
+
+        /// <summary>
+        /// AudioFileName 문자열로부터 실제 절대 파일 경로 복원.
+        /// </summary>
+        private static string ResolveAudioPath(string audioFileName)
+        {
+            if (string.IsNullOrEmpty(audioFileName)) return null;
+            if (audioFileName.StartsWith("ext:"))
+                return audioFileName.Substring(4);
+            if (audioFileName.StartsWith("music:"))
+                return System.IO.Path.Combine(
+                    Application.persistentDataPath, "Music",
+                    audioFileName.Substring(6));
+            // StreamingAssets 상대 경로
+            return System.IO.Path.Combine(Application.streamingAssetsPath, audioFileName);
         }
 
         /// <summary>
@@ -265,6 +313,7 @@ namespace AIBeat.Core
         public string CreatedDate;
         public int Seed;             // SmartBeatMapper 재생성을 위한 시드
         public string AudioFileName; // StreamingAssets 내 MP3 파일명 (예: "jpop_energetic.mp3")
+        public string CoverImagePath; // 커버 이미지 절대 경로 (없으면 기본 앨범 아트 사용)
     }
 
     /// <summary>

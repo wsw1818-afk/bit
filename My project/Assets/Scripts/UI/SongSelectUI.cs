@@ -438,7 +438,8 @@ namespace AIBeat.UI
                 BPM = 0,
                 DifficultyLevel = 5,
                 Duration = 0,
-                AudioFileName = audioRef
+                AudioFileName = audioRef,
+                CoverImagePath = AndroidMusicScanner.FindCoverImage(fullPath)
             };
 
             SongLibraryManager.Instance.AddSong(record);

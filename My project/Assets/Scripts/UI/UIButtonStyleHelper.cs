@@ -113,11 +113,15 @@ namespace AIBeat.UI
             btnGo.transform.SetParent(parent, false);
 
             var rect = btnGo.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0f, preferredHeight);
 
-            // LayoutElement 추가
+            // LayoutElement (VerticalLayoutGroup 사용 시만 의미 있음)
             var layoutElem = btnGo.AddComponent<LayoutElement>();
             layoutElem.preferredHeight = preferredHeight;
-            layoutElem.minHeight = 50f;
+            layoutElem.minHeight = preferredHeight;
+            layoutElem.flexibleHeight = 1f;
+            layoutElem.flexibleWidth = 1f;
+            layoutElem.ignoreLayout = false;
 
             // Image 컴포넌트
             var img = btnGo.AddComponent<Image>();

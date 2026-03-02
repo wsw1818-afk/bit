@@ -308,15 +308,7 @@ namespace AIBeat.UI
         /// </summary>
         private void CreateEqualizerBars()
         {
-            // === 하단 이퀄라이저 (120px, 위로 솟아오름) ===
-            CreateSingleEqualizer("EqualizerBottom", eqBarsBottom,
-                anchorY: 0f, pivotY: 0f, height: 120f, barCount: 30, flipY: false);
-
-            // === 상단 이퀄라이저 (70px, 아래로 내려옴) ===
-            CreateSingleEqualizer("EqualizerTop", eqBarsTop,
-                anchorY: 1f, pivotY: 1f, height: 70f, barCount: 20, flipY: true);
-
-            eqAnimCoroutine = StartCoroutine(AnimateEqualizer());
+            // 이퀄라이저 바 전체 제거 (배경 이미지 가림 방지)
         }
 
         private void CreateSingleEqualizer(string name, List<Image> barList,
@@ -720,7 +712,7 @@ namespace AIBeat.UI
                 subRect.offsetMax = new Vector2(0, 0);
                 var subTmp = subTextGo.AddComponent<TextMeshProUGUI>();
                 subTmp.text = cfg.subText;
-                subTmp.fontSize = 16;
+                subTmp.fontSize = 22;
                 subTmp.fontStyle = FontStyles.Bold;
                 subTmp.color = cfg.accentColor;
                 subTmp.characterSpacing = 5f;
@@ -865,27 +857,7 @@ namespace AIBeat.UI
                 titleRect.offsetMax = new Vector2(-15, 0);
             }
 
-            // 로고 이미지가 있으면 텍스트 대신 로고 표시
-            var logoSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Logo/MainLogo");
-            if (logoSprite != null)
-            {
-                var logoGo = new GameObject("LogoImage");
-                logoGo.transform.SetParent(transform, false);
-                var logoRect = logoGo.AddComponent<RectTransform>();
-                logoRect.anchorMin = new Vector2(0.1f, 0.56f);
-                logoRect.anchorMax = new Vector2(0.9f, 0.72f);
-                logoRect.offsetMin = Vector2.zero;
-                logoRect.offsetMax = Vector2.zero;
-                var logoImg = logoGo.AddComponent<Image>();
-                logoImg.sprite = logoSprite;
-                logoImg.preserveAspect = true;
-                logoImg.raycastTarget = false;
-                logoGo.transform.localScale = Vector3.zero;
-                UIAnimator.ScaleTo(this, logoGo.transform, Vector3.one, 0.5f);
-                // 텍스트 타이틀 숨김
-                titleText.gameObject.SetActive(false);
-                Debug.Log("[MainMenuUI] Loaded MainLogo image");
-            }
+            // 시안색 파형 로고 제거 (배경 이미지 가림 방지) - 텍스트 타이틀 사용
 
             titleText.fontSize = 64;
             titleText.fontStyle = FontStyles.Bold;

@@ -355,21 +355,13 @@ namespace AIBeat.Gameplay
             // 시간순 정렬
             notes.Sort((a, b) => a.HitTime.CompareTo(b.HitTime));
 
-            // 최소 시작 시간 보장: lookAhead 시간보다 이른 노트는 화면 밖에서 시작할 수 없음
-            // 노트가 화면 위에서 충분히 내려올 시간(lookAhead초)을 확보
-            float minHitTime = lookAhead;
-            if (notes.Count > 0 && notes[0].HitTime < minHitTime)
-            {
-                float offset = minHitTime - notes[0].HitTime;
+            // Note 이동은 시간 기반 절대 위치: Y = judgeY + (hitTime - currentTime) * speed
+            // lookAhead로 미리 스폰하므로 별도 오프셋 불필요
+            // (이전 minHitTime 오프셋은 lookAhead와 중복되어 초반 노트가 지연되는 버그 유발)
 #if UNITY_EDITOR
-                Debug.Log($"[NoteSpawner] Notes start too early ({notes[0].HitTime:F2}s), adding {offset:F2}s offset to all notes");
+            if (notes.Count > 0)
+                Debug.Log($"[NoteSpawner] First note at {notes[0].HitTime:F2}s, last at {notes[notes.Count-1].HitTime:F2}s, total={notes.Count}");
 #endif
-                for (int i = 0; i < notes.Count; i++)
-                {
-                    var n = notes[i];
-                    notes[i] = new NoteData(n.HitTime + offset, n.LaneIndex, n.Type, n.Duration);
-                }
-            }
 
             // 필터링: 같은 시간+레인 중복 + 롱노트 구간 내 겹침 제거
             int filteredCount = 0;

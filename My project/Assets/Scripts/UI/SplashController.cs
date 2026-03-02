@@ -15,7 +15,6 @@ namespace AIBeat.UI
         private void Start()
         {
             Application.runInBackground = true;
-
             // 배경 이미지 설정
             SetupSplashUI();
 
@@ -41,60 +40,65 @@ namespace AIBeat.UI
                 scaler.matchWidthOrHeight = 0.5f;
             }
 
-            // 배경 이미지 (Splash_BG.png)
-            var existingBg = canvas.transform.Find("SplashBackground");
-            if (existingBg == null)
+            // 씬에 있는 기존 Logo/Background 오브젝트 처리
+            var oldLogo = canvas.transform.Find("Logo");
+            if (oldLogo != null) Destroy(oldLogo.gameObject);
+            var oldSplashLogo = canvas.transform.Find("SplashLogo");
+            if (oldSplashLogo != null) Destroy(oldSplashLogo.gameObject);
+
+            // 배경 이미지 설정 (기존 Background 재활용 또는 새로 생성)
+            var existingBg = canvas.transform.Find("Background") ?? canvas.transform.Find("SplashBackground");
+            Image bgImg;
+            if (existingBg != null)
+            {
+                bgImg = existingBg.GetComponent<Image>();
+                existingBg.SetAsFirstSibling();
+            }
+            else
             {
                 var bgGo = new GameObject("SplashBackground");
                 bgGo.transform.SetParent(canvas.transform, false);
                 bgGo.transform.SetAsFirstSibling();
-
                 var bgRect = bgGo.AddComponent<RectTransform>();
                 bgRect.anchorMin = Vector2.zero;
                 bgRect.anchorMax = Vector2.one;
                 bgRect.offsetMin = Vector2.zero;
                 bgRect.offsetMax = Vector2.zero;
-
-                var bgImg = bgGo.AddComponent<Image>();
-                bgImg.raycastTarget = false;
-
-                Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Splash_BG");
-                if (bgSprite != null)
-                {
-                    bgImg.sprite = bgSprite;
-                    bgImg.type = Image.Type.Simple;
-                    bgImg.preserveAspect = false;
-                    Debug.Log("[SplashController] Loaded Splash_BG");
-                }
-                else
-                {
-                    bgImg.color = new Color(0.02f, 0.01f, 0.05f, 1f);
-                }
+                bgImg = bgGo.AddComponent<Image>();
             }
 
-            // 로고 이미지 (MainLogo.png)
-            var existingLogo = canvas.transform.Find("SplashLogo");
-            if (existingLogo == null)
+            bgImg.raycastTarget = false;
+            Sprite bgSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Backgrounds/Splash_BG");
+            if (bgSprite != null)
             {
-                Sprite logoSprite = ResourceHelper.LoadSpriteFromResources("AIBeat_Design/UI/Logo/MainLogo");
-                if (logoSprite != null)
-                {
-                    var logoGo = new GameObject("SplashLogo");
-                    logoGo.transform.SetParent(canvas.transform, false);
-
-                    var logoRect = logoGo.AddComponent<RectTransform>();
-                    logoRect.anchorMin = new Vector2(0.1f, 0.35f);
-                    logoRect.anchorMax = new Vector2(0.9f, 0.65f);
-                    logoRect.offsetMin = Vector2.zero;
-                    logoRect.offsetMax = Vector2.zero;
-
-                    var logoImg = logoGo.AddComponent<Image>();
-                    logoImg.sprite = logoSprite;
-                    logoImg.preserveAspect = true;
-                    logoImg.raycastTarget = false;
-                    Debug.Log("[SplashController] Loaded MainLogo");
-                }
+                bgImg.sprite = bgSprite;
+                bgImg.type = Image.Type.Simple;
+                bgImg.preserveAspect = false;
+                bgImg.color = Color.white;
+                Debug.Log("[SplashController] Loaded Splash_BG");
             }
+            else
+            {
+                bgImg.color = new Color(0.02f, 0.01f, 0.05f, 1f);
+                Debug.Log("[SplashController] Splash_BG not found, using dark fallback");
+            }
+
+            var titleGo = new GameObject("SplashTitle");
+            titleGo.transform.SetParent(canvas.transform, false);
+            var titleRect = titleGo.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0.05f, 0.4f);
+            titleRect.anchorMax = new Vector2(0.95f, 0.6f);
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+            var titleTmp = titleGo.AddComponent<TextMeshProUGUI>();
+            titleTmp.text = "A.I. BEAT";
+            titleTmp.fontSize = 72;
+            titleTmp.fontStyle = FontStyles.Bold;
+            titleTmp.color = UIColorPalette.NEON_CYAN_BRIGHT;
+            titleTmp.alignment = TextAlignmentOptions.Center;
+            titleTmp.raycastTarget = false;
+            var titleFont = KoreanFontManager.KoreanFont;
+            if (titleFont != null) titleTmp.font = titleFont;
 
             // "Touch to Start" 텍스트
             var existingTouch = canvas.transform.Find("TouchToStartText");

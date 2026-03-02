@@ -151,7 +151,9 @@ namespace AIBeat.UI
 
             var viewportImg = viewport.AddComponent<Image>();
             viewportImg.color = Color.clear;
-            viewport.AddComponent<RectMask2D>();
+            viewportImg.raycastTarget = false;
+            // RectMask2D 제거 - 텍스트 클리핑 문제 방지 (ScrollRect는 Mask 없이도 동작)
+            // viewport.AddComponent<RectMask2D>();
 
             scrollRect.viewport = viewportRect;
 
@@ -225,15 +227,16 @@ namespace AIBeat.UI
                 CreateSongCard(songs[i], i);
             }
 
-            StartCoroutine(AnimateCardsEntrance());
-            KoreanFontManager.ApplyFontToAll(rootPanel);
-
+            // 카드 layout 계산 + TMP mesh 생성 (alpha=0 세팅 전에 먼저 실행)
             Canvas.ForceUpdateCanvases();
             if (contentContainer != null)
-            {
-                var contentRect = contentContainer.GetComponent<RectTransform>();
-                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
-            }
+                LayoutRebuilder.ForceRebuildLayoutImmediate(
+                    contentContainer.GetComponent<RectTransform>());
+
+            foreach (var tmp in rootPanel.GetComponentsInChildren<TextMeshProUGUI>(true))
+                tmp.ForceMeshUpdate(true, true);
+
+            StartCoroutine(AnimateCardsEntrance());
         }
 
         /// <summary>
@@ -289,8 +292,9 @@ namespace AIBeat.UI
             artOutline.effectColor = new Color(0f, 1f, 1f, 0.5f);
             artOutline.effectDistance = new Vector2(1, -1);
 
-            var artMask = artGo.AddComponent<Mask>(); // (Optional) Rounded Mask could be better
-            artMask.showMaskGraphic = true;
+            // 곡의 커버 이미지가 있으면 비동기 로드
+            if (!string.IsNullOrEmpty(song.CoverImagePath))
+                StartCoroutine(LoadCoverImage(artImg, song.CoverImagePath));
 
             // 좌측 정보 패널
             var infoPanel = new GameObject("InfoPanel");
@@ -300,12 +304,13 @@ namespace AIBeat.UI
             infoLayout.flexibleWidth = 1;
 
             var infoVLayout = infoPanel.AddComponent<VerticalLayoutGroup>();
-            infoVLayout.spacing = 4;
+            infoVLayout.spacing = 2;
+            infoVLayout.padding = new RectOffset(0, 0, 4, 4);
             infoVLayout.childControlWidth = true;
-            infoVLayout.childControlHeight = true;
+            infoVLayout.childControlHeight = false;  // 자식 높이 직접 제어 (TMP size 충돌 방지)
             infoVLayout.childForceExpandWidth = true;
             infoVLayout.childForceExpandHeight = false;
-            infoVLayout.childAlignment = TextAnchor.MiddleLeft;
+            infoVLayout.childAlignment = TextAnchor.UpperLeft;
 
             // Row 1: 곡 제목
             string displayTitle = FormatTitle(song.Title);
@@ -326,7 +331,7 @@ namespace AIBeat.UI
                 row2 = song.BPM > 0
                     ? $"{song.BPM} BPM · {diffStars} · {playsStr}"
                     : $"{diffStars} · {playsStr}";
-            CreateTMPText(infoPanel, "Info", row2, 24,
+            CreateTMPText(infoPanel, "Info", row2, 28,
                 NEON_CYAN_BRIGHT, TextAlignmentOptions.MidlineLeft);
 
             // Row 3: 랭크 + 점수
@@ -334,7 +339,7 @@ namespace AIBeat.UI
             string scoreDisplay = song.BestScore > 0 ? song.BestScore.ToString("N0") : "--";
             var rankTmp = CreateTMPText(infoPanel, "RankScore",
                 $"Best: <color=#{ColorUtility.ToHtmlStringRGB(GetRankColor(song.BestRank))}>{rankDisplay}</color> · {scoreDisplay}",
-                22, new Color(0.75f, 0.75f, 0.85f), TextAlignmentOptions.MidlineLeft);
+                26, new Color(0.75f, 0.75f, 0.85f), TextAlignmentOptions.MidlineLeft);
             rankTmp.richText = true;
 
             // 우측 플레이 아이콘
@@ -514,80 +519,91 @@ namespace AIBeat.UI
             bgBtn.colors = bgColors;
             bgBtn.onClick.AddListener(() => CloseDifficultyPopup());
 
-            // 중앙 카드 — 컴팩트 (나노바나나 디자인 참조)
+            // 중앙 카드 — 콤팩트한 패널
             var card = new GameObject("Card");
             card.transform.SetParent(difficultyPopup.transform, false);
             var cardRect = card.AddComponent<RectTransform>();
-            cardRect.anchorMin = new Vector2(0.06f, 0.20f);
-            cardRect.anchorMax = new Vector2(0.94f, 0.80f);
+            cardRect.anchorMin = new Vector2(0.09f, 0.15f);
+            cardRect.anchorMax = new Vector2(0.91f, 0.83f);
             cardRect.offsetMin = Vector2.zero;
             cardRect.offsetMax = Vector2.zero;
             var cardImage = card.AddComponent<Image>();
-            cardImage.color = new Color(0.08f, 0.08f, 0.12f, 1f);
+            cardImage.color = new Color(0.075f, 0.075f, 0.118f, 1f); // #13131e
 
-            // 카드 테두리 (얇은 시안 네온)
-            var cardOutline = card.AddComponent<Outline>();
-            cardOutline.effectColor = new Color(0.3f, 0.4f, 0.5f, 0.12f);
-            cardOutline.effectDistance = new Vector2(1, -1);
+            // 카드 테두리 (borderRadius 11px 효과 — 다중 Outline)
+            var cardOutline1 = card.AddComponent<Outline>();
+            cardOutline1.effectColor = new Color(0.20f, 0.25f, 0.35f, 0.35f);
+            cardOutline1.effectDistance = new Vector2(2f, -2f);
+            var cardOutline2 = card.AddComponent<Outline>();
+            cardOutline2.effectColor = new Color(0.20f, 0.25f, 0.35f, 0.20f);
+            cardOutline2.effectDistance = new Vector2(-2f, 2f);
+            var cardOutline3 = card.AddComponent<Outline>();
+            cardOutline3.effectColor = new Color(0.15f, 0.20f, 0.30f, 0.15f);
+            cardOutline3.effectDistance = new Vector2(1f, -1f);
 
             // ===== 카드 내부 레이아웃 =====
-            // [0.82~0.96] 곡 제목
-            // [0.74~0.82] SELECT DIFFICULTY
-            // [0.50~0.72] EASY
-            // [0.27~0.49] NORMAL
-            // [0.04~0.26] HARD
-            // 하단 바깥에 CANCEL
+            // 상단: 곡제목 (0.88~0.97) + "SELECT DIFFICULTY" 라벨 (0.82~0.88)
+            // 중간: 버튼 3개 — 각각 독립 박스 (간격 포함)
+            // 하단: CANCEL 버튼 (0.02~0.12)
 
             // 곡 제목
             var titleObj = new GameObject("SongTitle");
             titleObj.transform.SetParent(card.transform, false);
             var titleRect = titleObj.AddComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0.06f, 0.82f);
-            titleRect.anchorMax = new Vector2(0.94f, 0.96f);
-            titleRect.offsetMin = Vector2.zero;
-            titleRect.offsetMax = Vector2.zero;
+            titleRect.anchorMin = new Vector2(0f, 0.86f);
+            titleRect.anchorMax = new Vector2(1f, 0.98f);
+            titleRect.offsetMin = new Vector2(16f, 0f);
+            titleRect.offsetMax = new Vector2(-16f, 0f);
             var titleText = titleObj.AddComponent<TextMeshProUGUI>();
             titleText.text = pendingSong?.Title ?? "곡 선택";
-            titleText.fontSize = 36;
-            titleText.fontSizeMin = 20; titleText.fontSizeMax = 36;
+            titleText.fontSize = 28;
+            titleText.fontSizeMin = 16; titleText.fontSizeMax = 28;
             titleText.enableAutoSizing = true;
+            titleText.characterSpacing = -4f;
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.color = Color.white;
             titleText.fontStyle = FontStyles.Bold;
             titleText.textWrappingMode = TextWrappingModes.NoWrap;
             titleText.overflowMode = TextOverflowModes.Ellipsis;
 
-            // "난이도를 선택하세요" 라벨
+            // "SELECT DIFFICULTY" 라벨
             var labelObj = new GameObject("Label");
             labelObj.transform.SetParent(card.transform, false);
             var labelRect = labelObj.AddComponent<RectTransform>();
-            labelRect.anchorMin = new Vector2(0.06f, 0.74f);
-            labelRect.anchorMax = new Vector2(0.94f, 0.82f);
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
+            labelRect.anchorMin = new Vector2(0f, 0.79f);
+            labelRect.anchorMax = new Vector2(1f, 0.86f);
+            labelRect.offsetMin = new Vector2(16f, 0f);
+            labelRect.offsetMax = new Vector2(-16f, 0f);
             var labelText = labelObj.AddComponent<TextMeshProUGUI>();
             labelText.text = "난이도를 선택하세요";
-            labelText.fontSize = 22;
+            labelText.fontSize = 20;
+            labelText.characterSpacing = -6f;
             labelText.alignment = TextAlignmentOptions.Center;
-            labelText.color = new Color(0.45f, 0.45f, 0.50f);
+            labelText.color = new Color(0.45f, 0.45f, 0.52f);
 
-            // 난이도 버튼 3개
-            CreateDifficultyButton(card.transform, "쉬움",   "노트 적음 · 느린 간격",       3,  new Color(0.30f, 0.85f, 0.40f), 0.50f, 0.72f);
-            CreateDifficultyButton(card.transform, "보통",   "빠른 간격 · 동시타격",        7,  new Color(1.0f, 0.80f, 0.15f),  0.27f, 0.49f);
-            CreateDifficultyButton(card.transform, "어려움", "폭타 · 동시타격 다수",        10, new Color(1.0f, 0.25f, 0.25f),  0.04f, 0.26f);
+            // 난이도 버튼 3개 — 독립 박스 (디자인 원본)
+            // 레이아웃: 취소(0.03~0.11) → 어려움(0.14~0.29) → 보통(0.32~0.47) → 쉬움(0.50~0.65)
+            // 버튼 높이 0.15, 간격 0.03, 라벨 끝(0.72)과 쉬움 시작(0.65) → 간격 0.07
+            var easyColor  = new Color(0.298f, 0.851f, 0.400f); // #4cd966
+            var normalColor = new Color(1.0f, 0.800f, 0.145f); // #ffcc25
+            var hardColor  = new Color(1.0f, 0.251f, 0.251f); // #ff4040
 
-            // CANCEL 버튼 — 카드 바깥 아래
+            CreateDifficultyButton(card.transform, "쉬움",   "노트 적음 · 느린 간격",  3,  easyColor,   0.56f, 0.71f);
+            CreateDifficultyButton(card.transform, "보통",   "빠른 간격 · 동시타격",   7,  normalColor, 0.37f, 0.52f);
+            CreateDifficultyButton(card.transform, "어려움", "폭타 · 동시타격 다수",   10, hardColor,   0.18f, 0.33f);
+
+            // 취소 버튼 — 카드 내부 최하단
             var closeObj = new GameObject("CloseBtn");
-            closeObj.transform.SetParent(difficultyPopup.transform, false);
+            closeObj.transform.SetParent(card.transform, false);
             var closeRect = closeObj.AddComponent<RectTransform>();
-            closeRect.anchorMin = new Vector2(0.25f, 0.12f);
-            closeRect.anchorMax = new Vector2(0.75f, 0.18f);
+            closeRect.anchorMin = new Vector2(0.12f, 0.03f);
+            closeRect.anchorMax = new Vector2(0.88f, 0.14f);
             closeRect.offsetMin = Vector2.zero;
             closeRect.offsetMax = Vector2.zero;
             var closeBtnImage = closeObj.AddComponent<Image>();
-            closeBtnImage.color = new Color(0.18f, 0.18f, 0.22f, 0.95f);
+            closeBtnImage.color = new Color(0.12f, 0.12f, 0.16f, 1f);
             var closeOutline = closeObj.AddComponent<Outline>();
-            closeOutline.effectColor = new Color(0.35f, 0.35f, 0.40f, 0.5f);
+            closeOutline.effectColor = new Color(0.30f, 0.30f, 0.38f, 0.5f);
             closeOutline.effectDistance = new Vector2(1, -1);
             var closeBtn = closeObj.AddComponent<Button>();
             closeBtn.targetGraphic = closeBtnImage;
@@ -603,8 +619,9 @@ namespace AIBeat.UI
             var closeTmp = closeTxt.AddComponent<TextMeshProUGUI>();
             closeTmp.text = "취소";
             closeTmp.fontSize = 26;
+            closeTmp.characterSpacing = -6f;
             closeTmp.alignment = TextAlignmentOptions.Center;
-            closeTmp.color = new Color(0.7f, 0.7f, 0.75f);
+            closeTmp.color = new Color(0.65f, 0.65f, 0.70f);
 
             KoreanFontManager.ApplyFontToAll(difficultyPopup);
         }
@@ -612,27 +629,36 @@ namespace AIBeat.UI
         /// <summary>
         /// 난이도 버튼 생성 — 나노바나나 디자인
         /// </summary>
+        // anchorYMin/anchorYMax: 카드 내 버튼의 세로 비율 위치 (0=하단, 1=상단)
         private void CreateDifficultyButton(Transform parent, string label, string desc, int level, Color accentColor, float anchorYMin, float anchorYMax)
         {
             var btnObj = new GameObject($"Btn_{label}");
             btnObj.transform.SetParent(parent, false);
             var btnRect = btnObj.AddComponent<RectTransform>();
-            btnRect.anchorMin = new Vector2(0.06f, anchorYMin);
-            btnRect.anchorMax = new Vector2(0.94f, anchorYMax);
-            btnRect.offsetMin = Vector2.zero;
-            btnRect.offsetMax = Vector2.zero;
+            btnRect.anchorMin = new Vector2(0f, anchorYMin);
+            btnRect.anchorMax = new Vector2(1f, anchorYMax);
+            btnRect.offsetMin = new Vector2(14f, 0f);
+            btnRect.offsetMax = new Vector2(-14f, 0f);
 
-            // 버튼 배경 (매우 짙은 색)
+            // 버튼 배경 — 디자인 원본처럼 독립 박스 + 테두리
             var btnImage = btnObj.AddComponent<Image>();
-            btnImage.color = new Color(0.07f, 0.07f, 0.10f);
+            btnImage.color = new Color(0.10f, 0.10f, 0.14f);
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = btnImage;
             var btnColors = btn.colors;
-            btnColors.highlightedColor = new Color(1.2f, 1.2f, 1.2f);
-            btnColors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
+            btnColors.highlightedColor = new Color(1.15f, 1.15f, 1.15f);
+            btnColors.pressedColor = new Color(0.85f, 0.85f, 0.85f);
             btn.colors = btnColors;
 
-            // 좌측 두꺼운 액센트 바 (6px)
+            // 버튼 테두리 — 불투명도 36%, 둥글기 4px 효과
+            var btnOutline1 = btnObj.AddComponent<Outline>();
+            btnOutline1.effectColor = accentColor * new Color(1, 1, 1, 0.36f);
+            btnOutline1.effectDistance = new Vector2(1, -1);
+            var btnOutline2 = btnObj.AddComponent<Outline>();
+            btnOutline2.effectColor = accentColor * new Color(1, 1, 1, 0.20f);
+            btnOutline2.effectDistance = new Vector2(-1, 1);
+
+            // 좌측 두꺼운 액센트 바 (5px)
             var accentBar = new GameObject("Accent");
             accentBar.transform.SetParent(btnObj.transform, false);
             var accentRect = accentBar.AddComponent<RectTransform>();
@@ -640,82 +666,59 @@ namespace AIBeat.UI
             accentRect.anchorMax = new Vector2(0f, 1f);
             accentRect.pivot = new Vector2(0f, 0.5f);
             accentRect.anchoredPosition = Vector2.zero;
-            accentRect.sizeDelta = new Vector2(6f, 0f);
+            accentRect.sizeDelta = new Vector2(8f, 0f);
             var accentImage = accentBar.AddComponent<Image>();
             accentImage.color = accentColor;
             accentImage.raycastTarget = false;
 
-            // 상단 라인 (난이도 색상)
-            var topLine = new GameObject("TopLine");
-            topLine.transform.SetParent(btnObj.transform, false);
-            var topLineRect = topLine.AddComponent<RectTransform>();
-            topLineRect.anchorMin = new Vector2(0f, 1f);
-            topLineRect.anchorMax = new Vector2(1f, 1f);
-            topLineRect.pivot = new Vector2(0.5f, 1f);
-            topLineRect.anchoredPosition = Vector2.zero;
-            topLineRect.sizeDelta = new Vector2(0f, 1.5f);
-            var topLineImage = topLine.AddComponent<Image>();
-            topLineImage.color = accentColor * new Color(1, 1, 1, 0.5f);
-            topLineImage.raycastTarget = false;
-
-            // 하단 라인 (난이도 색상)
-            var bottomLine = new GameObject("BottomLine");
-            bottomLine.transform.SetParent(btnObj.transform, false);
-            var bottomLineRect = bottomLine.AddComponent<RectTransform>();
-            bottomLineRect.anchorMin = new Vector2(0f, 0f);
-            bottomLineRect.anchorMax = new Vector2(1f, 0f);
-            bottomLineRect.pivot = new Vector2(0.5f, 0f);
-            bottomLineRect.anchoredPosition = Vector2.zero;
-            bottomLineRect.sizeDelta = new Vector2(0f, 1.5f);
-            var bottomLineImage = bottomLine.AddComponent<Image>();
-            bottomLineImage.color = accentColor * new Color(1, 1, 1, 0.5f);
-            bottomLineImage.raycastTarget = false;
-
-            // 난이도 이름 (좌측 상단, 크게)
+            // 난이도 이름 (좌측 상단)
             var nameObj = new GameObject("Name");
             nameObj.transform.SetParent(btnObj.transform, false);
             var nameRect = nameObj.AddComponent<RectTransform>();
-            nameRect.anchorMin = new Vector2(0f, 0.40f);
-            nameRect.anchorMax = new Vector2(0.70f, 0.95f);
+            nameRect.anchorMin = new Vector2(0f, 0.42f);
+            nameRect.anchorMax = new Vector2(0.68f, 0.95f);
             nameRect.offsetMin = new Vector2(24f, 0f);
             nameRect.offsetMax = Vector2.zero;
             var nameTmp = nameObj.AddComponent<TextMeshProUGUI>();
             nameTmp.text = label;
-            nameTmp.fontSize = 38;
+            nameTmp.fontSize = 32;
+            nameTmp.characterSpacing = -6f;
             nameTmp.fontStyle = FontStyles.Bold;
             nameTmp.alignment = TextAlignmentOptions.MidlineLeft;
             nameTmp.color = accentColor;
             nameTmp.raycastTarget = false;
 
-            // 설명 (좌측 하단, 작게)
+            // 설명 (좌측 하단)
             var descObj = new GameObject("Desc");
             descObj.transform.SetParent(btnObj.transform, false);
             var descRect = descObj.AddComponent<RectTransform>();
             descRect.anchorMin = new Vector2(0f, 0.05f);
-            descRect.anchorMax = new Vector2(0.70f, 0.42f);
+            descRect.anchorMax = new Vector2(0.68f, 0.44f);
             descRect.offsetMin = new Vector2(24f, 0f);
             descRect.offsetMax = Vector2.zero;
             var descTmp = descObj.AddComponent<TextMeshProUGUI>();
             descTmp.text = desc;
-            descTmp.fontSize = 20;
+            descTmp.fontSize = 18;
+            descTmp.characterSpacing = -6f;
             descTmp.alignment = TextAlignmentOptions.MidlineLeft;
-            descTmp.color = new Color(0.50f, 0.50f, 0.55f);
+            descTmp.color = new Color(0.55f, 0.55f, 0.60f);
             descTmp.raycastTarget = false;
 
             // 우측 레벨 표시
             var lvObj = new GameObject("Level");
             lvObj.transform.SetParent(btnObj.transform, false);
             var lvRect = lvObj.AddComponent<RectTransform>();
-            lvRect.anchorMin = new Vector2(0.70f, 0f);
+            lvRect.anchorMin = new Vector2(0.68f, 0f);
             lvRect.anchorMax = new Vector2(1f, 1f);
             lvRect.offsetMin = Vector2.zero;
             lvRect.offsetMax = new Vector2(-10f, 0f);
             var lvTmp = lvObj.AddComponent<TextMeshProUGUI>();
             lvTmp.text = $"Lv.{level}";
-            lvTmp.fontSize = 30;
+            lvTmp.fontSize = 28;
+            lvTmp.characterSpacing = -4f;
             lvTmp.fontStyle = FontStyles.Bold;
             lvTmp.alignment = TextAlignmentOptions.Center;
-            lvTmp.color = new Color(0.55f, 0.55f, 0.60f);
+            lvTmp.color = accentColor;
             lvTmp.raycastTarget = false;
 
             int capturedLevel = level;
@@ -731,6 +734,39 @@ namespace AIBeat.UI
                 pendingSong = displayedSongs[0];
             ShowDifficultyPopup();
             Debug.Log("[SongLibrary] ForceShowDifficultyPopup() 완료");
+        }
+
+        /// <summary>
+        /// 에디터 테스트용: 팝업 없이 바로 난이도 선택 후 게임 시작
+        /// </summary>
+        public void ForceStartWithDifficulty(int difficultyLevel)
+        {
+            if (displayedSongs != null && displayedSongs.Count > 0)
+                pendingSong = displayedSongs[0];
+            if (pendingSong == null)
+            {
+                Debug.LogError("[SongLibrary] ForceStartWithDifficulty: 곡이 없습니다");
+                return;
+            }
+            Debug.Log($"[SongLibrary] ForceStartWithDifficulty({difficultyLevel}) 호출 - 곡: {pendingSong.Title}");
+            StartGameWithDifficulty(difficultyLevel);
+        }
+
+        /// <summary>
+        /// 에디터 테스트용: StreamingAssets의 특정 파일명으로 바로 게임 시작
+        /// </summary>
+        public void ForceStartWithFile(string audioFileName, int difficultyLevel)
+        {
+            Application.runInBackground = true;
+            var record = new SongRecord
+            {
+                Title = System.IO.Path.GetFileNameWithoutExtension(audioFileName),
+                Artist = "Test",
+                AudioFileName = audioFileName,
+                DifficultyLevel = difficultyLevel,
+            };
+            Debug.Log($"[SongLibrary] ForceStartWithFile({audioFileName}, difficulty={difficultyLevel})");
+            StartCoroutine(LoadAudioAndStartGame(record));
         }
 
         /// <summary>
@@ -839,16 +875,20 @@ namespace AIBeat.UI
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent.transform, false);
-            go.AddComponent<RectTransform>();
+            var rt = go.AddComponent<RectTransform>();
+            // 고정 높이로 RectTransform 설정 - LayoutElement 없이 직접 크기 지정
+            rt.sizeDelta = new Vector2(0, fontSize * 1.5f);
 
             var tmp = go.AddComponent<TextMeshProUGUI>();
+            var korFont = KoreanFontManager.KoreanFont;
+            if (korFont != null) tmp.font = korFont;
             tmp.text = text;
             tmp.fontSize = fontSize;
             tmp.color = color;
             tmp.alignment = alignment;
             tmp.fontStyle = style;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
-            tmp.overflowMode = TextOverflowModes.Ellipsis;
+            tmp.overflowMode = TextOverflowModes.Truncate;
 
             return tmp;
         }
@@ -874,6 +914,226 @@ namespace AIBeat.UI
                 _ => AudioType.MPEG
             };
         }
+
+        /// <summary>
+        /// 커버 이미지를 비동기 로드하여 앨범 아트 Image에 적용.
+        /// "id3:<path>"   → MP3 내부 ID3 태그에서 추출 (파일 경로 직접 접근)
+        /// "id3ms:<id>"   → Android MediaStore URI로 스트림 열어 ID3 추출 (API 33+ _data null 대응)
+        /// 그 외           → 파일 시스템 이미지를 UnityWebRequest로 로드.
+        /// 로드 실패 시 기존 기본 이미지 유지.
+        /// </summary>
+        private IEnumerator LoadCoverImage(Image targetImage, string imagePath)
+        {
+            if (targetImage == null || string.IsNullOrEmpty(imagePath)) yield break;
+
+            // ID3 임베드 앨범 아트 (파일 경로로 직접 접근)
+            if (imagePath.StartsWith("id3:"))
+            {
+                string mp3Path = imagePath.Substring(4);
+                var tex = AIBeat.Core.Mp3CoverExtractor.ExtractCover(mp3Path);
+                if (tex != null && targetImage != null)
+                {
+                    var sprite = Sprite.Create(tex,
+                        new Rect(0, 0, tex.width, tex.height),
+                        new Vector2(0.5f, 0.5f));
+                    targetImage.sprite = sprite;
+                    targetImage.preserveAspect = true;
+                }
+                yield break;
+            }
+
+            // ID3 임베드 앨범 아트 (Android MediaStore URI로 스트림 접근, API 33+ 대응)
+            if (imagePath.StartsWith("id3ms:"))
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                string idStr = imagePath.Substring(6);
+                if (long.TryParse(idStr, out long mediaStoreId))
+                {
+                    Texture2D tex = null;
+                    try
+                    {
+                        tex = ExtractCoverFromMediaStore(mediaStoreId);
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogWarning($"[SongLibrary] MediaStore 커버 추출 실패: id={mediaStoreId} - {e.Message}");
+                    }
+                    if (tex != null && targetImage != null)
+                    {
+                        var sprite = Sprite.Create(tex,
+                            new Rect(0, 0, tex.width, tex.height),
+                            new Vector2(0.5f, 0.5f));
+                        targetImage.sprite = sprite;
+                        targetImage.preserveAspect = true;
+                    }
+                }
+#endif
+                yield break;
+            }
+
+            // 파일 시스템 이미지 (jpg/png 등)
+            string url = "file://" + imagePath.Replace("\\", "/");
+            using (var www = UnityWebRequestTexture.GetTexture(url))
+            {
+                yield return www.SendWebRequest();
+                if (www.result == UnityWebRequest.Result.Success && targetImage != null)
+                {
+                    var tex = DownloadHandlerTexture.GetContent(www);
+                    if (tex != null)
+                    {
+                        var sprite = Sprite.Create(tex,
+                            new Rect(0, 0, tex.width, tex.height),
+                            new Vector2(0.5f, 0.5f));
+                        targetImage.sprite = sprite;
+                        targetImage.preserveAspect = true;
+                    }
+                }
+            }
+        }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        /// <summary>
+        /// Android MediaStore URI에서 앨범 아트 추출.
+        /// 1차: Android 10+ loadThumbnail API (가장 빠르고 안정적)
+        /// 2차: InputStream으로 ID3 파싱 (폴백)
+        /// </summary>
+        private static Texture2D ExtractCoverFromMediaStore(long mediaStoreId)
+        {
+            using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
+            using (var contentResolver = activity.Call<AndroidJavaObject>("getContentResolver"))
+            using (var mediaStoreClass = new AndroidJavaClass("android.provider.MediaStore$Audio$Media"))
+            {
+                var baseUri = mediaStoreClass.GetStatic<AndroidJavaObject>("EXTERNAL_CONTENT_URI");
+                using (var contentUrisClass = new AndroidJavaClass("android.content.ContentUris"))
+                using (var itemUri = contentUrisClass.CallStatic<AndroidJavaObject>(
+                    "withAppendedId", baseUri, mediaStoreId))
+                {
+                    // 1차 시도: Android 10+ loadThumbnail API
+                    int apiLevel = GetApiLevel();
+                    if (apiLevel >= 29)
+                    {
+                        try
+                        {
+                            Texture2D thumbTex = LoadThumbnailFromContentResolver(contentResolver, itemUri);
+                            if (thumbTex != null) return thumbTex;
+                        }
+                        catch (System.Exception) { }
+                    }
+
+                    // 2차 시도: InputStream으로 ID3 파싱
+                    AndroidJavaObject inputStream = null;
+                    try
+                    {
+                        inputStream = contentResolver.Call<AndroidJavaObject>("openInputStream", itemUri);
+                    }
+                    catch (System.Exception) { }
+                    if (inputStream == null) return null;
+
+                    try
+                    {
+                        byte[] buffer = ReadJavaInputStream(inputStream);
+                        if (buffer == null || buffer.Length < 10) return null;
+
+                        using (var ms = new System.IO.MemoryStream(buffer))
+                        {
+                            return AIBeat.Core.Mp3CoverExtractor.ExtractCoverFromStream(ms,
+                                $"id={mediaStoreId}");
+                        }
+                    }
+                    finally
+                    {
+                        try { inputStream.Call("close"); } catch { }
+                        inputStream.Dispose();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Android 10+ ContentResolver.loadThumbnail() API로 앨범 아트 로드.
+        /// OS가 자체적으로 캐싱하므로 가장 빠르고 안정적.
+        /// </summary>
+        private static Texture2D LoadThumbnailFromContentResolver(
+            AndroidJavaObject contentResolver, AndroidJavaObject uri)
+        {
+            {
+                var size = new AndroidJavaObject("android.util.Size", 512, 512);
+                // Bitmap bitmap = contentResolver.loadThumbnail(uri, size, null)
+                var bitmap = contentResolver.Call<AndroidJavaObject>(
+                    "loadThumbnail", uri, size, (AndroidJavaObject)null);
+                if (bitmap == null) return null;
+
+                try
+                {
+                    int w = bitmap.Call<int>("getWidth");
+                    int h = bitmap.Call<int>("getHeight");
+                    if (w <= 0 || h <= 0) return null;
+
+                    // Bitmap → ARGB byte[] → Texture2D
+                    int pixelCount = w * h;
+                    int[] pixels = new int[pixelCount];
+                    bitmap.Call("getPixels", pixels, 0, w, 0, 0, w, h);
+
+                    // Android ARGB → Unity RGBA32 (Y축 반전: Android top-down → Unity bottom-up)
+                    byte[] rgba = new byte[pixelCount * 4];
+                    for (int y = 0; y < h; y++)
+                    {
+                        int srcRow = y * w;
+                        int dstRow = (h - 1 - y) * w;
+                        for (int x = 0; x < w; x++)
+                        {
+                            int argb = pixels[srcRow + x];
+                            int di = (dstRow + x) * 4;
+                            rgba[di + 0] = (byte)((argb >> 16) & 0xFF); // R
+                            rgba[di + 1] = (byte)((argb >> 8) & 0xFF);  // G
+                            rgba[di + 2] = (byte)(argb & 0xFF);          // B
+                            rgba[di + 3] = (byte)((argb >> 24) & 0xFF); // A
+                        }
+                    }
+
+                    var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                    tex.LoadRawTextureData(rgba);
+                    tex.Apply();
+                    return tex;
+                }
+                finally
+                {
+                    bitmap.Call("recycle");
+                    bitmap.Dispose();
+                }
+            }
+        }
+
+        private static int GetApiLevel()
+        {
+            using (var version = new AndroidJavaClass("android.os.Build$VERSION"))
+            {
+                return version.GetStatic<int>("SDK_INT");
+            }
+        }
+
+        /// <summary>
+        /// Java InputStream의 첫 512KB를 읽어 byte[]로 반환 (ID3 태그는 파일 앞 부분에 있음).
+        /// 큰 앨범 아트(300KB+)가 임베드된 MP3도 처리 가능.
+        /// </summary>
+        private static byte[] ReadJavaInputStream(AndroidJavaObject inputStream, int maxBytes = 512 * 1024)
+        {
+            using (var ms = new System.IO.MemoryStream(maxBytes))
+            {
+                byte[] chunk = new byte[16384];
+                int totalRead = 0;
+                while (totalRead < maxBytes)
+                {
+                    int read = inputStream.Call<int>("read", chunk);
+                    if (read <= 0) break;
+                    ms.Write(chunk, 0, read);
+                    totalRead += read;
+                }
+                return ms.ToArray();
+            }
+        }
+#endif
 
         private void OnDestroy()
         {

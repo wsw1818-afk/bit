@@ -56,6 +56,11 @@ namespace AIBeat.UI
         private Coroutine animCoroutine;
         private Coroutine eqCoroutine;
 
+        // 현재 표시 모드 ("LOADING" 또는 "AI 분석 중")
+        private string currentBaseText = "LOADING";
+        // 분석 모드 진입 후 씬 로딩 UpdateProgress 호출 차단
+        private bool isInAnalysisMode = false;
+
         private void Awake()
         {
             if (Instance == null)
@@ -428,6 +433,8 @@ namespace AIBeat.UI
         {
             if (rootPanel == null) return;
             rootPanel.SetActive(true);
+            currentBaseText = "LOADING";
+            isInAnalysisMode = false;
             Debug.Log("[LoadingScreen] Show() - 로딩 화면 표시");
 
             // 랜덤 팁
@@ -437,7 +444,7 @@ namespace AIBeat.UI
                 tipText.text = $"TIP: {tip}";
             }
 
-            UpdateProgress(0f);
+            SetProgressDirect(0f);
 
             // 애니메이션 시작
             if (animCoroutine != null) StopCoroutine(animCoroutine);
@@ -445,6 +452,41 @@ namespace AIBeat.UI
 
             if (eqCoroutine != null) StopCoroutine(eqCoroutine);
             eqCoroutine = StartCoroutine(EqualizerAnimation());
+        }
+
+        /// <summary>
+        /// AI 분석 단계로 전환.
+        /// 프로그레스를 30%로 고정하고, 이후 UpdateAnalysisProgress()로 30%~100% 범위에서 진행.
+        /// </summary>
+        public void SwitchToAnalysisMode(string songTitle = null)
+        {
+            isInAnalysisMode = true;
+            currentBaseText = "AI 분석 중";
+            if (loadingText != null)
+                loadingText.text = currentBaseText;
+            if (songTitle != null && songTitleText != null)
+                songTitleText.text = songTitle;
+            // 30%로 고정 (씬 로딩 완료 → AI 분석 시작 지점)
+            SetProgressDirect(0.3f);
+            if (tipText != null)
+            {
+                string[] analysisTips = new string[]
+                {
+                    "AI가 오디오를 분석하여 노트를 배치합니다",
+                    "BPM과 비트를 감지하여 리듬에 맞는 패턴을 생성합니다",
+                    "곡의 강약에 따라 노트 밀도가 달라집니다",
+                };
+                tipText.text = $"TIP: {analysisTips[Random.Range(0, analysisTips.Length)]}";
+            }
+        }
+
+        /// <summary>
+        /// AI 분석 프로그레스 (0.0~1.0) → 화면 프로그레스 30%~100%로 매핑.
+        /// </summary>
+        public void UpdateAnalysisProgress(float analysisProgress)
+        {
+            float mapped = 0.3f + Mathf.Clamp01(analysisProgress) * 0.7f;
+            SetProgressDirect(mapped);
         }
 
         /// <summary>
@@ -508,19 +550,30 @@ namespace AIBeat.UI
         }
 
         /// <summary>
-        /// 진행률 업데이트
+        /// 씬 로딩 프로그레스 (0.0~1.0) → 화면 프로그레스 0%~30%로 매핑.
+        /// 분석 모드 진입 후에는 무시 (30%→0% 롤백 방지).
         /// </summary>
         public void UpdateProgress(float progress)
+        {
+            if (isInAnalysisMode) return; // 분석 모드에서는 씬 로딩 프로그레스 무시
+            float mapped = Mathf.Clamp01(progress) * 0.3f;
+            SetProgressDirect(mapped);
+        }
+
+        /// <summary>
+        /// 프로그레스 바 직접 설정 (내부용)
+        /// </summary>
+        private void SetProgressDirect(float displayProgress)
         {
             if (progressBar != null)
             {
                 var rect = progressBar.GetComponent<RectTransform>();
                 if (rect != null)
-                    rect.anchorMax = new Vector2(Mathf.Clamp01(progress), 1f);
+                    rect.anchorMax = new Vector2(Mathf.Clamp01(displayProgress), 1f);
             }
 
             if (percentText != null)
-                percentText.text = $"{Mathf.RoundToInt(progress * 100)}%";
+                percentText.text = $"{Mathf.RoundToInt(displayProgress * 100)}%";
         }
 
         /// <summary>
@@ -544,7 +597,7 @@ namespace AIBeat.UI
                     dotCount = (dotCount + 1) % 4;
                     string dots = new string('.', dotCount);
                     if (loadingText != null)
-                        loadingText.text = $"LOADING{dots}";
+                        loadingText.text = $"{currentBaseText}{dots}";
                 }
 
                 // 글로우 펄스 (프로그레스 바 끝)
